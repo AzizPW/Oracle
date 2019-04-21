@@ -1,0 +1,533 @@
+user@172.19.8.37's password:
+     +--------------------------------------------------------------------+
+     ¦                        • MobaXterm 11.1 •                          ¦
+     ¦            (SSH client, X-server and networking tools)             ¦
+     ¦                                                                    ¦
+     ¦ ? SSH session to user@172.19.8.37                                  ¦
+     ¦   • SSH compression : ?                                            ¦
+     ¦   • SSH-browser     : ?                                            ¦
+     ¦   • X11-forwarding  : ?  (remote display is forwarded through SSH) ¦
+     ¦   • DISPLAY         : ?  (automatically set on remote server)      ¦
+     ¦                                                                    ¦
+     ¦ ? For more info, ctrl+click on help or visit our website           ¦
+     +--------------------------------------------------------------------+
+
+Welcome to Ubuntu 16.04.5 LTS (GNU/Linux 4.15.0-29-generic x86_64)
+
+ * Documentation:  https://help.ubuntu.com
+ * Management:     https://landscape.canonical.com
+ * Support:        https://ubuntu.com/advantage
+
+0 packages can be updated.
+0 updates are security updates.
+
+
+Last login: Sun Feb 10 02:10:31 2019
+/usr/bin/xauth:  file /home/user/.Xauthority does not exist
+user@ubuntu1:~$ mkdir -p /home/user/mii/20190213_Install
+user@ubuntu1:~$ rsync -vrah user@172.19.8.40:/home/user/mii/20190213_Install/* /home/user/mii/20190213_Install          /
+The authenticity of host '172.19.8.40 (172.19.8.40)' can't be established.
+ECDSA key fingerprint is SHA256:sb+yk/fHo8ZwYK12jFYVf3UKkbn1ywGvwQnlX+xJHT8.
+Are you sure you want to continue connecting (yes/no)? yes
+Warning: Permanently added '172.19.8.40' (ECDSA) to the list of known hosts.
+user@172.19.8.40's password:
+Permission denied, please try again.
+user@172.19.8.40's password:
+receiving incremental file list
+V981207-01.zip
+libaio1_0.3.110-2_amd64.deb
+libjson-perl_2.90-1_all.deb
+libmecab2_0.996-1.2ubuntu1_amd64.deb
+libpython-stdlib_2.7.11-1_amd64.deb
+libpython2.7-minimal_2.7.11-7ubuntu1_amd64.deb
+libpython2.7-stdlib_2.7.11-7ubuntu1_amd64.deb
+python-minimal_2.7.11-1_amd64.deb
+python2.7-minimal_2.7.11-7ubuntu1_amd64.deb
+python2.7_2.7.11-7ubuntu1_amd64.deb
+python_2.7.11-1_amd64.deb
+unzip_6.0-20ubuntu1_amd64.deb
+
+sent 252 bytes  received 520.55M bytes  9.38M bytes/sec
+total size is 520.43M  speedup is 1.00
+user@ubuntu1:~$ cd /home/user/mii/20190213_Install
+user@ubuntu1:~/mii/20190213_Install$ ls -lh
+total 497M
+-rw-rw-r-- 1 user user 6.3K Feb 13 11:49 libaio1_0.3.110-2_amd64.deb
+-rw-rw-r-- 1 user user  78K Feb 13 12:46 libjson-perl_2.90-1_all.deb
+-rw-rw-r-- 1 user user 259K Feb 13 12:12 libmecab2_0.996-1.2ubuntu1_amd64.deb
+-rw-rw-r-- 1 user user 328K Feb 13 12:52 libpython2.7-minimal_2.7.11-7ubuntu1_amd64.deb
+-rw-rw-r-- 1 user user 1.8M Feb 13 12:59 libpython2.7-stdlib_2.7.11-7ubuntu1_amd64.deb
+-rw-rw-r-- 1 user user 7.5K Feb 13 12:58 libpython-stdlib_2.7.11-1_amd64.deb
+-rw-rw-r-- 1 user user 134K Feb 13 12:46 python_2.7.11-1_amd64.deb
+-rw-rw-r-- 1 user user 215K Feb 13 13:01 python2.7_2.7.11-7ubuntu1_amd64.deb
+-rw-rw-r-- 1 user user 1.3M Feb 13 12:51 python2.7-minimal_2.7.11-7ubuntu1_amd64.deb
+-rw-rw-r-- 1 user user  28K Feb 13 12:49 python-minimal_2.7.11-1_amd64.deb
+-rw-rw-r-- 1 user user 155K Feb 13 12:02 unzip_6.0-20ubuntu1_amd64.deb
+-rw-rw-r-- 1 user user 493M Feb 13 11:56 V981207-01.zip
+user@ubuntu1:~/mii/20190213_Install$ hostname
+ubuntu1
+user@ubuntu1:~/mii/20190213_Install$ uname -a
+Linux ubuntu1 4.15.0-29-generic #31~16.04.1-Ubuntu SMP Wed Jul 18 08:54:04 UTC 2018 x86_64 x86_64 x86_64 GNU/Linux
+user@ubuntu1:~/mii/20190213_Install$ lsb_release -a
+No LSB modules are available.
+Distributor ID: Ubuntu
+Description:    Ubuntu 16.04.5 LTS
+Release:        16.04
+Codename:       xenial
+user@ubuntu1:~/mii/20190213_Install$ grep MemTotal /proc/meminfo
+MemTotal:       65633424 kB
+user@ubuntu1:~/mii/20190213_Install$ grep MemTotal /proc/meminfo
+MemTotal:       65633424 kB
+user@ubuntu1:~/mii/20190213_Install$ grep "model n" /proc/cpuinfo
+model name      : Intel(R) Xeon(R) Gold 6134 CPU @ 3.20GHz
+model name      : Intel(R) Xeon(R) Gold 6134 CPU @ 3.20GHz
+model name      : Intel(R) Xeon(R) Gold 6134 CPU @ 3.20GHz
+model name      : Intel(R) Xeon(R) Gold 6134 CPU @ 3.20GHz
+model name      : Intel(R) Xeon(R) Gold 6134 CPU @ 3.20GHz
+model name      : Intel(R) Xeon(R) Gold 6134 CPU @ 3.20GHz
+model name      : Intel(R) Xeon(R) Gold 6134 CPU @ 3.20GHz
+model name      : Intel(R) Xeon(R) Gold 6134 CPU @ 3.20GHz
+model name      : Intel(R) Xeon(R) Gold 6134 CPU @ 3.20GHz
+model name      : Intel(R) Xeon(R) Gold 6134 CPU @ 3.20GHz
+model name      : Intel(R) Xeon(R) Gold 6134 CPU @ 3.20GHz
+model name      : Intel(R) Xeon(R) Gold 6134 CPU @ 3.20GHz
+model name      : Intel(R) Xeon(R) Gold 6134 CPU @ 3.20GHz
+model name      : Intel(R) Xeon(R) Gold 6134 CPU @ 3.20GHz
+model name      : Intel(R) Xeon(R) Gold 6134 CPU @ 3.20GHz
+model name      : Intel(R) Xeon(R) Gold 6134 CPU @ 3.20GHz
+user@ubuntu1:~/mii/20190213_Install$ grep "model n" /proc/cpuinfo | wc -l
+16
+user@ubuntu1:~/mii/20190213_Install$ lscpu
+Architecture:          x86_64
+CPU op-mode(s):        32-bit, 64-bit
+Byte Order:            Little Endian
+CPU(s):                16
+On-line CPU(s) list:   0-15
+Thread(s) per core:    2
+Core(s) per socket:    8
+Socket(s):             1
+NUMA node(s):          1
+Vendor ID:             GenuineIntel
+CPU family:            6
+Model:                 85
+Model name:            Intel(R) Xeon(R) Gold 6134 CPU @ 3.20GHz
+Stepping:              4
+CPU MHz:               1200.750
+CPU max MHz:           3700.0000
+CPU min MHz:           1200.0000
+BogoMIPS:              6400.00
+Virtualization:        VT-x
+L1d cache:             32K
+L1i cache:             32K
+L2 cache:              1024K
+L3 cache:              25344K
+NUMA node0 CPU(s):     0-15
+Flags:                 fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc art arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc cpuid aperfmperf pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 sdbg fma cx16 xtpr pdcm pcid dca sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm abm 3dnowprefetch cpuid_fault epb cat_l3 cdp_l3 invpcid_single pti intel_ppin ssbd mba ibrs ibpb stibp tpr_shadow vnmi flexpriority ept vpid fsgsbase tsc_adjust bmi1 hle avx2 smep bmi2 erms invpcid rtm cqm mpx rdt_a avx512f avx512dq rdseed adx smap clflushopt clwb intel_pt avx512cd avx512bw avx512vl xsaveopt xsavec xgetbv1 xsaves cqm_llc cqm_occup_llc cqm_mbm_total cqm_mbm_local dtherm ida arat pln pts hwp hwp_act_window hwp_pkg_req pku ospke
+user@ubuntu1:~/mii/20190213_Install$ unzip V981207-01.zip -d V981207-01
+The program 'unzip' is currently not installed. You can install it by typing:
+sudo apt install unzip
+You will have to enable the component called 'main'
+user@ubuntu1:~/mii/20190213_Install$ sudo dpkg -i unzip_6.0-20ubuntu1_amd64.deb
+[sudo] password for user:
+Selecting previously unselected package unzip.
+(Reading database ... 62881 files and directories currently installed.)
+Preparing to unpack unzip_6.0-20ubuntu1_amd64.deb ...
+Unpacking unzip (6.0-20ubuntu1) ...
+Setting up unzip (6.0-20ubuntu1) ...
+Processing triggers for mime-support (3.59ubuntu1) ...
+Processing triggers for man-db (2.7.5-1) ...
+user@ubuntu1:~/mii/20190213_Install$ unzip V981207-01.zip -d V981207-01
+Archive:  V981207-01.zip
+ extracting: V981207-01/mysql-commercial-test_5.7.25+commercial-1ubuntu16.04_amd64.deb
+ extracting: V981207-01/libmysqld-dev_5.7.25+commercial-1ubuntu16.04_amd64.deb
+ extracting: V981207-01/libmysqlclient-dev_5.7.25+commercial-1ubuntu16.04_amd64.deb
+ extracting: V981207-01/libmysqlclient20_5.7.25+commercial-1ubuntu16.04_amd64.deb
+ extracting: V981207-01/mysql-commercial-client-dbgsym_5.7.25+commercial-1ubuntu16.04_amd64.deb
+ extracting: V981207-01/mysql-commercial-server-dbgsym_5.7.25+commercial-1ubuntu16.04_amd64.deb
+ extracting: V981207-01/mysql-common_5.7.25+commercial-1ubuntu16.04_amd64.deb
+ extracting: V981207-01/mysql-commercial-client_5.7.25+commercial-1ubuntu16.04_amd64.deb
+ extracting: V981207-01/mysql-commercial-test-dbgsym_5.7.25+commercial-1ubuntu16.04_amd64.deb
+ extracting: V981207-01/mysql-commercial-server_5.7.25+commercial-1ubuntu16.04_amd64.deb
+ extracting: V981207-01/libmysqlclient20-dbgsym_5.7.25+commercial-1ubuntu16.04_amd64.deb
+ extracting: V981207-01/mysql-testsuite_5.7.25+commercial-1ubuntu16.04_amd64.deb
+ extracting: V981207-01/mysql-client_5.7.25+commercial-1ubuntu16.04_amd64.deb
+ extracting: V981207-01/mysql-server_5.7.25+commercial-1ubuntu16.04_amd64.deb
+ extracting: V981207-01/README.txt
+user@ubuntu1:~/mii/20190213_Install$ id mysql
+id: ‘mysql’: no such user
+user@ubuntu1:~/mii/20190213_Install$ ls -lh
+total 497M
+-rw-rw-r-- 1 user user 6.3K Feb 13 11:49 libaio1_0.3.110-2_amd64.deb
+-rw-rw-r-- 1 user user  78K Feb 13 12:46 libjson-perl_2.90-1_all.deb
+-rw-rw-r-- 1 user user 259K Feb 13 12:12 libmecab2_0.996-1.2ubuntu1_amd64.deb
+-rw-rw-r-- 1 user user 328K Feb 13 12:52 libpython2.7-minimal_2.7.11-7ubuntu1_amd64.deb
+-rw-rw-r-- 1 user user 1.8M Feb 13 12:59 libpython2.7-stdlib_2.7.11-7ubuntu1_amd64.deb
+-rw-rw-r-- 1 user user 7.5K Feb 13 12:58 libpython-stdlib_2.7.11-1_amd64.deb
+-rw-rw-r-- 1 user user 134K Feb 13 12:46 python_2.7.11-1_amd64.deb
+-rw-rw-r-- 1 user user 215K Feb 13 13:01 python2.7_2.7.11-7ubuntu1_amd64.deb
+-rw-rw-r-- 1 user user 1.3M Feb 13 12:51 python2.7-minimal_2.7.11-7ubuntu1_amd64.deb
+-rw-rw-r-- 1 user user  28K Feb 13 12:49 python-minimal_2.7.11-1_amd64.deb
+-rw-rw-r-- 1 user user 155K Feb 13 12:02 unzip_6.0-20ubuntu1_amd64.deb
+drwxrwxr-x 2 user user 4.0K Feb 13 14:40 V981207-01
+-rw-rw-r-- 1 user user 493M Feb 13 11:56 V981207-01.zip
+user@ubuntu1:~/mii/20190213_Install$ sudo dpkg -i libaio1_0.3.110-2_amd64.deb libmecab2_0.996-1.2ubuntu1_amd64.deb
+Selecting previously unselected package libaio1:amd64.
+(Reading database ... 62899 files and directories currently installed.)
+Preparing to unpack libaio1_0.3.110-2_amd64.deb ...
+Unpacking libaio1:amd64 (0.3.110-2) ...
+Selecting previously unselected package libmecab2.
+Preparing to unpack libmecab2_0.996-1.2ubuntu1_amd64.deb ...
+Unpacking libmecab2 (0.996-1.2ubuntu1) ...
+Setting up libaio1:amd64 (0.3.110-2) ...
+Setting up libmecab2 (0.996-1.2ubuntu1) ...
+Processing triggers for libc-bin (2.23-0ubuntu10) ...
+user@ubuntu1:~/mii/20190213_Install$ sudo dpkg -i libjson-perl_2.90-1_all.deb
+Selecting previously unselected package libjson-perl.
+(Reading database ... 62914 files and directories currently installed.)
+Preparing to unpack libjson-perl_2.90-1_all.deb ...
+Unpacking libjson-perl (2.90-1) ...
+Setting up libjson-perl (2.90-1) ...
+Processing triggers for man-db (2.7.5-1) ...
+user@ubuntu1:~/mii/20190213_Install$ sudo dpkg -i libpython2.7-minimal_2.7.11-7ubuntu1_amd64.deb
+Selecting previously unselected package libpython2.7-minimal:amd64.
+(Reading database ... 62933 files and directories currently installed.)
+Preparing to unpack libpython2.7-minimal_2.7.11-7ubuntu1_amd64.deb ...
+Unpacking libpython2.7-minimal:amd64 (2.7.11-7ubuntu1) ...
+Setting up libpython2.7-minimal:amd64 (2.7.11-7ubuntu1) ...
+user@ubuntu1:~/mii/20190213_Install$ sudo dpkg -i libpython2.7-stdlib_2.7.11-7ubuntu1_amd64.deb
+Selecting previously unselected package libpython2.7-stdlib:amd64.
+(Reading database ... 63137 files and directories currently installed.)
+Preparing to unpack libpython2.7-stdlib_2.7.11-7ubuntu1_amd64.deb ...
+Unpacking libpython2.7-stdlib:amd64 (2.7.11-7ubuntu1) ...
+Setting up libpython2.7-stdlib:amd64 (2.7.11-7ubuntu1) ...
+user@ubuntu1:~/mii/20190213_Install$ sudo dpkg -i libpython-stdlib_2.7.11-1_amd64.deb
+Selecting previously unselected package libpython-stdlib:amd64.
+(Reading database ... 63623 files and directories currently installed.)
+Preparing to unpack libpython-stdlib_2.7.11-1_amd64.deb ...
+Unpacking libpython-stdlib:amd64 (2.7.11-1) ...
+Setting up libpython-stdlib:amd64 (2.7.11-1) ...
+user@ubuntu1:~/mii/20190213_Install$ sudo dpkg -i python2.7-minimal_2.7.11-7ubuntu1_amd64.deb
+Selecting previously unselected package python2.7-minimal.
+(Reading database ... 63627 files and directories currently installed.)
+Preparing to unpack python2.7-minimal_2.7.11-7ubuntu1_amd64.deb ...
+Unpacking python2.7-minimal (2.7.11-7ubuntu1) ...
+Setting up python2.7-minimal (2.7.11-7ubuntu1) ...
+Linking and byte-compiling packages for runtime python2.7...
+Processing triggers for man-db (2.7.5-1) ...
+user@ubuntu1:~/mii/20190213_Install$ sudo dpkg -i python-minimal_2.7.11-1_amd64.deb
+Selecting previously unselected package python-minimal.
+(Reading database ... 63634 files and directories currently installed.)
+Preparing to unpack python-minimal_2.7.11-1_amd64.deb ...
+Unpacking python-minimal (2.7.11-1) ...
+Setting up python-minimal (2.7.11-1) ...
+Processing triggers for man-db (2.7.5-1) ...
+user@ubuntu1:~/mii/20190213_Install$ sudo dpkg -i python2.7_2.7.11-7ubuntu1_amd64.deb
+Selecting previously unselected package python2.7.
+(Reading database ... 63660 files and directories currently installed.)
+Preparing to unpack python2.7_2.7.11-7ubuntu1_amd64.deb ...
+Unpacking python2.7 (2.7.11-7ubuntu1) ...
+Setting up python2.7 (2.7.11-7ubuntu1) ...
+Processing triggers for mime-support (3.59ubuntu1) ...
+Processing triggers for man-db (2.7.5-1) ...
+user@ubuntu1:~/mii/20190213_Install$ sudo dpkg -i python_2.7.11-1_amd64.deb
+Selecting previously unselected package python.
+(Reading database ... 63679 files and directories currently installed.)
+Preparing to unpack python_2.7.11-1_amd64.deb ...
+Unpacking python (2.7.11-1) ...
+Setting up python (2.7.11-1) ...
+Processing triggers for man-db (2.7.5-1) ...
+user@ubuntu1:~/mii/20190213_Install$ cd V981207-01/
+user@ubuntu1:~/mii/20190213_Install/V981207-01$ ls -lh
+total 493M
+-rw-r--r-- 1 user user 1.3M Dec 21 11:33 libmysqlclient20_5.7.25+commercial-1ubuntu16.04_amd64.deb
+-rw-r--r-- 1 user user 1.1M Dec 21 11:33 libmysqlclient20-dbgsym_5.7.25+commercial-1ubuntu16.04_amd64.deb
+-rw-r--r-- 1 user user 1.9M Dec 21 11:33 libmysqlclient-dev_5.7.25+commercial-1ubuntu16.04_amd64.deb
+-rw-r--r-- 1 user user 101M Dec 21 11:33 libmysqld-dev_5.7.25+commercial-1ubuntu16.04_amd64.deb
+-rw-r--r-- 1 user user 5.8K Dec 21 11:33 mysql-client_5.7.25+commercial-1ubuntu16.04_amd64.deb
+-rw-r--r-- 1 user user  11M Dec 21 11:33 mysql-commercial-client_5.7.25+commercial-1ubuntu16.04_amd64.deb
+-rw-r--r-- 1 user user  62M Dec 21 11:33 mysql-commercial-client-dbgsym_5.7.25+commercial-1ubuntu16.04_amd64.deb
+-rw-r--r-- 1 user user  38M Dec 21 11:33 mysql-commercial-server_5.7.25+commercial-1ubuntu16.04_amd64.deb
+-rw-r--r-- 1 user user 149M Dec 21 11:33 mysql-commercial-server-dbgsym_5.7.25+commercial-1ubuntu16.04_amd64.deb
+-rw-r--r-- 1 user user  25M Dec 21 11:33 mysql-commercial-test_5.7.25+commercial-1ubuntu16.04_amd64.deb
+-rw-r--r-- 1 user user 106M Dec 21 11:33 mysql-commercial-test-dbgsym_5.7.25+commercial-1ubuntu16.04_amd64.deb
+-rw-r--r-- 1 user user 8.4K Dec 21 11:33 mysql-common_5.7.25+commercial-1ubuntu16.04_amd64.deb
+-rw-r--r-- 1 user user 5.8K Dec 21 11:33 mysql-server_5.7.25+commercial-1ubuntu16.04_amd64.deb
+-rw-r--r-- 1 user user 5.8K Dec 21 11:33 mysql-testsuite_5.7.25+commercial-1ubuntu16.04_amd64.deb
+-rw-r--r-- 1 user user  17K Jan 17 09:46 README.txt
+user@ubuntu1:~/mii/20190213_Install/V981207-01$ sudo dpkg -i *deb
+Selecting previously unselected package libmysqlclient20:amd64.
+(Reading database ... 63734 files and directories currently installed.)
+Preparing to unpack libmysqlclient20_5.7.25+commercial-1ubuntu16.04_amd64.deb ...
+Unpacking libmysqlclient20:amd64 (5.7.25+commercial-1ubuntu16.04) ...
+Selecting previously unselected package libmysqlclient20-dbgsym.
+Preparing to unpack libmysqlclient20-dbgsym_5.7.25+commercial-1ubuntu16.04_amd64.deb ...
+Unpacking libmysqlclient20-dbgsym (5.7.25+commercial-1ubuntu16.04) ...
+Selecting previously unselected package libmysqlclient-dev.
+Preparing to unpack libmysqlclient-dev_5.7.25+commercial-1ubuntu16.04_amd64.deb ...
+Unpacking libmysqlclient-dev (5.7.25+commercial-1ubuntu16.04) ...
+Selecting previously unselected package libmysqld-dev.
+Preparing to unpack libmysqld-dev_5.7.25+commercial-1ubuntu16.04_amd64.deb ...
+Unpacking libmysqld-dev (5.7.25+commercial-1ubuntu16.04) ...
+Selecting previously unselected package mysql-client.
+Preparing to unpack mysql-client_5.7.25+commercial-1ubuntu16.04_amd64.deb ...
+Unpacking mysql-client (5.7.25+commercial-1ubuntu16.04) ...
+Selecting previously unselected package mysql-commercial-client.
+Preparing to unpack mysql-commercial-client_5.7.25+commercial-1ubuntu16.04_amd64.deb ...
+Unpacking mysql-commercial-client (5.7.25+commercial-1ubuntu16.04) ...
+Selecting previously unselected package mysql-commercial-client-dbgsym.
+Preparing to unpack mysql-commercial-client-dbgsym_5.7.25+commercial-1ubuntu16.04_amd64.deb ...
+Unpacking mysql-commercial-client-dbgsym (5.7.25+commercial-1ubuntu16.04) ...
+Selecting previously unselected package mysql-commercial-server.
+Preparing to unpack mysql-commercial-server_5.7.25+commercial-1ubuntu16.04_amd64.deb ...
+Unpacking mysql-commercial-server (5.7.25+commercial-1ubuntu16.04) ...
+Selecting previously unselected package mysql-commercial-server-dbgsym.
+Preparing to unpack mysql-commercial-server-dbgsym_5.7.25+commercial-1ubuntu16.04_amd64.deb ...
+Unpacking mysql-commercial-server-dbgsym (5.7.25+commercial-1ubuntu16.04) ...
+Selecting previously unselected package mysql-commercial-test.
+Preparing to unpack mysql-commercial-test_5.7.25+commercial-1ubuntu16.04_amd64.deb ...
+Unpacking mysql-commercial-test (5.7.25+commercial-1ubuntu16.04) ...
+Selecting previously unselected package mysql-commercial-test-dbgsym.
+Preparing to unpack mysql-commercial-test-dbgsym_5.7.25+commercial-1ubuntu16.04_amd64.deb ...
+Unpacking mysql-commercial-test-dbgsym (5.7.25+commercial-1ubuntu16.04) ...
+Selecting previously unselected package mysql-common.
+Preparing to unpack mysql-common_5.7.25+commercial-1ubuntu16.04_amd64.deb ...
+Unpacking mysql-common (5.7.25+commercial-1ubuntu16.04) ...
+Selecting previously unselected package mysql-server.
+Preparing to unpack mysql-server_5.7.25+commercial-1ubuntu16.04_amd64.deb ...
+Unpacking mysql-server (5.7.25+commercial-1ubuntu16.04) ...
+Selecting previously unselected package mysql-testsuite.
+Preparing to unpack mysql-testsuite_5.7.25+commercial-1ubuntu16.04_amd64.deb ...
+Unpacking mysql-testsuite (5.7.25+commercial-1ubuntu16.04) ...
+Setting up mysql-common (5.7.25+commercial-1ubuntu16.04) ...
+update-alternatives: using /etc/mysql/my.cnf.fallback to provide /etc/mysql/my.cnf (my.cnf) in auto mode
+Setting up libmysqlclient20:amd64 (5.7.25+commercial-1ubuntu16.04) ...
+Setting up libmysqlclient20-dbgsym (5.7.25+commercial-1ubuntu16.04) ...
+Setting up libmysqlclient-dev (5.7.25+commercial-1ubuntu16.04) ...
+Setting up libmysqld-dev (5.7.25+commercial-1ubuntu16.04) ...
+Setting up mysql-commercial-client (5.7.25+commercial-1ubuntu16.04) ...
+Setting up mysql-commercial-client-dbgsym (5.7.25+commercial-1ubuntu16.04) ...
+Setting up mysql-client (5.7.25+commercial-1ubuntu16.04) ...
+Setting up mysql-commercial-server (5.7.25+commercial-1ubuntu16.04) ...
+update-alternatives: using /etc/mysql/mysql.cnf to provide /etc/mysql/my.cnf (my.cnf) in auto mode
+2019-02-13T07:53:19.539688Z 0 [Warning] TIMESTAMP with implicit DEFAULT value is deprecated. Please use --explicit_defaults_for_timestamp server option (see documentation for more details).
+2019-02-13T07:53:19.556944Z 0 [ERROR] Could not open file '/var/log/mysql/error.log' for error logging: Permission denied
+2019-02-13T07:53:19.556975Z 0 [ERROR] Aborting
+
+dpkg: error processing package mysql-commercial-server (--install):
+ subprocess installed post-installation script returned error exit status 1
+dpkg: dependency problems prevent configuration of mysql-commercial-server-dbgsym:
+ mysql-commercial-server-dbgsym depends on mysql-commercial-server (= 5.7.25+commercial-1ubuntu16.04); however:
+  Package mysql-commercial-server is not configured yet.
+
+dpkg: error processing package mysql-commercial-server-dbgsym (--install):
+ dependency problems - leaving unconfigured
+dpkg: dependency problems prevent configuration of mysql-commercial-test:
+ mysql-commercial-test depends on mysql-commercial-server (= 5.7.25+commercial-1ubuntu16.04); however:
+  Package mysql-commercial-server is not configured yet.
+
+dpkg: error processing package mysql-commercial-test (--install):
+ dependency problems - leaving unconfigured
+dpkg: dependency problems prevent configuration of mysql-commercial-test-dbgsym:
+ mysql-commercial-test-dbgsym depends on mysql-commercial-test (= 5.7.25+commercial-1ubuntu16.04); however:
+  Package mysql-commercial-test is not configured yet.
+
+dpkg: error processing package mysql-commercial-test-dbgsym (--install):
+ dependency problems - leaving unconfigured
+dpkg: dependency problems prevent configuration of mysql-server:
+ mysql-server depends on mysql-commercial-server (= 5.7.25+commercial-1ubuntu16.04); however:
+  Package mysql-commercial-server is not configured yet.
+
+dpkg: error processing package mysql-server (--install):
+ dependency problems - leaving unconfigured
+dpkg: dependency problems prevent configuration of mysql-testsuite:
+ mysql-testsuite depends on mysql-commercial-test (= 5.7.25+commercial-1ubuntu16.04); however:
+  Package mysql-commercial-test is not configured yet.
+
+dpkg: error processing package mysql-testsuite (--install):
+ dependency problems - leaving unconfigured
+Processing triggers for libc-bin (2.23-0ubuntu10) ...
+Processing triggers for man-db (2.7.5-1) ...
+Processing triggers for systemd (229-4ubuntu21.4) ...
+Processing triggers for ureadahead (0.100.0-19) ...
+ureadahead will be reprofiled on next reboot
+Errors were encountered while processing:
+ mysql-commercial-server
+ mysql-commercial-server-dbgsym
+ mysql-commercial-test
+ mysql-commercial-test-dbgsym
+ mysql-server
+ mysql-testsuite
+user@ubuntu1:~/mii/20190213_Install/V981207-01$ sudo apt-get -f install
+Reading package lists... Done
+Building dependency tree
+Reading state information... Done
+0 upgraded, 0 newly installed, 0 to remove and 0 not upgraded.
+6 not fully installed or removed.
+After this operation, 0 B of additional disk space will be used.
+Setting up mysql-commercial-server (5.7.25+commercial-1ubuntu16.04) ...
+Setting up mysql-commercial-test (5.7.25+commercial-1ubuntu16.04) ...
+Setting up mysql-commercial-server-dbgsym (5.7.25+commercial-1ubuntu16.04) ...
+Setting up mysql-commercial-test-dbgsym (5.7.25+commercial-1ubuntu16.04) ...
+Setting up mysql-server (5.7.25+commercial-1ubuntu16.04) ...
+Setting up mysql-testsuite (5.7.25+commercial-1ubuntu16.04) ...
+user@ubuntu1:~/mii/20190213_Install/V981207-01$ ps -ef|grep mys
+mysql     8118     1  0 14:54 ?        00:00:00 /usr/sbin/mysqld --daemonize --pid-file=/var/run/mysqld/mysqld.pid
+root      8190  8180  0 14:54 pts/1    00:00:00 tail -100f /var/log/mysql/error.log
+user      8192  5603  0 14:55 pts/0    00:00:00 grep --color=auto mys
+user@ubuntu1:~/mii/20190213_Install/V981207-01$ sudo su
+root@ubuntu1:/home/user/mii/20190213_Install/V981207-01# mysql
+Welcome to the MySQL monitor.  Commands end with ; or \g.
+Your MySQL connection id is 2
+Server version: 5.7.25 MySQL Commercial Server (Advanced)
+
+Copyright (c) 2000, 2019, Oracle and/or its affiliates. All rights reserved.
+
+Oracle is a registered trademark of Oracle Corporation and/or its
+affiliates. Other names may be trademarks of their respective
+owners.
+
+Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
+
+mysql> status
+--------------
+mysql  Ver 14.14 Distrib 5.7.25, for Linux (x86_64) using  EditLine wrapper
+
+Connection id:          2
+Current database:
+Current user:           root@localhost
+SSL:                    Not in use
+Current pager:          stdout
+Using outfile:          ''
+Using delimiter:        ;
+Server version:         5.7.25 MySQL Commercial Server (Advanced)
+Protocol version:       10
+Connection:             Localhost via UNIX socket
+Server characterset:    latin1
+Db     characterset:    latin1
+Client characterset:    utf8
+Conn.  characterset:    utf8
+UNIX socket:            /var/run/mysqld/mysqld.sock
+Uptime:                 1 min 0 sec
+
+Threads: 1  Questions: 5  Slow queries: 0  Opens: 105  Flush tables: 1  Open tables: 98  Queries per second avg: 0.083
+--------------
+
+mysql> exit
+Bye
+root@ubuntu1:/home/user/mii/20190213_Install/V981207-01# /etc/init.d/mysql status
+? mysql.service - MySQL Commercial Server
+   Loaded: loaded (/lib/systemd/system/mysql.service; enabled; vendor preset: enabled)
+   Active: active (running) since Wed 2019-02-13 14:54:30 WIB; 1min 14s ago
+  Process: 8115 ExecStart=/usr/sbin/mysqld --daemonize --pid-file=/var/run/mysqld/mysqld.pid (code=exited, status=0/SUCCESS)
+  Process: 8064 ExecStartPre=/usr/share/mysql/mysql-systemd-start pre (code=exited, status=0/SUCCESS)
+ Main PID: 8118 (mysqld)
+    Tasks: 28
+   Memory: 174.0M
+      CPU: 318ms
+   CGroup: /system.slice/mysql.service
+           +-8118 /usr/sbin/mysqld --daemonize --pid-file=/var/run/mysqld/mysqld.pid
+
+Feb 13 14:54:29 ubuntu1 systemd[1]: Starting MySQL Commercial Server...
+Feb 13 14:54:30 ubuntu1 systemd[1]: Started MySQL Commercial Server.
+root@ubuntu1:/home/user/mii/20190213_Install/V981207-01# /etc/init.d/mysql stop
+[ ok ] Stopping mysql (via systemctl): mysql.service.
+root@ubuntu1:/home/user/mii/20190213_Install/V981207-01# /etc/init.d/mysql start
+[ ok ] Starting mysql (via systemctl): mysql.service.
+root@ubuntu1:/home/user/mii/20190213_Install/V981207-01# /etc/init.d/mysql status
+? mysql.service - MySQL Commercial Server
+   Loaded: loaded (/lib/systemd/system/mysql.service; enabled; vendor preset: enabled)
+   Active: active (running) since Wed 2019-02-13 14:56:50 WIB; 6s ago
+  Process: 8339 ExecStart=/usr/sbin/mysqld --daemonize --pid-file=/var/run/mysqld/mysqld.pid (code=exited, status=0/SUCCESS)
+  Process: 8285 ExecStartPre=/usr/share/mysql/mysql-systemd-start pre (code=exited, status=0/SUCCESS)
+ Main PID: 8343 (mysqld)
+    Tasks: 27
+   Memory: 173.6M
+      CPU: 290ms
+   CGroup: /system.slice/mysql.service
+           +-8343 /usr/sbin/mysqld --daemonize --pid-file=/var/run/mysqld/mysqld.pid
+
+Feb 13 14:56:50 ubuntu1 systemd[1]: Starting MySQL Commercial Server...
+Feb 13 14:56:50 ubuntu1 systemd[1]: Started MySQL Commercial Server.
+root@ubuntu1:/home/user/mii/20190213_Install/V981207-01# mysql
+Welcome to the MySQL monitor.  Commands end with ; or \g.
+Your MySQL connection id is 2
+Server version: 5.7.25 MySQL Commercial Server (Advanced)
+
+Copyright (c) 2000, 2019, Oracle and/or its affiliates. All rights reserved.
+
+Oracle is a registered trademark of Oracle Corporation and/or its
+affiliates. Other names may be trademarks of their respective
+owners.
+
+Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
+
+mysql> select @@datadir;
++-----------------+
+| @@datadir       |
++-----------------+
+| /var/lib/mysql/ |
++-----------------+
+1 row in set (0.00 sec)
+
+mysql> show variables like "%version%";
++-------------------------+------------------------------------+
+| Variable_name           | Value                              |
++-------------------------+------------------------------------+
+| innodb_version          | 5.7.25                             |
+| protocol_version        | 10                                 |
+| slave_type_conversions  |                                    |
+| tls_version             | TLSv1,TLSv1.1,TLSv1.2              |
+| version                 | 5.7.25                             |
+| version_comment         | MySQL Commercial Server (Advanced) |
+| version_compile_machine | x86_64                             |
+| version_compile_os      | Linux                              |
++-------------------------+------------------------------------+
+8 rows in set (0.00 sec)
+
+mysql> select @@version;
++-----------+
+| @@version |
++-----------+
+| 5.7.25    |
++-----------+
+1 row in set (0.00 sec)
+
+mysql> status;
+--------------
+mysql  Ver 14.14 Distrib 5.7.25, for Linux (x86_64) using  EditLine wrapper
+
+Connection id:          2
+Current database:
+Current user:           root@localhost
+SSL:                    Not in use
+Current pager:          stdout
+Using outfile:          ''
+Using delimiter:        ;
+Server version:         5.7.25 MySQL Commercial Server (Advanced)
+Protocol version:       10
+Connection:             Localhost via UNIX socket
+Server characterset:    latin1
+Db     characterset:    latin1
+Client characterset:    utf8
+Conn.  characterset:    utf8
+UNIX socket:            /var/run/mysqld/mysqld.sock
+Uptime:                 2 min 16 sec
+
+Threads: 1  Questions: 8  Slow queries: 0  Opens: 106  Flush tables: 1  Open tables: 99  Queries per second avg: 0.058
+--------------
+
+mysql> exit
+Bye
+root@ubuntu1:/home/user/mii/20190213_Install/V981207-01# exit
+exit
+user@ubuntu1:~/mii/20190213_Install/V981207-01$ cd ..
+user@ubuntu1:~/mii/20190213_Install$ rm -fr V981207-01/
+user@ubuntu1:~/mii/20190213_Install$ exit
+logout
+
+------------------------------------------------------------------------------------------------------------------------
+
+Session stopped
+    - Press <return> to exit tab
+    - Press R to restart session
+    - Press S to save terminal output to file
