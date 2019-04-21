@@ -1,1 +1,0 @@
-impdp SYSTEM/oracle attach=SYS_IMPORT_SCHEMA_01

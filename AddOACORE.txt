@@ -1,6 +1,0 @@
-<<<<<<< HEAD
-http://dbalertlog.blogspot.co.id/2014/01/ebs-r122-add-managed-server.html
-=======
-http://dbalertlog.blogspot.co.id/2014/01/ebs-r122-add-managed-server.html
->>>>>>> 327b5e2c2d7f1e6078f5d0c4cff716a75d749ca2
-http://www.appsdbatraining.com/2016/11/01/add-managed-oacore-oracle-apps-r12-2-x/

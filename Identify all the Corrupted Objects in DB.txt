@@ -1,1 +1,0 @@
-How to identify all the Corrupted Objects in the Database with RMAN (Doc ID 472231.1)
