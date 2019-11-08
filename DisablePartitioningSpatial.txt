@@ -1,0 +1,124 @@
+https://docs.oracle.com/en/database/oracle/oracle-database/12.2/ntdbi/enabling-and-disabling-database-options-after-installation.html#GUID-C45D75FC-34B5-4C24-9DE8-1518044A3BB3
+https://community.hexagongeospatial.com/t5/GeoMedia-Q-A/Removing-the-Spatial-component-from-an-Oracle-12C-Enterprise/ta-p/2413
+
+SQL> col COMP_NAME for a50;
+SQL> SELECT comp_name, version, status FROM dba_registry;
+
+COMP_NAME                                          VERSION                        STATUS
+-------------------------------------------------- ------------------------------ --------------------------------------------
+Oracle Database Catalog Views                      12.2.0.1.0                     VALID
+Oracle Database Packages and Types                 12.2.0.1.0                     VALID
+JServer JAVA Virtual Machine                       12.2.0.1.0                     VALID
+Oracle XDK                                         12.2.0.1.0                     VALID
+Oracle Database Java Packages                      12.2.0.1.0                     VALID
+OLAP Analytic Workspace                            12.2.0.1.0                     VALID
+Oracle Real Application Clusters                   12.2.0.1.0                     OPTION OFF
+Oracle XML Database                                12.2.0.1.0                     VALID
+Oracle Workspace Manager                           12.2.0.1.0                     VALID
+Oracle Text                                        12.2.0.1.0                     VALID
+Oracle Multimedia                                  12.2.0.1.0                     VALID
+Spatial                                            12.2.0.1.0                     VALID
+Oracle OLAP API                                    12.2.0.1.0                     VALID
+Oracle Label Security                              12.2.0.1.0                     VALID
+Oracle Database Vault                              12.2.0.1.0                     VALID
+
+15 rows selected.
+
+Elapsed: 00:00:00.00
+SQL> select * from V_$OPTION where lower(PARAMETER) like '%partition%';
+
+PARAMETER                                                        VALUE                                                                CON_ID
+---------------------------------------------------------------- ---------------------------------------------------------------- ----------
+Partitioning                                                     TRUE                                                                      0
+
+Elapsed: 00:00:00.00
+SQL> select * from V_$OPTION where lower(PARAMETER) like '%spati%';
+
+PARAMETER                                                        VALUE                                                                CON_ID
+---------------------------------------------------------------- ---------------------------------------------------------------- ----------
+Spatial                                                          TRUE                                                                      0
+
+Elapsed: 00:00:00.01
+SQL> exit
+Disconnected from Oracle Database 12c Enterprise Edition Release 12.2.0.1.0 - 64bit Production
+[orekel@iwak ~]$ srvctl stop database -db bandeng
+[orekel@iwak ~]$ chopt disable partitioning
+
+Writing to /z02/app/orekel/product/12.2.0.1/db1/install/disable_partitioning.log...
+/usr/bin/make -f /z02/app/orekel/product/12.2.0.1/db1/rdbms/lib/ins_rdbms.mk part_off ORACLE_HOME=/z02/app/orekel/product/12.2.0.1/db1
+/usr/bin/make -f /z02/app/orekel/product/12.2.0.1/db1/rdbms/lib/ins_rdbms.mk ioracle ORACLE_HOME=/z02/app/orekel/product/12.2.0.1/db1
+
+[orekel@iwak ~]$ srvctl start database -db bandeng
+[orekel@iwak ~]$ rlwrap sqlplus / as sysdba
+
+SQL*Plus: Release 12.2.0.1.0 Production on Wed Sep 11 22:26:10 2019
+
+Copyright (c) 1982, 2016, Oracle.  All rights reserved.
+
+
+Connected to:
+Oracle Database 12c Enterprise Edition Release 12.2.0.1.0 - 64bit Production
+
+SQL> col COMP_NAME for a40;
+SQL> SELECT comp_name, version, status FROM dba_registry order by 1;
+
+COMP_NAME                                VERSION                        STATUS
+---------------------------------------- ------------------------------ --------------------------------------------
+JServer JAVA Virtual Machine             12.2.0.1.0                     VALID
+OLAP Analytic Workspace                  12.2.0.1.0                     VALID
+Oracle Database Catalog Views            12.2.0.1.0                     VALID
+Oracle Database Java Packages            12.2.0.1.0                     VALID
+Oracle Database Packages and Types       12.2.0.1.0                     VALID
+Oracle Database Vault                    12.2.0.1.0                     VALID
+Oracle Label Security                    12.2.0.1.0                     VALID
+Oracle Multimedia                        12.2.0.1.0                     VALID
+Oracle OLAP API                          12.2.0.1.0                     VALID
+Oracle Real Application Clusters         12.2.0.1.0                     OPTION OFF
+Oracle Text                              12.2.0.1.0                     VALID
+Oracle Workspace Manager                 12.2.0.1.0                     VALID
+Oracle XDK                               12.2.0.1.0                     VALID
+Oracle XML Database                      12.2.0.1.0                     VALID
+Spatial                                  12.2.0.1.0                     VALID
+
+15 rows selected.
+
+Elapsed: 00:00:00.23
+SQL> select * from V_$OPTION where lower(PARAMETER) like '%partition%';
+
+PARAMETER                                                        VALUE                                                                CON_ID
+---------------------------------------------------------------- ---------------------------------------------------------------- ----------
+Partitioning                                                     FALSE                                                                     0
+
+Elapsed: 00:00:00.01
+SQL> select * from V_$OPTION where lower(PARAMETER) like '%spati%';
+
+PARAMETER                                                        VALUE                                                                CON_ID
+---------------------------------------------------------------- ---------------------------------------------------------------- ----------
+Spatial                                                          TRUE                                                                      0
+
+Elapsed: 00:00:00.00
+SQL> @?/md/admin/mddins
+SQL> SELECT comp_name,comp_id,version,status FROM dba_registry order by 1;
+
+COMP_NAME                                COMP_ID                        VERSION                        STATUS
+---------------------------------------- ------------------------------ ------------------------------ --------------------------------------------
+JServer JAVA Virtual Machine             JAVAVM                         12.2.0.1.0                     VALID
+OLAP Analytic Workspace                  APS                            12.2.0.1.0                     VALID
+Oracle Database Catalog Views            CATALOG                        12.2.0.1.0                     VALID
+Oracle Database Java Packages            CATJAVA                        12.2.0.1.0                     VALID
+Oracle Database Packages and Types       CATPROC                        12.2.0.1.0                     VALID
+Oracle Database Vault                    DV                             12.2.0.1.0                     VALID
+Oracle Label Security                    OLS                            12.2.0.1.0                     VALID
+Oracle Multimedia                        ORDIM                          12.2.0.1.0                     VALID
+Oracle OLAP API                          XOQ                            12.2.0.1.0                     VALID
+Oracle Real Application Clusters         RAC                            12.2.0.1.0                     OPTION OFF
+Oracle Text                              CONTEXT                        12.2.0.1.0                     VALID
+Oracle Workspace Manager                 OWM                            12.2.0.1.0                     VALID
+Oracle XDK                               XML                            12.2.0.1.0                     VALID
+Oracle XML Database                      XDB                            12.2.0.1.0                     VALID
+Spatial                                  SDO                            12.2.0.1.0                     REMOVED
+
+15 rows selected.
+
+Elapsed: 00:00:00.15
+SQL>

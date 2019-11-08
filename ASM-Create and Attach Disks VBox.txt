@@ -1,0 +1,37 @@
+### Create ASM Disks ###
+########################
+D:\virtualbox\dnsASM>"C:\Program Files\Oracle\VirtualBox\VBoxManage.exe" createhd --filename ASM40G-01.vdi --size 40960 --format VDI --variant Fixed
+0%...10%...20%...30%...40%...50%...60%...70%...80%...90%...100%
+Medium created. UUID: 6d0ddc35-3159-41c1-8b65-73c4698eb660
+
+D:\virtualbox\dnsASM>"C:\Program Files\Oracle\VirtualBox\VBoxManage.exe" createhd --filename ASM40G-02.vdi --size 40960 --format VDI --variant Fixed
+0%...10%...20%...30%...40%...50%...60%...70%...80%...90%...100%
+Medium created. UUID: 65030c44-e804-48b3-bc65-bf7f883a2655
+
+D:\virtualbox\dnsASM>"C:\Program Files\Oracle\VirtualBox\VBoxManage.exe" createhd --filename ASM20G-02.vdi --size 20480 --format VDI --variant Fixed
+0%...10%...20%...30%...40%...50%...60%...70%...80%...90%...100%
+Medium created. UUID: f0b1ecd8-0e0b-4dc1-9a0e-d6f6837a401f
+
+D:\virtualbox\dnsASM>"C:\Program Files\Oracle\VirtualBox\VBoxManage.exe" storageattach dns1 --storagectl "SATA" --port 2 --device 0 --type hdd --medium ASM40G-01.vdi --mtype shareable
+
+D:\virtualbox\dnsASM>"C:\Program Files\Oracle\VirtualBox\VBoxManage.exe" storageattach dns1 --storagectl "SATA" --port 3 --device 0 --type hdd --medium ASM40G-02.vdi --mtype shareable
+
+D:\virtualbox\dnsASM>"C:\Program Files\Oracle\VirtualBox\VBoxManage.exe" storageattach dns1 --storagectl "SATA" --port 4 --device 0 --type hdd --medium ASM20G-02.vdi --mtype shareable
+
+D:\virtualbox\dnsASM>"C:\Program Files\Oracle\VirtualBox\VBoxManage.exe" modifyhd ASM40G-01.vdi --type shareable
+
+D:\virtualbox\dnsASM>"C:\Program Files\Oracle\VirtualBox\VBoxManage.exe" modifyhd ASM40G-02.vdi --type shareable
+
+D:\virtualbox\dnsASM>"C:\Program Files\Oracle\VirtualBox\VBoxManage.exe" modifyhd ASM20G-02.vdi --type shareable
+
+D:\virtualbox\dnsASM>
+
+### After cloning VBox, attach the disks to new guest ###
+#########################################################
+D:\virtualbox\dnsASM>"C:\Program Files\Oracle\VirtualBox\VBoxManage.exe" storageattach dns1C --storagectl "SATA" --port 2 --device 0 --type hdd --medium ASM40G-01.vdi --mtype shareable
+
+D:\virtualbox\dnsASM>"C:\Program Files\Oracle\VirtualBox\VBoxManage.exe" storageattach dns1C --storagectl "SATA" --port 3 --device 0 --type hdd --medium ASM40G-02.vdi --mtype shareable
+
+D:\virtualbox\dnsASM>"C:\Program Files\Oracle\VirtualBox\VBoxManage.exe" storageattach dns1C --storagectl "SATA" --port 4 --device 0 --type hdd --medium ASM20G-02.vdi --mtype shareable
+
+D:\virtualbox\dnsASM>

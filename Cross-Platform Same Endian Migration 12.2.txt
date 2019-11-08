@@ -1,0 +1,870 @@
+http://refermefororacle.blogspot.com/2015/10/cross-platform-backup-and-restore-in-12c.html
+################
+#### Source ####
+################
+[orekel@iwak ~]$ . db_profile; srvctl start database -db bandeng; rlwrap sqlplus / as sysdba
+
+SQL*Plus: Release 12.2.0.1.0 Production on Sun Jun 23 19:14:05 2019
+
+Copyright (c) 1982, 2016, Oracle.  All rights reserved.
+
+
+Connected to:
+Oracle Database 12c Enterprise Edition Release 12.2.0.1.0 - 64bit Production
+
+SQL> --Check platform and endian
+SQL> SELECT PLATFORM_ID, PLATFORM_NAME, ENDIAN_FORMAT FROM V$DB_TRANSPORTABLE_PLATFORM ORDER BY 1;
+
+PLATFORM_ID PLATFORM_NAME                                                                                         ENDIAN_FORMAT
+----------- ----------------------------------------------------------------------------------------------------- --------------
+          5 HP Tru64 UNIX                                                                                         Little
+          7 Microsoft Windows IA (32-bit)                                                                         Little
+          8 Microsoft Windows IA (64-bit)                                                                         Little
+         10 Linux IA (32-bit)                                                                                     Little
+         11 Linux IA (64-bit)                                                                                     Little
+         12 Microsoft Windows x86 64-bit                                                                          Little
+         13 Linux x86 64-bit                                                                                      Little
+         15 HP Open VMS                                                                                           Little
+         17 Solaris Operating System (x86)                                                                        Little
+         19 HP IA Open VMS                                                                                        Little
+         20 Solaris Operating System (x86-64)                                                                     Little
+         21 Apple Mac OS (x86-64)                                                                                 Little
+
+12 rows selected.
+
+Elapsed: 00:00:00.03
+SQL> exit
+Disconnected from Oracle Database 12c Enterprise Edition Release 12.2.0.1.0 - 64bit Production
+[orekel@iwak ~]$ . db_profile; srvctl stop database -db bandeng;
+[orekel@iwak ~]$ . db_profile; srvctl start database -db bandeng -o "READ ONLY";
+[orekel@iwak ~]$ rlwrap sqlplus / as sysdba
+
+SQL*Plus: Release 12.2.0.1.0 Production on Sun Jun 23 19:18:37 2019
+
+Copyright (c) 1982, 2016, Oracle.  All rights reserved.
+
+
+Connected to:
+Oracle Database 12c Enterprise Edition Release 12.2.0.1.0 - 64bit Production
+
+SQL> --Check Open Read Only
+SQL> SELECT NAME,DB_UNIQUE_NAME,DATABASE_ROLE,OPEN_MODE,LOG_MODE FROM GV$DATABASE;
+
+NAME      DB_UNIQUE_NAME                 DATABASE_ROLE    OPEN_MODE            LOG_MODE
+--------- ------------------------------ ---------------- -------------------- ------------
+BANDENG   BANDENG                        PRIMARY          READ ONLY            ARCHIVELOG
+
+Elapsed: 00:00:00.01
+SQL> --Check external objects
+SQL> set serveroutput on;
+SQL> declare x boolean; begin x := dbms_tdb.check_external; end;
+  2  /
+The following external tables exist in the database:
+SYS.OPATCH_XML_INV
+The following directories exist in the database:
+SYS.XMLDIR, SYS.XSDDIR, SYS.ORA_DBMS_FCP_LOGDIR, SYS.ORA_DBMS_FCP_ADMINDIR, SYS.OPATCH_INST_DIR, SYS.ORACLE_OCM_CONFIG_DIR, SYS.DATA_PUMP_DIR,
+SYS.ORACLE_OCM_CONFIG_DIR2, SYS.OPATCH_SCRIPT_DIR, SYS.OPATCH_LOG_DIR, SYS.ORACLE_BASE
+
+PL/SQL procedure successfully completed.
+
+Elapsed: 00:00:00.83
+SQL> --Check directories
+SQL> col DIRECTORY_NAME for a25;
+SQL> col DIRECTORY_PATH for a100;
+SQL> select DIRECTORY_NAME, DIRECTORY_PATH from DBA_DIRECTORIES;
+
+DIRECTORY_NAME            DIRECTORY_PATH
+------------------------- ----------------------------------------------------------------------------------------------------
+XMLDIR                    /z02/app/orekel/product/12.2.0.1/db1/rdbms/xml
+XSDDIR                    /z02/app/orekel/product/12.2.0.1/db1/rdbms/xml/schema
+ORA_DBMS_FCP_LOGDIR       /z02/app/orekel/product/12.2.0.1/db1/cfgtoollogs
+ORA_DBMS_FCP_ADMINDIR     /z02/app/orekel/product/12.2.0.1/db1/rdbms/admin
+OPATCH_INST_DIR           /z02/app/orekel/product/12.2.0.1/db1/OPatch
+ORACLE_OCM_CONFIG_DIR     /z02/app/orekel/product/12.2.0.1/db1/ccr/state
+DATA_PUMP_DIR             /z02/app/orekel/admin/BANDENG/dpdump/
+ORACLE_OCM_CONFIG_DIR2    /z02/app/orekel/product/12.2.0.1/db1/ccr/state
+OPATCH_SCRIPT_DIR         /z02/app/orekel/product/12.2.0.1/db1/QOpatch
+OPATCH_LOG_DIR            /z02/app/orekel/product/12.2.0.1/db1/rdbms/log
+ORACLE_BASE               /z02/app/orekel
+ORACLE_HOME               /z02/app/orekel/product/12.2.0.1/db1
+
+12 rows selected.
+
+Elapsed: 00:00:00.00
+SQL> DECLARE db_ready BOOLEAN;
+  2  BEGIN
+  3    db_ready := DBMS_TDB.CHECK_DB('Solaris Operating System (x86)', DBMS_TDB.SKIP_NONE);
+  4  END;
+  5  /
+
+PL/SQL procedure successfully completed.
+
+Elapsed: 00:00:00.08
+SQL> DECLARE db_ready BOOLEAN;
+  2  BEGIN
+  3    db_ready := DBMS_TDB.CHECK_DB('Microsoft Windows x86 64-bit', DBMS_TDB.SKIP_NONE);
+  4  END;
+  5  /
+
+PL/SQL procedure successfully completed.
+
+Elapsed: 00:00:00.04
+SQL> select FILE_NAME "Datafiles requiring Conversion" from DBA_DATA_FILES where TABLESPACE_NAME in (select distinct TABLESPACE_NAME from DBA_ROLLBACK_SEGS);
+
+Datafiles requiring Conversion
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
++DATA/BANDENG/DATAFILE/undotbs1.259.968473383
++DATA/BANDENG/DATAFILE/system.257.968473211
+
+Elapsed: 00:00:00.32
+SQL> select FILE_NAME "Files NOT requiring Conversion" from DBA_DATA_FILES where TABLESPACE_NAME NOT in (select distinct TABLESPACE_NAME from DBA_ROLLBACK_SEGS);
+
+Files NOT requiring Conversion
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
++DATA/BANDENG/DATAFILE/users.260.968473385
++DATA/BANDENG/DATAFILE/sysaux.258.968473329
+
+Elapsed: 00:00:00.06
+SQL> --Backup controlfile to trace
+SQL> ALTER DATABASE BACKUP CONTROLFILE TO TRACE AS '/z01/app/bandeng/datafile/controlfile_20190623.sql';
+
+Database altered.
+
+Elapsed: 00:00:01.95
+SQL> --Backup pfile
+SQL> create pfile='/z01/app/bandeng/datafile/initBANDENG_20190623.ora' from spfile;
+
+File created.
+
+Elapsed: 00:00:00.92
+SQL> exit
+Disconnected from Oracle Database 12c Enterprise Edition Release 12.2.0.1.0 - 64bit Production
+[orekel@iwak ~]$ . db_profile; rlwrap rman target=/
+
+Recovery Manager: Release 12.2.0.1.0 - Production on Sun Jun 23 20:48:27 2019
+
+Copyright (c) 1982, 2017, Oracle and/or its affiliates.  All rights reserved.
+
+connected to target database: BANDENG (DBID=4201625281)
+
+RMAN> show all;
+
+using target database control file instead of recovery catalog
+RMAN configuration parameters for database with db_unique_name BANDENG are:
+CONFIGURE RETENTION POLICY TO REDUNDANCY 1; # default
+CONFIGURE BACKUP OPTIMIZATION OFF; # default
+CONFIGURE DEFAULT DEVICE TYPE TO DISK; # default
+CONFIGURE CONTROLFILE AUTOBACKUP ON; # default
+CONFIGURE CONTROLFILE AUTOBACKUP FORMAT FOR DEVICE TYPE DISK TO '%F'; # default
+CONFIGURE DEVICE TYPE DISK PARALLELISM 1 BACKUP TYPE TO BACKUPSET; # default
+CONFIGURE DATAFILE BACKUP COPIES FOR DEVICE TYPE DISK TO 1; # default
+CONFIGURE ARCHIVELOG BACKUP COPIES FOR DEVICE TYPE DISK TO 1; # default
+CONFIGURE MAXSETSIZE TO UNLIMITED; # default
+CONFIGURE ENCRYPTION FOR DATABASE OFF; # default
+CONFIGURE ENCRYPTION ALGORITHM 'AES128'; # default
+CONFIGURE COMPRESSION ALGORITHM 'BASIC' AS OF RELEASE 'DEFAULT' OPTIMIZE FOR LOAD TRUE ; # default
+CONFIGURE RMAN OUTPUT TO KEEP FOR 7 DAYS; # default
+CONFIGURE ARCHIVELOG DELETION POLICY TO NONE; # default
+CONFIGURE SNAPSHOT CONTROLFILE NAME TO '/z02/app/orekel/product/12.2.0.1/db1/dbs/snapcf_BANDENG.f'; # default
+
+RMAN> configure channel device type disk format '/z01/app/bandeng/datafile/%U%t.bkp';
+
+new RMAN configuration parameters:
+CONFIGURE CHANNEL DEVICE TYPE DISK FORMAT   '/z01/app/bandeng/datafile/%U%t.bkp';
+new RMAN configuration parameters are successfully stored
+
+RMAN> backup for transport database;
+
+Starting backup at 23-Jun-19 20:49:26
+allocated channel: ORA_DISK_1
+channel ORA_DISK_1: SID=265 device type=DISK
+channel ORA_DISK_1: starting full datafile backup set
+channel ORA_DISK_1: specifying datafile(s) in backup set
+input datafile file number=00007 name=+DATA/BANDENG/DATAFILE/users.260.968473385
+input datafile file number=00001 name=+DATA/BANDENG/DATAFILE/system.257.968473211
+input datafile file number=00003 name=+DATA/BANDENG/DATAFILE/sysaux.258.968473329
+input datafile file number=00004 name=+DATA/BANDENG/DATAFILE/undotbs1.259.968473383
+channel ORA_DISK_1: starting piece 1 at 23-Jun-19 20:49:30
+channel ORA_DISK_1: finished piece 1 at 23-Jun-19 20:50:35
+piece handle=/z01/app/bandeng/datafile/02u4rk2o_1_11011732568.bkp tag=TAG20190623T204927 comment=NONE
+channel ORA_DISK_1: backup set complete, elapsed time: 00:01:06
+Finished backup at 23-Jun-19 20:50:36
+
+RMAN> configure channel device type disk clear;
+
+using target database control file instead of recovery catalog
+old RMAN configuration parameters:
+CONFIGURE CHANNEL DEVICE TYPE DISK FORMAT   '/z01/app/bandeng/datafile/%U%t.bkp';
+old RMAN configuration parameters are successfully deleted
+
+RMAN> exit
+
+
+Recovery Manager complete.
+[orekel@ikan ~]$ ls -lh /z01/app/bandeng/datafile/
+total 1.1G
+-rw-r-----. 1 orekel asmadmin 1.1G Jun 23 20:50 02u4rk2o_1_11011732568.bkp
+-rw-r--r--. 1 orekel asmadmin 6.3K Jun 23 21:04 controlfile_20190623.sql
+-rw-r--r--. 1 orekel asmadmin 1.2K Jun 23 21:05 initBANDENG_20190623.ora
+[orekel@ikan ~]$
+
+################
+#### Target ####
+################
+[orekel@ikan ~]$ cd /z01/app/bandeng/datafile/
+[orekel@ikan datafile]$ ls -lh
+total 1.1G
+-rw-r-----. 1 orekel asmadmin 1.1G Jun 23 20:50 02u4rk2o_1_11011732568.bkp
+-rw-r--r--. 1 orekel asmadmin 6.3K Jun 23 21:04 controlfile_20190623.sql
+-rw-r--r--. 1 orekel asmadmin 1.2K Jun 23 21:05 initBANDENG_20190623.ora
+[orekel@ikan datafile]$ cp initBANDENG_20190623.ora initBANDENG.ora
+[orekel@ikan datafile]$ cat initBANDENG.ora
+BANDENG.__data_transfer_cache_size=0
+BANDENG.__db_cache_size=520093696
+BANDENG.__inmemory_ext_roarea=0
+BANDENG.__inmemory_ext_rwarea=0
+BANDENG.__java_pool_size=16777216
+BANDENG.__large_pool_size=33554432
+BANDENG.__oracle_base='/z02/app/orekel'#ORACLE_BASE set from environment
+BANDENG.__pga_aggregate_target=402653184
+BANDENG.__sga_target=788529152
+BANDENG.__shared_io_pool_size=0
+BANDENG.__shared_pool_size=201326592
+BANDENG.__streams_pool_size=0
+*.audit_file_dest='/z02/app/orekel/admin/BANDENG/adump'
+*.audit_trail='DB','EXTENDED'
+*.compatible='12.2.0'
+*.control_files='+DATA/BANDENG/CONTROLFILE/current.262.968473473','+DATA/BANDENG/CONTROLFILE/current.261.968473475'
+*.db_block_size=8192
+*.db_create_file_dest='+DATA'
+*.db_domain='centos.org'
+*.db_name='BANDENG'
+*.db_recovery_file_dest='+FRA'
+*.db_recovery_file_dest_size=4294967296
+*.diagnostic_dest='/z02/app/orekel'
+*.dispatchers='(PROTOCOL=TCP) (SERVICE=BANDENGXDB)'
+*.local_listener='LISTENER_BANDENG'
+*.log_archive_format='%t_%s_%r.arc'
+*.memory_target=1132m
+*.nls_language='AMERICAN'
+*.nls_territory='AMERICA'
+*.open_cursors=300
+*.processes=300
+*.remote_login_passwordfile='EXCLUSIVE'
+*.undo_tablespace='UNDOTBS1'
+[orekel@ikan datafile]$ vi initBANDENG.ora
+[orekel@ikan datafile]$ cat initBANDENG.ora
+BANDENG.__data_transfer_cache_size=0
+BANDENG.__db_cache_size=520093696
+BANDENG.__inmemory_ext_roarea=0
+BANDENG.__inmemory_ext_rwarea=0
+BANDENG.__java_pool_size=16777216
+BANDENG.__large_pool_size=33554432
+BANDENG.__oracle_base='/z02/app/orekel'#ORACLE_BASE set from environment
+BANDENG.__pga_aggregate_target=402653184
+BANDENG.__sga_target=788529152
+BANDENG.__shared_io_pool_size=0
+BANDENG.__shared_pool_size=201326592
+BANDENG.__streams_pool_size=0
+*.audit_file_dest='/z02/app/orekel/admin/BANDENG/adump'
+*.audit_trail='NONE'
+*.compatible='12.2.0'
+*.control_files='+DATA/BANDENG/CONTROLFILE/control01.ctl'
+*.db_block_size=8192
+*.db_create_file_dest='+DATA'
+*.db_domain='centos.org'
+*.db_name='BANDENG'
+*.db_recovery_file_dest='+FRA'
+*.db_recovery_file_dest_size=4294967296
+*.diagnostic_dest='/z02/app/orekel'
+*.dispatchers='(PROTOCOL=TCP) (SERVICE=BANDENGXDB)'
+*.local_listener='LISTENER_BANDENG'
+*.log_archive_format='%t_%s_%r.arc'
+*.memory_target=1132m
+*.nls_language='AMERICAN'
+*.nls_territory='AMERICA'
+*.open_cursors=300
+*.processes=300
+*.remote_login_passwordfile='EXCLUSIVE'
+*.undo_tablespace='UNDOTBS1'
+[orekel@ikan datafile]$ mkdir -p /z02/app/orekel/admin/BANDENG/adump
+[orekel@ikan datafile]$ . ~/db_profile; rlwrap sqlplus / as sysdba
+
+SQL*Plus: Release 12.2.0.1.0 Production on Sun Jun 23 22:06:56 2019
+
+Copyright (c) 1982, 2016, Oracle.  All rights reserved.
+
+Connected to an idle instance.
+
+SQL> STARTUP NOMOUNT PFILE='/z01/app/bandeng/datafile/initBANDENG.ora';
+ORACLE instance started.
+
+Total System Global Area 1191182336 bytes
+Fixed Size                  8620032 bytes
+Variable Size             771753984 bytes
+Database Buffers          402653184 bytes
+Redo Buffers                8155136 bytes
+SQL> exit;
+Disconnected from Oracle Database 12c Enterprise Edition Release 12.2.0.1.0 - 64bit Production
+[orekel@ikan datafile]$ rlwrap rman target=/
+
+Recovery Manager: Release 12.2.0.1.0 - Production on Sun Jun 23 22:07:46 2019
+
+Copyright (c) 1982, 2017, Oracle and/or its affiliates.  All rights reserved.
+
+connected to target database: BANDENG (not mounted)
+
+RMAN> run{
+2>   restore from platform 'Linux x86 64-bit' foreign database to new
+3>   from backupset '/z01/app/bandeng/datafile/02u4rk2o_1_11011732568.bkp';}
+
+Starting restore at 23-Jun-19 22:09:52
+using target database control file instead of recovery catalog
+allocated channel: ORA_DISK_1
+channel ORA_DISK_1: SID=22 device type=DISK
+
+channel ORA_DISK_1: starting datafile backup set restore
+channel ORA_DISK_1: specifying datafile(s) to restore from backup set
+channel ORA_DISK_1: restoring all foreign files in backup piece
+channel ORA_DISK_1: reading from backup piece /z01/app/bandeng/datafile/02u4rk2o_1_11011732568.bkp
+channel ORA_DISK_1: restoring foreign file 7 to +DATA/BANDENG/DATAFILE/users.270.1011737393
+channel ORA_DISK_1: restoring foreign file 1 to +DATA/BANDENG/DATAFILE/system.261.1011737393
+channel ORA_DISK_1: restoring foreign file 3 to +DATA/BANDENG/DATAFILE/sysaux.262.1011737393
+channel ORA_DISK_1: restoring foreign file 4 to +DATA/BANDENG/DATAFILE/undotbs1.269.1011737393
+channel ORA_DISK_1: foreign piece handle=/z01/app/bandeng/datafile/02u4rk2o_1_11011732568.bkp
+channel ORA_DISK_1: restored backup piece 1
+channel ORA_DISK_1: restore complete, elapsed time: 00:01:36
+Finished restore at 23-Jun-19 22:11:29
+
+RMAN> exit
+
+
+Recovery Manager complete.
+[orekel@ikan datafile]$ . ~/db_profile; rlwrap sqlplus / as sysdba
+
+SQL*Plus: Release 12.2.0.1.0 Production on Sun Jun 23 22:26:32 2019
+
+Copyright (c) 1982, 2016, Oracle.  All rights reserved.
+
+
+Connected to:
+Oracle Database 12c Enterprise Edition Release 12.2.0.1.0 - 64bit Production
+
+SQL> SELECT STATUS,INSTANCE_NAME,HOST_NAME FROM GV$INSTANCE;
+
+STATUS       INSTANCE_NAME    HOST_NAME
+------------ ---------------- ----------------------------------------------------------------
+STARTED      BANDENG          iwak.centos.org
+
+Elapsed: 00:00:00.01
+SQL> exit;
+Disconnected from Oracle Database 12c Enterprise Edition Release 12.2.0.1.0 - 64bit Production
+[orekel@ikan datafile]$ cat controlfile_20190623.sql
+-- The following are current System-scope REDO Log Archival related
+-- parameters and can be included in the database initialization file.
+--
+-- LOG_ARCHIVE_DEST=''
+-- LOG_ARCHIVE_DUPLEX_DEST=''
+--
+-- LOG_ARCHIVE_FORMAT=%t_%s_%r.arc
+--
+-- DB_UNIQUE_NAME="BANDENG"
+--
+-- LOG_ARCHIVE_CONFIG='SEND, RECEIVE, NODG_CONFIG'
+-- LOG_ARCHIVE_MAX_PROCESSES=4
+-- STANDBY_FILE_MANAGEMENT=MANUAL
+-- STANDBY_ARCHIVE_DEST=?#/dbs/arch
+-- FAL_CLIENT=''
+-- FAL_SERVER=''
+--
+-- LOG_ARCHIVE_DEST_1='LOCATION=USE_DB_RECOVERY_FILE_DEST'
+-- LOG_ARCHIVE_DEST_1='MANDATORY NOREOPEN NODELAY'
+-- LOG_ARCHIVE_DEST_1='ARCH NOAFFIRM NOVERIFY SYNC'
+-- LOG_ARCHIVE_DEST_1='NOREGISTER NOALTERNATE NODEPENDENCY'
+-- LOG_ARCHIVE_DEST_1='NOMAX_FAILURE NOQUOTA_SIZE NOQUOTA_USED NODB_UNIQUE_NAME'
+-- LOG_ARCHIVE_DEST_1='VALID_FOR=(PRIMARY_ROLE,ONLINE_LOGFILES)'
+-- LOG_ARCHIVE_DEST_STATE_1=ENABLE
+
+--
+-- Below are two sets of SQL statements, each of which creates a new
+-- control file and uses it to open the database. The first set opens
+-- the database with the NORESETLOGS option and should be used only if
+-- the current versions of all online logs are available. The second
+-- set opens the database with the RESETLOGS option and should be used
+-- if online logs are unavailable.
+-- The appropriate set of statements can be copied from the trace into
+-- a script file, edited as necessary, and executed when there is a
+-- need to re-create the control file.
+--
+--     Set #1. NORESETLOGS case
+--
+-- The following commands will create a new control file and use it
+-- to open the database.
+-- Data used by Recovery Manager will be lost.
+-- Additional logs may be required for media recovery of offline
+-- Use this only if the current versions of all online logs are
+-- available.
+
+-- After mounting the created controlfile, the following SQL
+-- statement will place the database in the appropriate
+-- protection mode:
+--  ALTER DATABASE SET STANDBY DATABASE TO MAXIMIZE PERFORMANCE
+
+STARTUP NOMOUNT
+CREATE CONTROLFILE REUSE DATABASE "BANDENG" NORESETLOGS  ARCHIVELOG
+    MAXLOGFILES 16
+    MAXLOGMEMBERS 3
+    MAXDATAFILES 100
+    MAXINSTANCES 8
+    MAXLOGHISTORY 292
+LOGFILE
+  GROUP 1 (
+    '+DATA/BANDENG/ONLINELOG/group_1.263.968473483',
+    '+DATA/BANDENG/ONLINELOG/group_1.266.968473537'
+  ) SIZE 200M BLOCKSIZE 512,
+  GROUP 2 (
+    '+DATA/BANDENG/ONLINELOG/group_2.264.968473485',
+    '+DATA/BANDENG/ONLINELOG/group_2.268.968473547'
+  ) SIZE 200M BLOCKSIZE 512,
+  GROUP 3 (
+    '+DATA/BANDENG/ONLINELOG/group_3.265.968473485',
+    '+DATA/BANDENG/ONLINELOG/group_3.267.968473543'
+  ) SIZE 200M BLOCKSIZE 512
+-- STANDBY LOGFILE
+DATAFILE
+  '+DATA/BANDENG/DATAFILE/system.257.968473211',
+  '+DATA/BANDENG/DATAFILE/sysaux.258.968473329',
+  '+DATA/BANDENG/DATAFILE/undotbs1.259.968473383',
+  '+DATA/BANDENG/DATAFILE/users.260.968473385'
+CHARACTER SET AL32UTF8
+;
+
+-- Configure RMAN configuration record 1
+VARIABLE RECNO NUMBER;
+EXECUTE :RECNO := SYS.DBMS_BACKUP_RESTORE.SETCONFIG('CHANNEL','DEVICE TYPE DISK FORMAT   ''/z01/app/bandeng/datafile/%U%t.bkp''');
+-- Commands to re-create incarnation table
+-- Below log names MUST be changed to existing filenames on
+-- disk. Any one log file from each branch can be used to
+-- re-create incarnation records.
+-- ALTER DATABASE REGISTER LOGFILE '+FRA';
+-- ALTER DATABASE REGISTER LOGFILE '+FRA';
+-- Recovery is required if any of the datafiles are restored backups,
+-- or if the last shutdown was not normal or immediate.
+RECOVER DATABASE
+
+-- All logs need archiving and a log switch is needed.
+ALTER SYSTEM ARCHIVE LOG ALL;
+
+-- Database can now be opened normally.
+ALTER DATABASE OPEN;
+
+-- Commands to add tempfiles to temporary tablespaces.
+-- Online tempfiles have complete space information.
+-- Other tempfiles may require adjustment.
+ALTER TABLESPACE TEMP ADD TEMPFILE '+DATA/BANDENG/TEMPFILE/temp.269.968473617'
+     SIZE 33554432  REUSE AUTOEXTEND ON NEXT 655360  MAXSIZE 32767M;
+-- End of tempfile additions.
+--
+--     Set #2. RESETLOGS case
+--
+-- The following commands will create a new control file and use it
+-- to open the database.
+-- Data used by Recovery Manager will be lost.
+-- The contents of online logs will be lost and all backups will
+-- be invalidated. Use this only if online logs are damaged.
+
+-- After mounting the created controlfile, the following SQL
+-- statement will place the database in the appropriate
+-- protection mode:
+--  ALTER DATABASE SET STANDBY DATABASE TO MAXIMIZE PERFORMANCE
+
+STARTUP NOMOUNT
+CREATE CONTROLFILE REUSE DATABASE "BANDENG" RESETLOGS  ARCHIVELOG
+    MAXLOGFILES 16
+    MAXLOGMEMBERS 3
+    MAXDATAFILES 100
+    MAXINSTANCES 8
+    MAXLOGHISTORY 292
+LOGFILE
+  GROUP 1 (
+    '+DATA/BANDENG/ONLINELOG/group_1.263.968473483',
+    '+DATA/BANDENG/ONLINELOG/group_1.266.968473537'
+  ) SIZE 200M BLOCKSIZE 512,
+  GROUP 2 (
+    '+DATA/BANDENG/ONLINELOG/group_2.264.968473485',
+    '+DATA/BANDENG/ONLINELOG/group_2.268.968473547'
+  ) SIZE 200M BLOCKSIZE 512,
+  GROUP 3 (
+    '+DATA/BANDENG/ONLINELOG/group_3.265.968473485',
+    '+DATA/BANDENG/ONLINELOG/group_3.267.968473543'
+  ) SIZE 200M BLOCKSIZE 512
+-- STANDBY LOGFILE
+DATAFILE
+  '+DATA/BANDENG/DATAFILE/system.257.968473211',
+  '+DATA/BANDENG/DATAFILE/sysaux.258.968473329',
+  '+DATA/BANDENG/DATAFILE/undotbs1.259.968473383',
+  '+DATA/BANDENG/DATAFILE/users.260.968473385'
+CHARACTER SET AL32UTF8
+;
+
+-- Configure RMAN configuration record 1
+VARIABLE RECNO NUMBER;
+EXECUTE :RECNO := SYS.DBMS_BACKUP_RESTORE.SETCONFIG('CHANNEL','DEVICE TYPE DISK FORMAT   ''/z01/app/bandeng/datafile/%U%t.bkp''');
+-- Commands to re-create incarnation table
+-- Below log names MUST be changed to existing filenames on
+-- disk. Any one log file from each branch can be used to
+-- re-create incarnation records.
+-- ALTER DATABASE REGISTER LOGFILE '+FRA';
+-- ALTER DATABASE REGISTER LOGFILE '+FRA';
+-- Recovery is required if any of the datafiles are restored backups,
+-- or if the last shutdown was not normal or immediate.
+RECOVER DATABASE USING BACKUP CONTROLFILE
+
+-- Database can now be opened zeroing the online logs.
+ALTER DATABASE OPEN RESETLOGS;
+
+-- Commands to add tempfiles to temporary tablespaces.
+-- Online tempfiles have complete space information.
+-- Other tempfiles may require adjustment.
+ALTER TABLESPACE TEMP ADD TEMPFILE '+DATA/BANDENG/TEMPFILE/temp.269.968473617'
+     SIZE 33554432  REUSE AUTOEXTEND ON NEXT 655360  MAXSIZE 32767M;
+-- End of tempfile additions.
+--
+[orekel@ikan datafile]$ . ~/grid_profile; rlwrap asmcmd
+ASMCMD> cd DATA
+ASMCMD> ls
+ASM/
+BANDENG/
+orapwasm
+ASMCMD> cd BANDENG
+ASMCMD> ls
+DATAFILE/
+ASMCMD> cd DATAFILE
+ASMCMD> ls
+SYSAUX.262.1011737393
+SYSTEM.261.1011737393
+UNDOTBS1.269.1011737393
+USERS.270.1011737393
+ASMCMD> pwd
++DATA/BANDENG/DATAFILE
+ASMCMD> ls -l
+Type      Redund  Striped  Time             Sys  Name
+DATAFILE  MIRROR  COARSE   JUN 23 22:00:00  Y    SYSAUX.262.1011737393
+DATAFILE  MIRROR  COARSE   JUN 23 22:00:00  Y    SYSTEM.261.1011737393
+DATAFILE  MIRROR  COARSE   JUN 23 22:00:00  Y    UNDOTBS1.269.1011737393
+DATAFILE  MIRROR  COARSE   JUN 23 22:00:00  Y    USERS.270.1011737393
+ASMCMD> pwd
++DATA/BANDENG/DATAFILE
+ASMCMD> exit
+[orekel@ikan datafile]$ vi recreatecontrolfile.sql
+[orekel@ikan datafile]$ cat recreatecontrolfile.sql
+CREATE CONTROLFILE REUSE DATABASE "BANDENG" RESETLOGS  ARCHIVELOG
+    MAXLOGFILES 16
+    MAXLOGMEMBERS 3
+    MAXDATAFILES 100
+    MAXINSTANCES 8
+    MAXLOGHISTORY 292
+LOGFILE
+  GROUP 1 (
+    '+DATA/BANDENG/ONLINELOG/group_1.263.968473483',
+    '+DATA/BANDENG/ONLINELOG/group_1.266.968473537'
+  ) SIZE 200M BLOCKSIZE 512,
+  GROUP 2 (
+    '+DATA/BANDENG/ONLINELOG/group_2.264.968473485',
+    '+DATA/BANDENG/ONLINELOG/group_2.268.968473547'
+  ) SIZE 200M BLOCKSIZE 512,
+  GROUP 3 (
+    '+DATA/BANDENG/ONLINELOG/group_3.265.968473485',
+    '+DATA/BANDENG/ONLINELOG/group_3.267.968473543'
+  ) SIZE 200M BLOCKSIZE 512
+DATAFILE
+  '+DATA/BANDENG/DATAFILE/SYSAUX.262.1011737393',
+  '+DATA/BANDENG/DATAFILE/SYSTEM.261.1011737393',
+  '+DATA/BANDENG/DATAFILE/UNDOTBS1.269.1011737393',
+  '+DATA/BANDENG/DATAFILE/USERS.270.1011737393'
+CHARACTER SET AL32UTF8;
+ALTER DATABASE OPEN RESETLOGS;
+ALTER TABLESPACE TEMP ADD TEMPFILE '+DATA/BANDENG/TEMPFILE/temp.269.968473617' SIZE 33554432  REUSE AUTOEXTEND ON NEXT 655360  MAXSIZE 32767M;
+SELECT NAME,OPEN_MODE FROM V$DATABASE UNION ALL SELECT INSTANCE_NAME,STATUS FROM V$INSTANCE;
+[orekel@ikan datafile]$ rlwrap sqlplus / as sysdba
+
+SQL*Plus: Release 12.2.0.1.0 Production on Sun Jun 23 22:39:55 2019
+
+Copyright (c) 1982, 2016, Oracle.  All rights reserved.
+
+
+Connected to:
+Oracle Database 12c Enterprise Edition Release 12.2.0.1.0 - 64bit Production
+
+SQL> @/z01/app/bandeng/datafile/recreatecontrolfile.sql
+
+Control file created.
+
+Elapsed: 00:00:00.82
+
+Database altered.
+
+Elapsed: 00:01:13.40
+ALTER TABLESPACE TEMP ADD TEMPFILE '+DATA/BANDENG/TEMPFILE/temp.269.968473617' SIZE 33554432  REUSE AUTOEXTEND ON NEXT 655360  MAXSIZE 32767M
+*
+ERROR at line 1:
+ORA-01276: Cannot add file +DATA/BANDENG/TEMPFILE/temp.269.968473617.  File has an Oracle Managed Files file name.
+
+
+Elapsed: 00:00:00.35
+
+NAME             OPEN_MODE
+---------------- --------------------
+BANDENG          READ WRITE
+BANDENG          OPEN
+
+Elapsed: 00:00:00.02
+SQL> --Failed TEMP creation
+SQL> CREATE TEMPORARY TABLESPACE TEMP2 TEMPFILE '+DATA' SIZE 8M AUTOEXTEND ON NEXT 8M MAXSIZE UNLIMITED;
+
+Tablespace created.
+
+Elapsed: 00:00:00.27
+SQL> COL USERNAME FOR A25;
+SQL> COL ACCOUNT_STATUS FOR A20;
+SQL> SELECT USERNAME, ACCOUNT_STATUS, DEFAULT_TABLESPACE, TEMPORARY_TABLESPACE TEMP_TBS FROM DBA_USERS ORDER BY 1;
+
+USERNAME                  ACCOUNT_STATUS       DEFAULT_TABLESPACE             TEMP_TBS
+------------------------- -------------------- ------------------------------ ------------------------------
+ANONYMOUS                 EXPIRED & LOCKED     SYSAUX                         TEMP
+APPQOSSYS                 EXPIRED & LOCKED     SYSAUX                         TEMP
+AUDSYS                    EXPIRED & LOCKED     USERS                          TEMP
+COMMON                    OPEN                 USERS                          TEMP
+CTXSYS                    EXPIRED & LOCKED     SYSAUX                         TEMP
+DBSFWUSER                 EXPIRED & LOCKED     SYSAUX                         TEMP
+DBSNMP                    EXPIRED & LOCKED     SYSAUX                         TEMP
+DIP                       EXPIRED & LOCKED     USERS                          TEMP
+DVF                       EXPIRED & LOCKED     SYSAUX                         TEMP
+DVSYS                     EXPIRED & LOCKED     SYSAUX                         TEMP
+GGSYS                     EXPIRED & LOCKED     SYSAUX                         TEMP
+GSMADMIN_INTERNAL         EXPIRED & LOCKED     SYSAUX                         TEMP
+GSMCATUSER                EXPIRED & LOCKED     USERS                          TEMP
+GSMUSER                   EXPIRED & LOCKED     USERS                          TEMP
+HR                        EXPIRED & LOCKED     SYSAUX                         TEMP
+LBACSYS                   EXPIRED & LOCKED     SYSTEM                         TEMP
+MDDATA                    EXPIRED & LOCKED     USERS                          TEMP
+MDSYS                     EXPIRED & LOCKED     SYSAUX                         TEMP
+OJVMSYS                   EXPIRED & LOCKED     SYSTEM                         TEMP
+OLAPSYS                   EXPIRED & LOCKED     SYSAUX                         TEMP
+ORACLE_OCM                EXPIRED & LOCKED     USERS                          TEMP
+ORDDATA                   EXPIRED & LOCKED     SYSAUX                         TEMP
+ORDPLUGINS                EXPIRED & LOCKED     SYSAUX                         TEMP
+ORDSYS                    EXPIRED & LOCKED     SYSAUX                         TEMP
+OUTLN                     EXPIRED & LOCKED     SYSTEM                         TEMP
+REMOTE_SCHEDULER_AGENT    EXPIRED & LOCKED     USERS                          TEMP
+SI_INFORMTN_SCHEMA        EXPIRED & LOCKED     SYSAUX                         TEMP
+SPATIAL_CSW_ADMIN_USR     EXPIRED & LOCKED     USERS                          TEMP
+SYS                       OPEN                 SYSTEM                         TEMP
+SYS$UMF                   EXPIRED & LOCKED     SYSTEM                         TEMP
+SYSBACKUP                 EXPIRED & LOCKED     USERS                          TEMP
+SYSDG                     EXPIRED & LOCKED     USERS                          TEMP
+SYSKM                     EXPIRED & LOCKED     USERS                          TEMP
+SYSRAC                    EXPIRED & LOCKED     USERS                          TEMP
+SYSTEM                    EXPIRED(GRACE)       SYSTEM                         TEMP
+WMSYS                     EXPIRED & LOCKED     SYSAUX                         TEMP
+XDB                       EXPIRED & LOCKED     SYSAUX                         TEMP
+XS$NULL                   EXPIRED & LOCKED     SYSTEM                         TEMP
+
+38 rows selected.
+
+Elapsed: 00:00:00.30
+SQL> ALTER DATABASE DEFAULT TEMPORARY TABLESPACE TEMP2;
+
+Database altered.
+
+Elapsed: 00:00:00.06
+SQL> SELECT USERNAME, ACCOUNT_STATUS, DEFAULT_TABLESPACE, TEMPORARY_TABLESPACE TEMP_TBS FROM DBA_USERS ORDER BY 1;
+
+USERNAME                  ACCOUNT_STATUS       DEFAULT_TABLESPACE             TEMP_TBS
+------------------------- -------------------- ------------------------------ ------------------------------
+ANONYMOUS                 EXPIRED & LOCKED     SYSAUX                         TEMP2
+APPQOSSYS                 EXPIRED & LOCKED     SYSAUX                         TEMP2
+AUDSYS                    EXPIRED & LOCKED     USERS                          TEMP2
+COMMON                    OPEN                 USERS                          TEMP2
+CTXSYS                    EXPIRED & LOCKED     SYSAUX                         TEMP2
+DBSFWUSER                 EXPIRED & LOCKED     SYSAUX                         TEMP2
+DBSNMP                    EXPIRED & LOCKED     SYSAUX                         TEMP2
+DIP                       EXPIRED & LOCKED     USERS                          TEMP2
+DVF                       EXPIRED & LOCKED     SYSAUX                         TEMP2
+DVSYS                     EXPIRED & LOCKED     SYSAUX                         TEMP2
+GGSYS                     EXPIRED & LOCKED     SYSAUX                         TEMP2
+GSMADMIN_INTERNAL         EXPIRED & LOCKED     SYSAUX                         TEMP2
+GSMCATUSER                EXPIRED & LOCKED     USERS                          TEMP2
+GSMUSER                   EXPIRED & LOCKED     USERS                          TEMP2
+HR                        EXPIRED & LOCKED     SYSAUX                         TEMP2
+LBACSYS                   EXPIRED & LOCKED     SYSTEM                         TEMP2
+MDDATA                    EXPIRED & LOCKED     USERS                          TEMP2
+MDSYS                     EXPIRED & LOCKED     SYSAUX                         TEMP2
+OJVMSYS                   EXPIRED & LOCKED     SYSTEM                         TEMP2
+OLAPSYS                   EXPIRED & LOCKED     SYSAUX                         TEMP2
+ORACLE_OCM                EXPIRED & LOCKED     USERS                          TEMP2
+ORDDATA                   EXPIRED & LOCKED     SYSAUX                         TEMP2
+ORDPLUGINS                EXPIRED & LOCKED     SYSAUX                         TEMP2
+ORDSYS                    EXPIRED & LOCKED     SYSAUX                         TEMP2
+OUTLN                     EXPIRED & LOCKED     SYSTEM                         TEMP2
+REMOTE_SCHEDULER_AGENT    EXPIRED & LOCKED     USERS                          TEMP2
+SI_INFORMTN_SCHEMA        EXPIRED & LOCKED     SYSAUX                         TEMP2
+SPATIAL_CSW_ADMIN_USR     EXPIRED & LOCKED     USERS                          TEMP2
+SYS                       OPEN                 SYSTEM                         TEMP2
+SYS$UMF                   EXPIRED & LOCKED     SYSTEM                         TEMP2
+SYSBACKUP                 EXPIRED & LOCKED     USERS                          TEMP2
+SYSDG                     EXPIRED & LOCKED     USERS                          TEMP2
+SYSKM                     EXPIRED & LOCKED     USERS                          TEMP2
+SYSRAC                    EXPIRED & LOCKED     USERS                          TEMP2
+SYSTEM                    EXPIRED(GRACE)       SYSTEM                         TEMP2
+WMSYS                     EXPIRED & LOCKED     SYSAUX                         TEMP2
+XDB                       EXPIRED & LOCKED     SYSAUX                         TEMP2
+XS$NULL                   EXPIRED & LOCKED     SYSTEM                         TEMP2
+
+38 rows selected.
+
+Elapsed: 00:00:00.01
+SQL> create spfile='+DATA/BANDENG/PARAMETERFILE/spfileBANDENG.ora' from PFILE='/z01/app/bandeng/datafile/initBANDENG.ora';
+
+File created.
+
+Elapsed: 00:00:00.48
+SQL> SELECT INSTANCE_NAME FROM V$INSTANCE;
+
+INSTANCE_NAME
+----------------
+BANDENG
+
+Elapsed: 00:00:00.01
+SQL> SELECT NAME,DB_UNIQUE_NAME FROM V$DATABASE;
+
+NAME      DB_UNIQUE_NAME
+--------- ------------------------------
+BANDENG   BANDENG
+
+Elapsed: 00:00:00.01
+SQL> !env|grep ORA
+ORACLE_UNQNAME=BANDENG
+ORACLE_SID=BANDENG
+ORACLE_HOSTNAME=ikan.centos.org
+ORACLE_BASE=/z02/app/orekel
+ORACLE_HOME=/z02/app/orekel/product/12.2.0.1/db1
+
+SQL> exit
+Disconnected from Oracle Database 12c Enterprise Edition Release 12.2.0.1.0 - 64bit Production
+[orekel@ikan datafile]$ srvctl add database -help
+
+Adds a database configuration to be managed by Oracle Restart.
+
+Usage: srvctl add database -db <db_unique_name> -oraclehome <oracle_home> [-domain <domain_name>] [-spfile <spfile>] [-pwfile <password_file_path>] [-role {PRIMARY | PHYSICAL_STANDBY | LOGICAL_STANDBY | SNAPSHOT_STANDBY | FAR_SYNC}] [-startoption <start_options>] [-stopoption <stop_options>] [-dbname <db_name>] [-instance <inst_name>] [-policy {AUTOMATIC | MANUAL | NORESTART}] [-diskgroup "<diskgroup_list>"]
+    -db <db_unique_name>           Unique name for the database
+    -oraclehome <path>             Oracle home path
+    -domain <domain>               Domain for database. Must be set if database has DB_DOMAIN set.
+    -spfile <spfile>               Server parameter file path
+    -pwfile <password_file_path>   Password file path
+    -role <role>                   Role of the database (PRIMARY, PHYSICAL_STANDBY, LOGICAL_STANDBY, SNAPSHOT_STANDBY, FAR_SYNC)
+    -startoption <start_options>   Startup options for the database. Examples of startup options are OPEN, MOUNT, or "READ ONLY".
+    -stopoption <stop_options>     Stop options for the database. Examples of shutdown options are NORMAL, TRANSACTIONAL, IMMEDIATE, or ABORT.
+    -dbname <db_name>              Database name (DB_NAME), if different from the unique name given by the -db option
+    -instance <inst_name>          Instance name
+    -policy <dbpolicy>             Management policy for the database (AUTOMATIC, MANUAL, or NORESTART)
+    -diskgroup "<diskgroup_list>"  Comma separated list of disk group names
+    -verbose                       Verbose output
+    -help                          Print usage
+[orekel@ikan datafile]$ srvctl add database -db BANDENG -oraclehome /z02/app/orekel/product/12.2.0.1/db1 -domain centos.org -spfile +DATA/BANDENG/PARAMETERFILE/spfileBANDENG.ora -role PRIMARY -startoption OPEN -stopoption IMMEDIATE -dbname BANDENG -instance BANDENG -policy AUTOMATIC -diskgroup "DATA","FRA"
+[orekel@ikan datafile]$ srvctl config database -db BANDENG
+Database unique name: BANDENG
+Database name: BANDENG
+Oracle home: /z02/app/orekel/product/12.2.0.1/db1
+Oracle user: orekel
+Spfile: +DATA/BANDENG/PARAMETERFILE/spfileBANDENG.ora
+Password file:
+Domain: centos.org
+Start options: open
+Stop options: immediate
+Database role: PRIMARY
+Management policy: AUTOMATIC
+Disk Groups: DATA,FRA
+Services:
+OSDBA group:
+OSOPER group:
+Database instance: BANDENG
+[orekel@ikan datafile]$ rlwrap sqlplus / as sysdba
+
+SQL*Plus: Release 12.2.0.1.0 Production on Sun Jun 23 22:58:48 2019
+
+Copyright (c) 1982, 2016, Oracle.  All rights reserved.
+
+
+Connected to:
+Oracle Database 12c Enterprise Edition Release 12.2.0.1.0 - 64bit Production
+
+SQL> SHU IMMEDIATE;
+Database closed.
+Database dismounted.
+ORACLE instance shut down.
+SQL> EXIT
+Disconnected from Oracle Database 12c Enterprise Edition Release 12.2.0.1.0 - 64bit Production
+[orekel@ikan datafile]$ vi $ORACLE_HOME/dbs/initBANDENG.ora
+[orekel@ikan datafile]$ cat $ORACLE_HOME/dbs/initBANDENG.ora
+spfile='+DATA/BANDENG/PARAMETERFILE/spfileBANDENG.ora'
+[orekel@ikan datafile]$ srvctl start database -db bandeng
+[orekel@ikan datafile]$ rlwrap sqlplus / as sysdba
+
+SQL*Plus: Release 12.2.0.1.0 Production on Sun Jun 23 23:01:52 2019
+
+Copyright (c) 1982, 2016, Oracle.  All rights reserved.
+
+
+Connected to:
+Oracle Database 12c Enterprise Edition Release 12.2.0.1.0 - 64bit Production
+
+SQL> ALTER TABLESPACE TEMP ADD TEMPFILE '+DATA' SIZE 8M AUTOEXTEND ON NEXT 8M MAXSIZE UNLIMITED;
+
+Tablespace altered.
+
+Elapsed: 00:00:00.47
+SQL> COL FORCE_LOGGING FOR A3;
+SQL> COL PLATFORM_NAME FOR A25;
+SQL> SELECT NAME,DB_UNIQUE_NAME,DBID,CREATED,LOG_MODE,OPEN_MODE,DATABASE_ROLE,PLATFORM_NAME,FORCE_LOGGING FROM V$DATABASE;
+
+NAME      DB_UNIQUE_NAME                       DBID CREATED   LOG_MODE     OPEN_MODE            DATABASE_ROLE    PLATFORM_NAME             FOR
+--------- ------------------------------ ---------- --------- ------------ -------------------- ---------------- ------------------------- ---
+BANDENG   BANDENG                        4201625281 23-JUN-19 ARCHIVELOG   READ WRITE           PRIMARY          Linux x86 64-bit          NO
+
+Elapsed: 00:00:00.01
+SQL> EXIT
+Disconnected from Oracle Database 12c Enterprise Edition Release 12.2.0.1.0 - 64bit Production
+[orekel@ikan datafile]$ srvctl status database -db bandeng
+Database is running.
+[orekel@ikan datafile]$ . ~/grid_profile; crsctl stat res -t
+--------------------------------------------------------------------------------
+Name           Target  State        Server                   State details
+--------------------------------------------------------------------------------
+Local Resources
+--------------------------------------------------------------------------------
+ora.DATA.dg
+               ONLINE  ONLINE       ikan                     STABLE
+ora.FRA.dg
+               ONLINE  ONLINE       ikan                     STABLE
+ora.LISTENER.lsnr
+               ONLINE  ONLINE       ikan                     STABLE
+ora.asm
+               ONLINE  ONLINE       ikan                     Started,STABLE
+ora.ons
+               OFFLINE OFFLINE      ikan                     STABLE
+--------------------------------------------------------------------------------
+Cluster Resources
+--------------------------------------------------------------------------------
+ora.bandeng.db
+      1        ONLINE  ONLINE       ikan                     Open,HOME=/z02/app/o
+                                                             rekel/product/12.2.0
+                                                             .1/db1,STABLE
+ora.cssd
+      1        ONLINE  ONLINE       ikan                     STABLE
+ora.diskmon
+      1        OFFLINE OFFLINE                               STABLE
+ora.evmd
+      1        ONLINE  ONLINE       ikan                     STABLE
+--------------------------------------------------------------------------------
+[orekel@ikan datafile]$

@@ -1,0 +1,199 @@
+-----
+sources:
+https://www.postgresql.org/ftp/source/v11.5/
+
+install :
+https://www.postgresql.org/docs/11/installation.html
+-----
+
+-------------------------------- prereq
+-- packages
+mount -t iso9660 -o loop /sources/rhel-server-7.2-x86_64-dvd.iso /mnt/RHEL
+yum install gcc zlib-devel readline-devel
+
+-- source :
+ls -lah /sources/postgresql/postgresql-11.5.tar.gz
+
+
+-- user
+groupadd postgre
+useradd postgre -g postgre
+passwd postgre
+
+-- dir 
+mkdir -p /usr/pgsql-11.5
+mkdir -p /u01/postgre_datafiles
+
+chown -R postgre:postgre /usr/pgsql-11.5
+chown -R postgre:postgre /u01/postgre_datafiles
+chown -R postgre:postgre /sources/postgresql/
+
+
+-- vi bash_postgredb
+su - postgre
+# vi .bash_profile
+
+PGLIB=/usr/pgsql-11.5/lib
+PGDATA=/u01/postgre_datafiles
+PATH=$PATH:/usr/pgsql-11.5/bin
+MANPATH=$MANPATH:/usr/pgsql-11.5/man
+export PGLIB PGDATA PATH MANPATH
+
+
+-- tar:
+postgre$ 
+cd /sources/postgresql/
+tar -xvf postgresql-11.5.tar.gz
+
+
+-- configure
+cd /sources/postgresql/postgresql-11.5
+./configure
+
+change path install:
+./configure --prefix=/usr/pgsql-11.5/
+
+
+
+
+
+-- install :
+cd /sources/postgresql/postgresql-11.5
+# make
+....
+make[1]: Leaving directory `/sources/postgresql/postgresql-11.5/config'
+All of PostgreSQL successfully made. Ready to install.
+
+
+# make install
+make[1]: Leaving directory `/sources/postgresql/postgresql-11.5/config'
+PostgreSQL installation complete.
+ 
+ 
+
+
+
+------------------------------------- Phase 2 - startup first
+# su - postgre
+
+-- Create postgresql cluster by executing:
+$ /usr/pgsql-11.5/bin/initdb -D /u01/postgre_datafiles
+...
+Success. You can now start the database server using: 
+
+
+-- start db
+$ /usr/pgsql-11.5/bin/pg_ctl -D /u01/postgre_datafiles -l logfile start
+...
+waiting for server to start.... done
+server started
+
+
+-- Start up the postgresql server (postmaster process) by executing:
+/usr/pgsql-11.5/bin/postgres -D /u01/postgre_datafiles >logfile 2>&1 &
+
+
+
+---- status :
+/usr/pgsql-11.5/bin/pg_ctl -D /u01/postgre_datafiles -l logfile status
+....
+pg_ctl: server is running (PID: 15586)
+/usr/pgsql-11.5/bin/postgres "-D" "/u01/postgre_datafiles"
+
+
+----- check:
+ps -ef | grep postgre
+
+
+
+Create DB :
+Create a postgresql database in the cluster by executing:
+/usr/pgsql-11.5/bin/createdb testb
+
+Login to the database using the psql command:
+$ psql testb
+
+\l
+\q
+done.--
+
+
+------------------------------------------------------ Phase 3. Checking 
+
+------ restart
+status :
+/usr/pgsql-11.5/bin/pg_ctl -D /u01/postgre_datafiles -l logfile status
+
+Stop:
+/usr/pgsql-11.5/bin/pg_ctl -D /u01/postgre_datafiles stop -m fast
+
+Start :
+/usr/pgsql-11.5/bin/pg_ctl -D /u01/postgre_datafiles -l logfile start
+
+
+note file configure :
+cat /u01/postgre_datafiles/postgresql.conf
+
+
+ 
+------------------------------------------------- Create Service:
+Stop service:
+/usr/pgsql-11.5/bin/pg_ctl -D /u01/postgre_datafiles stop -m fast
+
+
+root # vi /usr/lib/systemd/system/postgresql.service
+[Unit]
+Description=postgresql database server
+After=network.target
+
+[Service]
+Type=forking
+
+User=postgre
+Group=postgre
+
+# Where to send early-startup messages from the server (before the logging
+# options of postgresql.conf take effect)
+# This is normally controlled by the global default set by systemd
+# StandardOutput=syslog
+
+# Disable OOM kill on the postmaster
+OOMScoreAdjust=-1000
+# ... but allow it still to be effective for child processes
+# (note that these settings are ignored by postgre releases before 9.5)
+Environment=PG_OOM_ADJUST_FILE=/proc/self/oom_score_adj
+Environment=PG_OOM_ADJUST_VALUE=0
+
+# Maximum number of seconds pg_ctl will wait for postgre to start.  Note that
+# PGSTARTTIMEOUT should be less than TimeoutSec value.
+Environment=PGSTARTTIMEOUT=270
+
+Environment=PGDATA=/u01/postgre_datafiles
+
+
+ExecStart=/usr/pgsql-11.5/bin/pg_ctl start -D ${PGDATA} -s -w -t ${PGSTARTTIMEOUT}
+ExecStop=/usr/pgsql-11.5/bin/pg_ctl stop -D ${PGDATA} -s -m fast
+ExecReload=/usr/pgsql-11.5/bin/pg_ctl reload -D ${PGDATA} -s
+
+# Give a reasonable amount of time for the server to start up/shut down.
+# Ideally, the timeout for starting postgresql server should be handled more
+# nicely by pg_ctl in ExecStart, so keep its timeout smaller than this value.
+TimeoutSec=300
+
+[Install]
+WantedBy=multi-user.target
+
+
+------------------------------------------------- START
+sudo systemctl daemon-reload # load the updated service file from disk
+sudo systemctl enable postgresql
+
+sudo systemctl start postgresql
+sudo systemctl status postgresql
+sudo systemctl stop postgresql
+
+
+
+--------------------------------- reboot server
+
+----- aob.end

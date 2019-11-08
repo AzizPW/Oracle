@@ -16,4 +16,9 @@ WHERE  UPPER(s.type) != 'BACKGROUND' AND UPPER(S.STATUS)='ACTIVE' AND UPPER(S.pr
 SELECT * FROM V$SESSION WHERE STATUS='ACTIVE';
 
 SELECT 'ALTER SYSTEM KILL SESSION '''||S.sid||','||s.serial#||''' IMMEDIATE;' SYNTAX, s.inst_id, s.sid||','||s.serial# SID_SERIAL, p.spid, s.username, s.program
-FROM gv$session s JOIN gv$process p ON p.addr = s.paddr AND p.inst_id = s.inst_id WHERE  s.type != 'BACKGROUND' AND S.STATUS='ACTIVE';
+FROM gv$session s JOIN gv$process p ON p.addr = s.paddr AND p.inst_id = s.inst_id WHERE  s.type != 'BACKGROUND' AND S.STATUS='INACTIVE';
+
+SELECT 'ALTER SYSTEM KILL SESSION '''||S.sid||','||s.serial#||''' IMMEDIATE;' SYNTAX
+FROM gv$session s JOIN gv$process p ON p.addr = s.paddr AND p.inst_id = s.inst_id WHERE  s.type != 'BACKGROUND' AND S.STATUS='INACTIVE';
+
+SELECT * FROM GV$RESOURCE_LIMIT;

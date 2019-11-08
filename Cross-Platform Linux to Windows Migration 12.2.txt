@@ -1,0 +1,439 @@
+http://refermefororacle.blogspot.com/2015/10/cross-platform-backup-and-restore-in-12c.html
+################
+#### Source ####
+################
+[orekel@iwak ~]$ . db_profile; srvctl start database -db bandeng; rlwrap sqlplus / as sysdba
+
+SQL*Plus: Release 12.2.0.1.0 Production on Sun Jun 23 19:14:05 2019
+
+Copyright (c) 1982, 2016, Oracle.  All rights reserved.
+
+
+Connected to:
+Oracle Database 12c Enterprise Edition Release 12.2.0.1.0 - 64bit Production
+
+SQL> --Check platform and endian
+SQL> SELECT PLATFORM_ID, PLATFORM_NAME, ENDIAN_FORMAT FROM V$DB_TRANSPORTABLE_PLATFORM ORDER BY 1;
+
+PLATFORM_ID PLATFORM_NAME                                                                                         ENDIAN_FORMAT
+----------- ----------------------------------------------------------------------------------------------------- --------------
+          5 HP Tru64 UNIX                                                                                         Little
+          7 Microsoft Windows IA (32-bit)                                                                         Little
+          8 Microsoft Windows IA (64-bit)                                                                         Little
+         10 Linux IA (32-bit)                                                                                     Little
+         11 Linux IA (64-bit)                                                                                     Little
+         12 Microsoft Windows x86 64-bit                                                                          Little
+         13 Linux x86 64-bit                                                                                      Little
+         15 HP Open VMS                                                                                           Little
+         17 Solaris Operating System (x86)                                                                        Little
+         19 HP IA Open VMS                                                                                        Little
+         20 Solaris Operating System (x86-64)                                                                     Little
+         21 Apple Mac OS (x86-64)                                                                                 Little
+
+12 rows selected.
+
+Elapsed: 00:00:00.03
+SQL> exit
+Disconnected from Oracle Database 12c Enterprise Edition Release 12.2.0.1.0 - 64bit Production
+[orekel@iwak ~]$ . db_profile; srvctl stop database -db bandeng;
+[orekel@iwak ~]$ . db_profile; srvctl start database -db bandeng -o "READ ONLY";
+[orekel@iwak ~]$ rlwrap sqlplus / as sysdba
+
+SQL*Plus: Release 12.2.0.1.0 Production on Sun Jun 23 19:18:37 2019
+
+Copyright (c) 1982, 2016, Oracle.  All rights reserved.
+
+
+Connected to:
+Oracle Database 12c Enterprise Edition Release 12.2.0.1.0 - 64bit Production
+
+SQL> --Check Open Read Only
+SQL> SELECT NAME,DB_UNIQUE_NAME,DATABASE_ROLE,OPEN_MODE,LOG_MODE FROM GV$DATABASE;
+
+NAME      DB_UNIQUE_NAME                 DATABASE_ROLE    OPEN_MODE            LOG_MODE
+--------- ------------------------------ ---------------- -------------------- ------------
+BANDENG   BANDENG                        PRIMARY          READ ONLY            ARCHIVELOG
+
+Elapsed: 00:00:00.01
+SQL> --Check external objects
+SQL> set serveroutput on;
+SQL> declare x boolean; begin x := dbms_tdb.check_external; end;
+  2  /
+The following external tables exist in the database:
+SYS.OPATCH_XML_INV
+The following directories exist in the database:
+SYS.XMLDIR, SYS.XSDDIR, SYS.ORA_DBMS_FCP_LOGDIR, SYS.ORA_DBMS_FCP_ADMINDIR, SYS.OPATCH_INST_DIR, SYS.ORACLE_OCM_CONFIG_DIR, SYS.DATA_PUMP_DIR,
+SYS.ORACLE_OCM_CONFIG_DIR2, SYS.OPATCH_SCRIPT_DIR, SYS.OPATCH_LOG_DIR, SYS.ORACLE_BASE
+
+PL/SQL procedure successfully completed.
+
+Elapsed: 00:00:00.83
+SQL> --Check directories
+SQL> col DIRECTORY_NAME for a25;
+SQL> col DIRECTORY_PATH for a100;
+SQL> select DIRECTORY_NAME, DIRECTORY_PATH from DBA_DIRECTORIES;
+
+DIRECTORY_NAME            DIRECTORY_PATH
+------------------------- ----------------------------------------------------------------------------------------------------
+XMLDIR                    /z02/app/orekel/product/12.2.0.1/db1/rdbms/xml
+XSDDIR                    /z02/app/orekel/product/12.2.0.1/db1/rdbms/xml/schema
+ORA_DBMS_FCP_LOGDIR       /z02/app/orekel/product/12.2.0.1/db1/cfgtoollogs
+ORA_DBMS_FCP_ADMINDIR     /z02/app/orekel/product/12.2.0.1/db1/rdbms/admin
+OPATCH_INST_DIR           /z02/app/orekel/product/12.2.0.1/db1/OPatch
+ORACLE_OCM_CONFIG_DIR     /z02/app/orekel/product/12.2.0.1/db1/ccr/state
+DATA_PUMP_DIR             /z02/app/orekel/admin/BANDENG/dpdump/
+ORACLE_OCM_CONFIG_DIR2    /z02/app/orekel/product/12.2.0.1/db1/ccr/state
+OPATCH_SCRIPT_DIR         /z02/app/orekel/product/12.2.0.1/db1/QOpatch
+OPATCH_LOG_DIR            /z02/app/orekel/product/12.2.0.1/db1/rdbms/log
+ORACLE_BASE               /z02/app/orekel
+ORACLE_HOME               /z02/app/orekel/product/12.2.0.1/db1
+
+12 rows selected.
+
+Elapsed: 00:00:00.00
+SQL> DECLARE db_ready BOOLEAN;
+  2  BEGIN
+  3    db_ready := DBMS_TDB.CHECK_DB('Solaris Operating System (x86)', DBMS_TDB.SKIP_NONE);
+  4  END;
+  5  /
+
+PL/SQL procedure successfully completed.
+
+Elapsed: 00:00:00.08
+SQL> DECLARE db_ready BOOLEAN;
+  2  BEGIN
+  3    db_ready := DBMS_TDB.CHECK_DB('Microsoft Windows x86 64-bit', DBMS_TDB.SKIP_NONE);
+  4  END;
+  5  /
+
+PL/SQL procedure successfully completed.
+
+Elapsed: 00:00:00.04
+SQL> select FILE_NAME "Datafiles requiring Conversion" from DBA_DATA_FILES where TABLESPACE_NAME in (select distinct TABLESPACE_NAME from DBA_ROLLBACK_SEGS);
+
+Datafiles requiring Conversion
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
++DATA/BANDENG/DATAFILE/undotbs1.259.968473383
++DATA/BANDENG/DATAFILE/system.257.968473211
+
+Elapsed: 00:00:00.32
+SQL> select FILE_NAME "Files NOT requiring Conversion" from DBA_DATA_FILES where TABLESPACE_NAME NOT in (select distinct TABLESPACE_NAME from DBA_ROLLBACK_SEGS);
+
+Files NOT requiring Conversion
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
++DATA/BANDENG/DATAFILE/users.260.968473385
++DATA/BANDENG/DATAFILE/sysaux.258.968473329
+
+Elapsed: 00:00:00.06
+SQL> --Backup controlfile to trace
+SQL> ALTER DATABASE BACKUP CONTROLFILE TO TRACE AS '/z01/app/bandeng/datafile/controlfile_20190623.sql';
+
+Database altered.
+
+Elapsed: 00:00:01.95
+SQL> --Backup pfile
+SQL> create pfile='/z01/app/bandeng/datafile/initBANDENG_20190623.ora' from spfile;
+
+File created.
+
+Elapsed: 00:00:00.92
+SQL> exit
+Disconnected from Oracle Database 12c Enterprise Edition Release 12.2.0.1.0 - 64bit Production
+[orekel@iwak ~]$ . db_profile; rlwrap rman target=/
+
+Recovery Manager: Release 12.2.0.1.0 - Production on Sun Jun 23 20:48:27 2019
+
+Copyright (c) 1982, 2017, Oracle and/or its affiliates.  All rights reserved.
+
+connected to target database: BANDENG (DBID=4201625281)
+
+RMAN> show all;
+
+using target database control file instead of recovery catalog
+RMAN configuration parameters for database with db_unique_name BANDENG are:
+CONFIGURE RETENTION POLICY TO REDUNDANCY 1; # default
+CONFIGURE BACKUP OPTIMIZATION OFF; # default
+CONFIGURE DEFAULT DEVICE TYPE TO DISK; # default
+CONFIGURE CONTROLFILE AUTOBACKUP ON; # default
+CONFIGURE CONTROLFILE AUTOBACKUP FORMAT FOR DEVICE TYPE DISK TO '%F'; # default
+CONFIGURE DEVICE TYPE DISK PARALLELISM 1 BACKUP TYPE TO BACKUPSET; # default
+CONFIGURE DATAFILE BACKUP COPIES FOR DEVICE TYPE DISK TO 1; # default
+CONFIGURE ARCHIVELOG BACKUP COPIES FOR DEVICE TYPE DISK TO 1; # default
+CONFIGURE MAXSETSIZE TO UNLIMITED; # default
+CONFIGURE ENCRYPTION FOR DATABASE OFF; # default
+CONFIGURE ENCRYPTION ALGORITHM 'AES128'; # default
+CONFIGURE COMPRESSION ALGORITHM 'BASIC' AS OF RELEASE 'DEFAULT' OPTIMIZE FOR LOAD TRUE ; # default
+CONFIGURE RMAN OUTPUT TO KEEP FOR 7 DAYS; # default
+CONFIGURE ARCHIVELOG DELETION POLICY TO NONE; # default
+CONFIGURE SNAPSHOT CONTROLFILE NAME TO '/z02/app/orekel/product/12.2.0.1/db1/dbs/snapcf_BANDENG.f'; # default
+
+RMAN> configure channel device type disk format '/z01/app/bandeng/datafile/%U%t.bkp';
+
+new RMAN configuration parameters:
+CONFIGURE CHANNEL DEVICE TYPE DISK FORMAT   '/z01/app/bandeng/datafile/%U%t.bkp';
+new RMAN configuration parameters are successfully stored
+
+RMAN> backup for transport database;
+
+Starting backup at 23-Jun-19 20:49:26
+allocated channel: ORA_DISK_1
+channel ORA_DISK_1: SID=265 device type=DISK
+channel ORA_DISK_1: starting full datafile backup set
+channel ORA_DISK_1: specifying datafile(s) in backup set
+input datafile file number=00007 name=+DATA/BANDENG/DATAFILE/users.260.968473385
+input datafile file number=00001 name=+DATA/BANDENG/DATAFILE/system.257.968473211
+input datafile file number=00003 name=+DATA/BANDENG/DATAFILE/sysaux.258.968473329
+input datafile file number=00004 name=+DATA/BANDENG/DATAFILE/undotbs1.259.968473383
+channel ORA_DISK_1: starting piece 1 at 23-Jun-19 20:49:30
+channel ORA_DISK_1: finished piece 1 at 23-Jun-19 20:50:35
+piece handle=/z01/app/bandeng/datafile/02u4rk2o_1_11011732568.bkp tag=TAG20190623T204927 comment=NONE
+channel ORA_DISK_1: backup set complete, elapsed time: 00:01:06
+Finished backup at 23-Jun-19 20:50:36
+
+RMAN> configure channel device type disk clear;
+
+using target database control file instead of recovery catalog
+old RMAN configuration parameters:
+CONFIGURE CHANNEL DEVICE TYPE DISK FORMAT   '/z01/app/bandeng/datafile/%U%t.bkp';
+old RMAN configuration parameters are successfully deleted
+
+RMAN> exit
+
+
+Recovery Manager complete.
+[orekel@ikan ~]$ ls -lh /z01/app/bandeng/datafile/
+total 1.1G
+-rw-r-----. 1 orekel asmadmin 1.1G Jun 23 20:50 02u4rk2o_1_11011732568.bkp
+-rw-r--r--. 1 orekel asmadmin 6.3K Jun 23 21:04 controlfile_20190623.sql
+-rw-r--r--. 1 orekel asmadmin 1.2K Jun 23 21:05 initBANDENG_20190623.ora
+[orekel@ikan ~]$
+
+################
+#### Target ####
+################
+D:\iwak.centos.org\initBANDENGwin.ora
+#####################################
+BANDENG.__data_transfer_cache_size=0
+BANDENG.__db_cache_size=520093696
+BANDENG.__inmemory_ext_roarea=0
+BANDENG.__inmemory_ext_rwarea=0
+BANDENG.__java_pool_size=16777216
+BANDENG.__large_pool_size=33554432
+BANDENG.__oracle_base='D:\app\oracle'
+BANDENG.__pga_aggregate_target=402653184
+BANDENG.__sga_target=788529152
+BANDENG.__shared_io_pool_size=0
+BANDENG.__shared_pool_size=201326592
+BANDENG.__streams_pool_size=0
+*.audit_file_dest='D:\app\oracle\admin\BANDENG\adump'
+*.audit_trail='NONE'
+*.compatible='12.2.0'
+*.control_files='D:\oradata\BANDENG\control01.ctl'
+*.db_block_size=8192
+*.db_create_file_dest='D:\oradata'
+*.db_domain='centos.org'
+*.db_name='BANDENG'
+*.db_recovery_file_dest='D:\app\oracle\FRA'
+*.db_recovery_file_dest_size=4294967296
+*.diagnostic_dest='D:\app\oracle'
+*.dispatchers='(PROTOCOL=TCP) (SERVICE=BANDENGXDB)'
+*.log_archive_format='%t_%s_%r.arc'
+*.sga_max_size=788529152
+*.sga_target=788529152
+*.nls_language='AMERICAN'
+*.nls_territory='AMERICA'
+*.open_cursors=300
+*.processes=300
+*.remote_login_passwordfile='EXCLUSIVE'
+*.undo_tablespace='UNDOTBS1'
+
+C:\Windows\system32>D:\app\oracle\product\12.2.0.1\db_1\bin\oradim -new -sid BANDENG
+Instance created.
+
+C:\Windows\system32>set ORACLE_BASE=D:\app\oracle
+
+C:\Windows\system32>set ORACLE_HOME=D:\app\oracle\product\12.2.0.1\db_1
+
+C:\Windows\system32>set ORACLE_HOSTNAME=azizwib.metrodata.co.id
+
+C:\Windows\system32>set ORACLE_SID=BANDENG
+
+C:\Windows\system32>D:\app\oracle\product\12.2.0.1\db_1\bin\sqlplus / as sysdba
+
+SQL*Plus: Release 12.2.0.1.0 Production on Sun Jun 23 17:19:11 2019
+
+Copyright (c) 1982, 2016, Oracle.  All rights reserved.
+
+Connected to an idle instance.
+
+SQL> STARTUP NOMOUNT PFILE='D:\iwak.centos.org\initBANDENGwin.ORA';
+ORACLE instance started.
+
+Total System Global Area  788529152 bytes
+Fixed Size                  8751792 bytes
+Variable Size             394265936 bytes
+Database Buffers          377487360 bytes
+Redo Buffers                8024064 bytes
+SQL> EXIT
+Disconnected from Oracle Database 12c Enterprise Edition Release 12.2.0.1.0 - 64bit Production
+
+C:\Windows\system32>D:\app\oracle\product\12.2.0.1\db_1\bin\rman target=/
+
+Recovery Manager: Release 12.2.0.1.0 - Production on Sun Jun 23 17:22:54 2019
+
+Copyright (c) 1982, 2017, Oracle and/or its affiliates.  All rights reserved.
+
+connected to target database: BANDENG (not mounted)
+
+RMAN> run{
+2>   SET NEWNAME FOR DATABASE TO 'D:\oradata\BANDENG\%U';
+3>   restore from platform 'Linux x86 64-bit' foreign database to new
+4>   from backupset 'D:\iwak.centos.org\02u4rk2o_1_11011732568.bkp';}
+
+executing command: SET NEWNAME
+
+Starting restore at 23-JUN-19
+using target database control file instead of recovery catalog
+allocated channel: ORA_DISK_1
+channel ORA_DISK_1: SID=123 device type=DISK
+
+channel ORA_DISK_1: starting datafile backup set restore
+channel ORA_DISK_1: specifying datafile(s) to restore from backup set
+channel ORA_DISK_1: restoring all foreign files in backup piece
+channel ORA_DISK_1: reading from backup piece D:\iwak.centos.org\02u4rk2o_1_11011732568.bkp
+channel ORA_DISK_1: restoring foreign file 7 to D:\ORADATA\BANDENG\DATAFILE\O1_MF_USERS_GJYO3LK9_.DBF
+channel ORA_DISK_1: restoring foreign file 1 to D:\ORADATA\BANDENG\DATAFILE\O1_MF_SYSTEM_GJYO3LMN_.DBF
+channel ORA_DISK_1: restoring foreign file 3 to D:\ORADATA\BANDENG\DATAFILE\O1_MF_SYSAUX_GJYO3LOG_.DBF
+channel ORA_DISK_1: restoring foreign file 4 to D:\ORADATA\BANDENG\DATAFILE\O1_MF_UNDOTBS1_GJYO3LPL_.DBF
+channel ORA_DISK_1: foreign piece handle=D:\iwak.centos.org\02u4rk2o_1_11011732568.bkp
+channel ORA_DISK_1: restored backup piece 1
+channel ORA_DISK_1: restore complete, elapsed time: 00:00:56
+Finished restore at 23-JUN-19
+
+RMAN> EXIT
+
+
+Recovery Manager complete.
+
+C:\Windows\system32>D:\app\oracle\product\12.2.0.1\db_1\bin\sqlplus / as sysdba
+
+SQL*Plus: Release 12.2.0.1.0 Production on Sun Jun 23 17:34:13 2019
+
+Copyright (c) 1982, 2016, Oracle.  All rights reserved.
+
+
+Connected to:
+Oracle Database 12c Enterprise Edition Release 12.2.0.1.0 - 64bit Production
+
+SQL> SELECT STATUS,INSTANCE_NAME,HOST_NAME FROM GV$INSTANCE;
+
+STATUS       INSTANCE_NAME    HOST_NAME
+------------ ---------------- ----------------------------------------------------------------
+STARTED      bandeng          AZIZWIB
+
+Elapsed: 00:00:00.01
+SQL> exit;
+Disconnected from Oracle Database 12c Enterprise Edition Release 12.2.0.1.0 - 64bit Production
+
+C:\Windows\system32>
+
+D:\iwak.centos.org\recreatecontrolfilewin.sql
+#############################################
+CREATE CONTROLFILE REUSE DATABASE "BANDENG" RESETLOGS  ARCHIVELOG
+    MAXLOGFILES 16
+    MAXLOGMEMBERS 3
+    MAXDATAFILES 100
+    MAXINSTANCES 8
+    MAXLOGHISTORY 292
+LOGFILE
+  GROUP 1 (
+    'D:\oradata\BANDENG\DATAFILE\REDO01A.DBF',
+    'D:\oradata\BANDENG\DATAFILE\REDO01B.DBF'
+  ) SIZE 200M BLOCKSIZE 512,
+  GROUP 2 (
+    'D:\oradata\BANDENG\DATAFILE\REDO02A.DBF',
+    'D:\oradata\BANDENG\DATAFILE\REDO02B.DBF'
+  ) SIZE 200M BLOCKSIZE 512,
+  GROUP 3 (
+    'D:\oradata\BANDENG\DATAFILE\REDO03A.DBF',
+    'D:\oradata\BANDENG\DATAFILE\REDO03B.DBF'
+  ) SIZE 200M BLOCKSIZE 512
+DATAFILE
+  'D:\oradata\BANDENG\DATAFILE\O1_MF_SYSAUX_GJYO3LOG_.DBF',
+  'D:\oradata\BANDENG\DATAFILE\O1_MF_SYSTEM_GJYO3LMN_.DBF',
+  'D:\oradata\BANDENG\DATAFILE\O1_MF_UNDOTBS1_GJYO3LPL_.DBF',
+  'D:\oradata\BANDENG\DATAFILE\O1_MF_USERS_GJYO3LK9_.DBF'
+CHARACTER SET AL32UTF8;
+ALTER DATABASE OPEN RESETLOGS;
+ALTER TABLESPACE TEMP ADD TEMPFILE 'D:\oradata\BANDENG\DATAFILE\TEMP01.DBF' SIZE 33554432  REUSE AUTOEXTEND ON NEXT 655360  MAXSIZE 32767M;
+SELECT NAME,OPEN_MODE FROM V$DATABASE UNION ALL SELECT INSTANCE_NAME,STATUS FROM V$INSTANCE;
+
+C:\Windows\system32>D:\app\oracle\product\12.2.0.1\db_1\bin\sqlplus / as sysdba
+
+SQL*Plus: Release 12.2.0.1.0 Production on Sun Jun 23 17:40:19 2019
+
+Copyright (c) 1982, 2016, Oracle.  All rights reserved.
+
+
+Connected to:
+Oracle Database 12c Enterprise Edition Release 12.2.0.1.0 - 64bit Production
+
+SQL> @D:\iwak.centos.org\recreatecontrolfilewin.sql
+
+Control file created.
+
+Elapsed: 00:00:00.67
+
+Database altered.
+
+Elapsed: 00:00:40.04
+
+Tablespace altered.
+
+Elapsed: 00:00:00.71
+
+NAME             OPEN_MODE
+---------------- --------------------
+BANDENG          READ WRITE
+bandeng          OPEN
+
+Elapsed: 00:00:00.04
+SQL> create spfile from PFILE='D:\iwak.centos.org\initBANDENGwin.ORA';
+
+File created.
+
+Elapsed: 00:00:00.20
+SQL> shu immediate;
+Database closed.
+Database dismounted.
+ORACLE instance shut down.
+SQL> STARTUP;
+ORACLE instance started.
+
+Total System Global Area  788529152 bytes
+Fixed Size                  8751792 bytes
+Variable Size             394265936 bytes
+Database Buffers          377487360 bytes
+Redo Buffers                8024064 bytes
+Database mounted.
+Database opened.
+SQL> COL FORCE_LOGGING FOR A3;
+SQL> COL PLATFORM_NAME FOR A30;
+SQL> SELECT NAME,DB_UNIQUE_NAME,DBID,CREATED,LOG_MODE,OPEN_MODE,DATABASE_ROLE,PLATFORM_NAME,FORCE_LOGGING FROM V$DATABASE;
+
+NAME      DB_UNIQUE_NAME                       DBID CREATED   LOG_MODE     OPEN_MODE            DATABASE_ROLE    PLATFORM_NAME                  FOR
+--------- ------------------------------ ---------- --------- ------------ -------------------- ---------------- ------------------------------ ---
+BANDENG   BANDENG                        4201625281 23-JUN-19 ARCHIVELOG   READ WRITE           PRIMARY          Microsoft Windows x86 64-bit   NO
+
+Elapsed: 00:00:00.03
+SQL> SELECT 'Ganteng gini mah ..' Kolom from dual;
+
+KOLOM
+-------------------
+Ganteng gini mah ..
+
+Elapsed: 00:00:00.03
+SQL> EXIT;
+Disconnected from Oracle Database 12c Enterprise Edition Release 12.2.0.1.0 - 64bit Production
+
+C:\Windows\system32>

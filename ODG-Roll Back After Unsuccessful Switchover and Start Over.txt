@@ -1,0 +1,46 @@
+https://docs.oracle.com/database/121/SBYDB/troubleshooting.htm#SBYDB4915
+
+Roll Back After Unsuccessful Switchover and Start Over
+######################################################
+For physical standby databases in situations where an error occurred and it is not possible to continue with the switchover, it might still be possible to revert the new physical standby database back to the primary role by using the following steps. (This functionality is available starting with Oracle Database 11g Release 2 (11.2.0.2).)
+1. Shut down and mount the new standby database (old primary).
+2. Start Redo Apply on the new standby database.
+3. Verify that the new standby database is ready to be switched back to the primary role. Query the SWITCHOVER_STATUS column of the V$DATABASE view on the new standby database. For example:
+   SQL> SELECT SWITCHOVER_STATUS FROM V$DATABASE;
+
+   SWITCHOVER_STATUS 
+   ----------------- 
+   TO_PRIMARY
+   1 row selected
+
+   A value of TO PRIMARY or SESSIONS ACTIVE indicates that the new standby database is ready to be switched to the primary role. Continue to query this column until the value returned is either TO PRIMARY or SESSIONS ACTIVE.
+4. Issue the following statement to convert the new standby database back to the primary role:
+   SQL> ALTER DATABASE SWITCHOVER TO target_db_name [FORCE];
+   If this statement is successful, then the database runs in the primary database role, and you do not need to perform any more steps.
+   If this statement is unsuccessful, then continue with Step 5.
+5. When the switchover to change the role from primary to physical standby was initiated, a trace file was written in the log directory. This trace file contains the SQL statements required to re-create the original primary control file. Locate the trace file and extract the SQL statements into a temporary file. Execute the temporary file from SQL*Plus. This reverts the new standby database back to the primary role.
+6. Shut down the original physical standby database.
+7. Create a new standby control file. This is necessary to resynchronize the primary database and physical standby database. Copy the physical standby control file to the original physical standby system. Create a Control File for the Standby Database describes how to create a physical standby control file.
+8. Restart the original physical standby instance.
+   If this procedure is successful and archive gap management is enabled, then the FAL processes start and re-archive any missing archived redo log files to the physical standby database. Force a log switch on the primary database and examine the alert logs on both the primary database and physical standby database to ensure the archived redo log file sequence numbers are correct.
+   See Manual Gap Resolution for information about archive gap management and Setting Archive Tracing for information about locating the trace files.
+9. Try the switchover again.
+   At this point, the Oracle Data Guard configuration has been rolled back to its initial state, and you can try the switchover operation again (after correcting any problems that might have led to the initial unsuccessful switchover).
+
+https://docs.oracle.com/cd/B19306_01/server.102/b14239/troubleshooting.htm#i637876
+
+Roll Back After Unsuccessful Switchover and Start Over
+######################################################
+For physical standby databases in situations where an error occurred and it is not possible to continue with the switchover, it might still be possible to revert the new physical standby database back to the primary role by using the following steps:
+1. Connect to the new standby database (old primary), and issue the following statement to convert it back to the primary role:
+   SQL> ALTER DATABASE COMMIT TO SWITCHOVER TO PRIMARY;
+   If this statement is successful, then shut down (if necessary) and restart the database. Once restarted, the database will be running in the primary database role, and you do not need to perform any more steps.
+   If this statement is unsuccessful, then continue with Step 3.
+2. When the switchover to change the role from primary to physical standby was initiated, a trace file was written in the log directory. This trace file contains the SQL statements required to re-create the original primary control file. Locate the trace file and extract the SQL statements into a temporary file. Execute the temporary file from SQL*Plus. This will revert the new standby database back to the primary role.
+3. Shut down the original physical standby database.
+4. Create a new standby control file. This is necessary to resynchronize the primary database and physical standby database. Copy the physical standby control file to the original physical standby system. Section 3.2.2 describes how to create a physical standby control file.
+5. Restart the original physical standby instance.
+   If this procedure is successful and archive gap management is enabled, the FAL processes will start and re-archive any missing archived redo log files to the physical standby database. Force a log switch on the primary database and examine the alert logs on both the primary database and physical standby database to ensure the archived redo log file sequence numbers are correct.
+   See Section 5.8 for information about archive gap management and Appendix G for information about locating the trace files.
+6. Try the switchover again.
+   At this point, the Data Guard configuration has been rolled back to its initial state, and you can try the switchover operation again (after correcting any problems that might have led to the initial unsuccessful switchover).

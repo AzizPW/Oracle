@@ -1,0 +1,98 @@
+http://jazstudios.blogspot.com/2010/06/postgresql-login-commands.html
+https://www.postgresql.org/docs/11/tutorial-accessdb.html
+
+
+----------
+start stop db:
+systemctl start postgresql
+systemctl status postgresql
+systemctl stop postgresql
+
+
+--- comamand
+$ psql --help
+
+
+
+-- Show Database Version:
+psql -V
+
+psql -d testb -U h20 -W
+SELECT version();
+
+
+
+login:
+$ psql -d testb
+psql -d testb -U h20 -W
+psql -d testb -U h20 -W -h192.168.56.72
+
+
+
+list db:
+$ psql -l
+                                List of databases
+   Name    |  Owner  | Encoding |   Collate   |    Ctype    |  Access privileges  
+-----------+---------+----------+-------------+-------------+---------------------
+ postgres  | postgre | UTF8     | en_US.UTF-8 | en_US.UTF-8 | 
+ template0 | postgre | UTF8     | en_US.UTF-8 | en_US.UTF-8 | =c/postgre + postgre=CTc/postgre
+ template1 | postgre | UTF8     | en_US.UTF-8 | en_US.UTF-8 | =c/postgre +  postgre=CTc/postgre
+ testb     | postgre | UTF8     | en_US.UTF-8 | en_US.UTF-8 | 
+
+
+
+
+
+
+-- list tables:
+testb=# \dt
+
+
+
+--- create table
+testb=# 
+CREATE TABLE weather (
+    city            varchar(80),
+    temp_lo         int,           -- low temperature
+    temp_hi         int,           -- high temperature
+    prcp            real,          -- precipitation
+    date            date 
+    );
+    
+testb=# 
+CREATE TABLE cities (
+    name            varchar(80),
+    location        point
+    );
+
+testb=# INSERT INTO weather VALUES ('San Francisco', 46, 50, 0.25, '1994-11-27');
+testb=# INSERT INTO cities VALUES ('San Francisco', '(-194.0, 53.0)');
+
+testb=# INSERT INTO weather (city, temp_lo, temp_hi, prcp, date) VALUES ('San Francisco', 43, 57, 0.0, '1994-11-29');
+
+
+testb=# SELECT * FROM weather;
+testb=# SELECT city, temp_lo, temp_hi, prcp, date FROM weather;
+
+   
+   
+
+--- USER
+list:
+\du
+
+user biasa: 
+CREATE USER h20 WITH PASSWORD 'Multi.123';
+
+grant super user :
+alter user h20 with SUPERUSER CREATEDB CREATEROLE INHERIT LOGIN REPLICATION;
+
+check current user session:
+select CURRENT_USER;
+
+
+
+
+
+---- PARAMETER
+testb# show all;
