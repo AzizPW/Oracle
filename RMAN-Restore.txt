@@ -1,0 +1,907 @@
+#################################################################
+### Oracle DB 11.2.0.4 Single ASM ###############################
+### RMAN Backup Restore on rhel6 ################################
+### by AzizPW - Database Administrator ##########################
+### PT Mitra Integrasi Informatika ##############################
+### Sun, 03 Nov 2019# ###########################################
+#################################################################
+
+### Test Create and Insert Table Before Backup
+##############################################
+[oracle@spiderman ~]$ rlwrap sqlplus / as sysdba
+
+SQL*Plus: Release 11.2.0.4.0 Production on Sun Nov 3 17:00:07 2019
+
+Copyright (c) 1982, 2013, Oracle.  All rights reserved.
+
+
+Connected to:
+Oracle Database 11g Enterprise Edition Release 11.2.0.4.0 - 64bit Production
+With the Partitioning, Automatic Storage Management, OLAP, Data Mining
+and Real Application Testing options
+
+SQL> create table scott.band(id number,name varchar2(50),genre varchar2(30)) tablespace users;
+
+Table created.
+
+Elapsed: 00:00:00.37
+SQL> insert into scott.band values (1,'Green Day','Punk Rock');
+
+1 row created.
+
+Elapsed: 00:00:00.05
+SQL> insert into scott.band values (2,'Blink 182','Punk Rock');
+
+1 row created.
+
+Elapsed: 00:00:00.00
+SQL> insert into scott.band values (3,'Slipknot','Heavy Metal');
+
+1 row created.
+
+Elapsed: 00:00:00.00
+SQL> insert into scott.band values (4,'Lamb of God','Death Metal');
+
+1 row created.
+
+Elapsed: 00:00:00.00
+SQL> insert into scott.band values (5,'Guns N Roses','Rock');
+
+1 row created.
+
+Elapsed: 00:00:00.00
+SQL> insert into scott.band values (6,'Sum 41','Punk Rock');
+
+1 row created.
+
+Elapsed: 00:00:00.00
+SQL> COMMIT;
+
+Commit complete.
+
+Elapsed: 00:00:00.00
+SQL> SELECT * FROM SCOTT.BAND;
+
+	ID NAME 					      GENRE
+---------- -------------------------------------------------- ------------------------------
+	 1 Green Day					      Punk Rock
+	 2 Blink 182					      Punk Rock
+	 3 Slipknot					      Heavy Metal
+	 4 Lamb of God					      Death Metal
+	 5 Guns N Roses 				      Rock
+	 6 Sum 41					      Punk Rock
+
+6 rows selected.
+
+Elapsed: 00:00:00.00
+SQL> ALTER SYSTEM ARCHIVE LOG CURRENT;
+
+System altered.
+
+Elapsed: 00:00:00.49
+SQL> ALTER SYSTEM CHECKPOINT GLOBAL;
+
+System altered.
+
+Elapsed: 00:00:00.87
+SQL> exit
+Disconnected from Oracle Database 11g Enterprise Edition Release 11.2.0.4.0 - 64bit Production
+With the Partitioning, Automatic Storage Management, OLAP, Data Mining
+and Real Application Testing options
+[oracle@spiderman backup]$
+
+### Backup Database
+###################
+[oracle@spiderman backup]$ vi /home/oracle/backup/RMAN-Fullbackup.sh; chmod +x /home/oracle/backup/RMAN-Fullbackup.sh; cat /home/oracle/backup/RMAN-Fullbackup.sh;
+#!/bin/bash
+source /home/oracle/.bash_profile; export NLS_DATE_FORMAT='DD-Mon-RR HH24:MI:SS';
+$ORACLE_HOME/bin/rman target=/ log=/home/oracle/backup/RMAN-Fullbackup_`date +%Y%m%d`.log << EOF
+run{
+  CONFIGURE DEVICE TYPE DISK PARALLELISM 2;
+  CROSSCHECK BACKUP;
+  DELETE NOPROMPT EXPIRED BACKUP;
+  CROSSCHECK ARCHIVELOG ALL;
+  DELETE NOPROMPT EXPIRED ARCHIVELOG ALL;
+  BACKUP AS COMPRESSED BACKUPSET SPFILE TAG 'SPFile' FORMAT '/home/oracle/backup/SPF_%I%d%T_%s_%p.bkp';
+  SQL 'ALTER SYSTEM ARCHIVE LOG CURRENT';
+  SQL 'ALTER SYSTEM CHECKPOINT GLOBAL';
+  BACKUP AS COMPRESSED BACKUPSET DATABASE TAG 'Database' FORMAT '/home/oracle/backup/DB_%I%d%T_%s_%p.bkp';
+  BACKUP AS COMPRESSED BACKUPSET ARCHIVELOG ALL DELETE ALL INPUT TAG 'Archivelogs' FORMAT '/home/oracle/backup/ARC_%I%d%T_%s_%p.bkp';
+  BACKUP AS COMPRESSED BACKUPSET CURRENT CONTROLFILE TAG 'PrimControl' FORMAT '/home/oracle/backup/CTRL_%I%d%T_%s_%p.bkp';
+  BACKUP AS COMPRESSED BACKUPSET CURRENT CONTROLFILE FOR STANDBY TAG 'StbyControl' FORMAT '/home/oracle/backup/STBY_%I%d%T_%s_%p.bkp';
+  CONFIGURE DEVICE TYPE DISK CLEAR;}
+EOF
+[oracle@spiderman backup]$ nohup /home/oracle/backup/RMAN-Fullbackup.sh > /home/oracle/backup/nohupRMAN-Fullbackup_`date +%Y%m%d`.log 2>&1 &
+[1] 9498
+[oracle@spiderman backup]$ top -c -p 9498
+
+top - 17:08:14 up 22 min,  4 users,  load average: 0.42, 0.19, 0.16
+Tasks:   1 total,   0 running,   1 sleeping,   0 stopped,   0 zombie
+Cpu(s):  1.2%us,  1.9%sy,  0.0%ni, 90.9%id,  5.9%wa,  0.0%hi,  0.1%si,  0.0%st
+Mem:   2805944k total,  2045932k used,   760012k free,    73244k buffers
+Swap:  8387580k total,        0k used,  8387580k free,  1127000k cached
+
+   PID USER      PR  NI  VIRT  RES  SHR S %CPU %MEM    TIME+  COMMAND                                                                                                   
+  9498 oracle    20   0  103m 1412 1172 S  0.0  0.1   0:00.00 /bin/bash /home/oracle/backup/RMAN-Fullbackup.sh                                                          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[oracle@spiderman backup]$ tail -100f /home/oracle/backup/RMAN-Fullbackup_`date +%Y%m%d`.log
+
+^C
+[1]+  Done                    nohup /home/oracle/backup/RMAN-Fullbackup.sh > /home/oracle/backup/nohupRMAN-Fullbackup_`date +%Y%m%d`.log 2>&1
+[oracle@spiderman backup]$ cat /home/oracle/backup/RMAN-Fullbackup_20191103.log 
+
+Recovery Manager: Release 11.2.0.4.0 - Production on Sun Nov 3 17:07:57 2019
+
+Copyright (c) 1982, 2011, Oracle and/or its affiliates.  All rights reserved.
+
+connected to target database: PARKER (DBID=2441856931)
+
+RMAN> 2> 3> 4> 5> 6> 7> 8> 9> 10> 11> 12> 13> 14> 
+using target database control file instead of recovery catalog
+new RMAN configuration parameters:
+CONFIGURE DEVICE TYPE DISK PARALLELISM 2 BACKUP TYPE TO BACKUPSET;
+new RMAN configuration parameters are successfully stored
+
+allocated channel: ORA_DISK_1
+channel ORA_DISK_1: SID=153 device type=DISK
+allocated channel: ORA_DISK_2
+channel ORA_DISK_2: SID=30 device type=DISK
+specification does not match any backup in the repository
+
+using channel ORA_DISK_1
+using channel ORA_DISK_2
+specification does not match any backup in the repository
+
+released channel: ORA_DISK_1
+released channel: ORA_DISK_2
+allocated channel: ORA_DISK_1
+channel ORA_DISK_1: SID=153 device type=DISK
+allocated channel: ORA_DISK_2
+channel ORA_DISK_2: SID=30 device type=DISK
+validation succeeded for archived log
+archived log file name=+FRA/parker/archivelog/2017_05_04/thread_1_seq_5.256.943069441 RECID=1 STAMP=943069441
+validation succeeded for archived log
+archived log file name=+FRA/parker/archivelog/2017_05_04/thread_1_seq_6.257.943069487 RECID=2 STAMP=943069487
+validation succeeded for archived log
+archived log file name=+FRA/parker/archivelog/2017_05_04/thread_1_seq_7.260.943071675 RECID=3 STAMP=943071677
+validation succeeded for archived log
+archived log file name=+FRA/parker/archivelog/2019_11_03/thread_1_seq_8.262.1023382519 RECID=4 STAMP=1023382519
+validation succeeded for archived log
+archived log file name=+FRA/parker/archivelog/2019_11_03/thread_1_seq_9.263.1023382825 RECID=5 STAMP=1023382825
+Crosschecked 5 objects
+
+
+released channel: ORA_DISK_1
+released channel: ORA_DISK_2
+allocated channel: ORA_DISK_1
+channel ORA_DISK_1: SID=153 device type=DISK
+allocated channel: ORA_DISK_2
+channel ORA_DISK_2: SID=30 device type=DISK
+specification does not match any archived log in the repository
+
+Starting backup at 03-Nov-19 17:08:00
+using channel ORA_DISK_1
+using channel ORA_DISK_2
+channel ORA_DISK_1: starting compressed full datafile backup set
+channel ORA_DISK_1: specifying datafile(s) in backup set
+including current SPFILE in backup set
+channel ORA_DISK_1: starting piece 1 at 03-Nov-19 17:08:00
+channel ORA_DISK_1: finished piece 1 at 03-Nov-19 17:08:01
+piece handle=/home/oracle/backup/SPF_2441856931PARKER20191103_1_1.bkp tag=SPFILE comment=NONE
+channel ORA_DISK_1: backup set complete, elapsed time: 00:00:01
+Finished backup at 03-Nov-19 17:08:01
+
+sql statement: ALTER SYSTEM ARCHIVE LOG CURRENT
+
+sql statement: ALTER SYSTEM CHECKPOINT GLOBAL
+
+Starting backup at 03-Nov-19 17:08:01
+using channel ORA_DISK_1
+using channel ORA_DISK_2
+channel ORA_DISK_1: starting compressed full datafile backup set
+channel ORA_DISK_1: specifying datafile(s) in backup set
+input datafile file number=00001 name=+DATA/parker/datafile/system.256.943067079
+input datafile file number=00005 name=+DATA/parker/datafile/example.269.943067403
+channel ORA_DISK_1: starting piece 1 at 03-Nov-19 17:08:02
+channel ORA_DISK_2: starting compressed full datafile backup set
+channel ORA_DISK_2: specifying datafile(s) in backup set
+input datafile file number=00002 name=+DATA/parker/datafile/sysaux.257.943067079
+input datafile file number=00003 name=+DATA/parker/datafile/undotbs1.258.943067081
+input datafile file number=00004 name=+DATA/parker/datafile/users.259.943067081
+channel ORA_DISK_2: starting piece 1 at 03-Nov-19 17:08:02
+channel ORA_DISK_1: finished piece 1 at 03-Nov-19 17:09:07
+piece handle=/home/oracle/backup/DB_2441856931PARKER20191103_2_1.bkp tag=DATABASE comment=NONE
+channel ORA_DISK_1: backup set complete, elapsed time: 00:01:05
+channel ORA_DISK_1: starting compressed full datafile backup set
+channel ORA_DISK_1: specifying datafile(s) in backup set
+channel ORA_DISK_2: finished piece 1 at 03-Nov-19 17:09:07
+piece handle=/home/oracle/backup/DB_2441856931PARKER20191103_3_1.bkp tag=DATABASE comment=NONE
+channel ORA_DISK_2: backup set complete, elapsed time: 00:01:05
+channel ORA_DISK_2: starting compressed full datafile backup set
+channel ORA_DISK_2: specifying datafile(s) in backup set
+including current SPFILE in backup set
+channel ORA_DISK_2: starting piece 1 at 03-Nov-19 17:09:07
+including current control file in backup set
+channel ORA_DISK_1: starting piece 1 at 03-Nov-19 17:09:08
+channel ORA_DISK_2: finished piece 1 at 03-Nov-19 17:09:08
+piece handle=/home/oracle/backup/DB_2441856931PARKER20191103_5_1.bkp tag=DATABASE comment=NONE
+channel ORA_DISK_2: backup set complete, elapsed time: 00:00:01
+channel ORA_DISK_1: finished piece 1 at 03-Nov-19 17:09:09
+piece handle=/home/oracle/backup/DB_2441856931PARKER20191103_4_1.bkp tag=DATABASE comment=NONE
+channel ORA_DISK_1: backup set complete, elapsed time: 00:00:01
+Finished backup at 03-Nov-19 17:09:09
+
+Starting backup at 03-Nov-19 17:09:09
+current log archived
+using channel ORA_DISK_1
+using channel ORA_DISK_2
+channel ORA_DISK_1: starting compressed archived log backup set
+channel ORA_DISK_1: specifying archived log(s) in backup set
+input archived log thread=1 sequence=5 RECID=1 STAMP=943069441
+input archived log thread=1 sequence=6 RECID=2 STAMP=943069487
+input archived log thread=1 sequence=7 RECID=3 STAMP=943071677
+channel ORA_DISK_1: starting piece 1 at 03-Nov-19 17:09:10
+channel ORA_DISK_2: starting compressed archived log backup set
+channel ORA_DISK_2: specifying archived log(s) in backup set
+input archived log thread=1 sequence=8 RECID=4 STAMP=1023382519
+input archived log thread=1 sequence=9 RECID=5 STAMP=1023382825
+input archived log thread=1 sequence=10 RECID=6 STAMP=1023383281
+input archived log thread=1 sequence=11 RECID=7 STAMP=1023383350
+channel ORA_DISK_2: starting piece 1 at 03-Nov-19 17:09:10
+channel ORA_DISK_1: finished piece 1 at 03-Nov-19 17:09:11
+piece handle=/home/oracle/backup/ARC_2441856931PARKER20191103_6_1.bkp tag=ARCHIVELOGS comment=NONE
+channel ORA_DISK_1: backup set complete, elapsed time: 00:00:01
+channel ORA_DISK_1: deleting archived log(s)
+archived log file name=+FRA/parker/archivelog/2017_05_04/thread_1_seq_5.256.943069441 RECID=1 STAMP=943069441
+archived log file name=+FRA/parker/archivelog/2017_05_04/thread_1_seq_6.257.943069487 RECID=2 STAMP=943069487
+archived log file name=+FRA/parker/archivelog/2017_05_04/thread_1_seq_7.260.943071675 RECID=3 STAMP=943071677
+channel ORA_DISK_2: finished piece 1 at 03-Nov-19 17:09:11
+piece handle=/home/oracle/backup/ARC_2441856931PARKER20191103_7_1.bkp tag=ARCHIVELOGS comment=NONE
+channel ORA_DISK_2: backup set complete, elapsed time: 00:00:01
+channel ORA_DISK_2: deleting archived log(s)
+archived log file name=+FRA/parker/archivelog/2019_11_03/thread_1_seq_8.262.1023382519 RECID=4 STAMP=1023382519
+archived log file name=+FRA/parker/archivelog/2019_11_03/thread_1_seq_9.263.1023382825 RECID=5 STAMP=1023382825
+archived log file name=+FRA/parker/archivelog/2019_11_03/thread_1_seq_10.264.1023383281 RECID=6 STAMP=1023383281
+archived log file name=+FRA/parker/archivelog/2019_11_03/thread_1_seq_11.265.1023383351 RECID=7 STAMP=1023383350
+Finished backup at 03-Nov-19 17:09:11
+
+Starting backup at 03-Nov-19 17:09:11
+using channel ORA_DISK_1
+using channel ORA_DISK_2
+channel ORA_DISK_1: starting compressed full datafile backup set
+channel ORA_DISK_1: specifying datafile(s) in backup set
+including current control file in backup set
+channel ORA_DISK_1: starting piece 1 at 03-Nov-19 17:09:12
+channel ORA_DISK_1: finished piece 1 at 03-Nov-19 17:09:13
+piece handle=/home/oracle/backup/CTRL_2441856931PARKER20191103_8_1.bkp tag=PRIMCONTROL comment=NONE
+channel ORA_DISK_1: backup set complete, elapsed time: 00:00:01
+Finished backup at 03-Nov-19 17:09:13
+
+Starting backup at 03-Nov-19 17:09:13
+using channel ORA_DISK_1
+using channel ORA_DISK_2
+channel ORA_DISK_1: starting compressed full datafile backup set
+channel ORA_DISK_1: specifying datafile(s) in backup set
+including standby control file in backup set
+channel ORA_DISK_1: starting piece 1 at 03-Nov-19 17:09:15
+channel ORA_DISK_1: finished piece 1 at 03-Nov-19 17:09:16
+piece handle=/home/oracle/backup/STBY_2441856931PARKER20191103_9_1.bkp tag=STBYCONTROL comment=NONE
+channel ORA_DISK_1: backup set complete, elapsed time: 00:00:01
+Finished backup at 03-Nov-19 17:09:16
+
+old RMAN configuration parameters:
+CONFIGURE DEVICE TYPE DISK PARALLELISM 2 BACKUP TYPE TO BACKUPSET;
+RMAN configuration parameters are successfully reset to default value
+released channel: ORA_DISK_1
+released channel: ORA_DISK_2
+
+RMAN> 
+
+Recovery Manager complete.
+[oracle@spiderman backup]$
+
+### Backup pfile and passwordfile
+################################
+[oracle@spiderman backup]$ rlwrap sqlplus / as sysdba
+
+SQL*Plus: Release 11.2.0.4.0 Production on Sun Nov 3 17:12:14 2019
+
+Copyright (c) 1982, 2013, Oracle.  All rights reserved.
+
+
+Connected to:
+Oracle Database 11g Enterprise Edition Release 11.2.0.4.0 - 64bit Production
+With the Partitioning, Automatic Storage Management, OLAP, Data Mining
+and Real Application Testing options
+
+SQL> select instance_name from v$instance;
+
+INSTANCE_NAME
+----------------
+PARKER
+
+Elapsed: 00:00:00.00
+SQL> create pfile='/home/oracle/backup/initPARKER.ora' from spfile;
+
+File created.
+
+Elapsed: 00:00:00.01
+SQL> exit
+Disconnected from Oracle Database 11g Enterprise Edition Release 11.2.0.4.0 - 64bit Production
+With the Partitioning, Automatic Storage Management, OLAP, Data Mining
+and Real Application Testing options
+[oracle@spiderman backup]$ rsync -vrah $ORACLE_HOME/dbs/*pw* ~/backup/
+sending incremental file list
+orapwPARKER
+
+sent 1.64K bytes  received 31 bytes  3.33K bytes/sec
+total size is 1.54K  speedup is 0.92
+[oracle@spiderman backup]$ ls -lh `pwd`/*
+-rw-r-----. 1 oracle asmadmin 4.5M Nov  3 17:09 /home/oracle/backup/ARC_2441856931PARKER20191103_6_1.bkp
+-rw-r-----. 1 oracle asmadmin 3.8M Nov  3 17:09 /home/oracle/backup/ARC_2441856931PARKER20191103_7_1.bkp
+-rw-r-----. 1 oracle asmadmin 1.1M Nov  3 17:09 /home/oracle/backup/CTRL_2441856931PARKER20191103_8_1.bkp
+-rw-r-----. 1 oracle asmadmin 214M Nov  3 17:09 /home/oracle/backup/DB_2441856931PARKER20191103_2_1.bkp
+-rw-r-----. 1 oracle asmadmin  84M Nov  3 17:09 /home/oracle/backup/DB_2441856931PARKER20191103_3_1.bkp
+-rw-r-----. 1 oracle asmadmin 1.1M Nov  3 17:09 /home/oracle/backup/DB_2441856931PARKER20191103_4_1.bkp
+-rw-r-----. 1 oracle asmadmin  96K Nov  3 17:09 /home/oracle/backup/DB_2441856931PARKER20191103_5_1.bkp
+-rw-r--r--. 1 oracle asmadmin  933 Nov  3 17:12 /home/oracle/backup/initPARKER.ora
+-rw-r--r--. 1 oracle oinstall   78 Nov  3 17:09 /home/oracle/backup/nohupRMAN-Fullbackup_20191103.log
+-rw-r-----. 1 oracle oinstall 1.5K May  4  2017 /home/oracle/backup/orapwPARKER
+-rw-r--r--. 1 oracle oinstall 8.5K Nov  3 17:09 /home/oracle/backup/RMAN-Fullbackup_20191103.log
+-rwxr-xr-x. 1 oracle oinstall 1.1K Nov  3 17:05 /home/oracle/backup/RMAN-Fullbackup.sh
+-rw-r-----. 1 oracle asmadmin  96K Nov  3 17:08 /home/oracle/backup/SPF_2441856931PARKER20191103_1_1.bkp
+-rw-r-----. 1 oracle asmadmin 1.1M Nov  3 17:09 /home/oracle/backup/STBY_2441856931PARKER20191103_9_1.bkp
+[oracle@spiderman backup]$
+
+### Drop database by DBCA or command line
+#########################################
+run dbca or
+SQL> drop database;
+
+### Edit pfile for Restore
+##########################
+[oracle@spiderman backup]$ cp initPARKER.ora initPARKER_ori_20191103.ora
+oracle@spiderman backup]$ vi initPARKER.ora; cat initPARKER.ora;
+*.audit_file_dest='/z01/app/oracle/admin/parker/adump
+*.audit_trail='none'
+*.compatible='11.2.0.4.0'
+*.control_files='+DATA/parker/controlfile/control01.ctl','+FRA/parker/controlfile/control02.ctl'
+*.db_block_size=8192
+*.db_create_file_dest='+DATA'
+*.db_domain='marvel.com'
+*.db_name='parker'
+*.db_recovery_file_dest_size=4385144832
+*.db_recovery_file_dest='+FRA'
+*.db_unique_name='PARKER'
+*.diagnostic_dest='/z01/app/oracle'
+*.dispatchers='(PROTOCOL=TCP) (SERVICE=PARKERXDB)'
+*.log_archive_format='%t_%s_%r.arc'
+*.open_cursors=500
+*.processes=1500
+*.remote_login_passwordfile='EXCLUSIVE'
+*.undo_tablespace='UNDOTBS1'
+*.pga_aggregate_target=768M
+*.sga_max_size=1280M
+*.sga_target=1280M
+[oracle@spiderman backup]$
+
+### Restore Database
+####################
+[oracle@spiderman backup]$ rlwrap rman target=/
+
+Recovery Manager: Release 11.2.0.4.0 - Production on Sun Nov 3 17:41:31 2019
+
+Copyright (c) 1982, 2011, Oracle and/or its affiliates.  All rights reserved.
+
+connected to target database (not started)
+
+RMAN> STARTUP NOMOUNT PFILE='/home/oracle/backup/initPARKER.ora';
+
+Oracle instance started
+
+Total System Global Area    1336176640 bytes
+
+Fixed Size                     2253024 bytes
+Variable Size                956305184 bytes
+Database Buffers             369098752 bytes
+Redo Buffers                   8519680 bytes
+
+RMAN> set dbid 2441856931
+
+executing command: SET DBID
+
+RMAN> RESTORE PRIMARY CONTROLFILE FROM '/home/oracle/backup/CTRL_2441856931PARKER20191103_8_1.bkp';
+
+Starting restore at 03-Nov-19 17:42:38
+using target database control file instead of recovery catalog
+allocated channel: ORA_DISK_1
+channel ORA_DISK_1: SID=1149 device type=DISK
+
+channel ORA_DISK_1: restoring control file
+channel ORA_DISK_1: restore complete, elapsed time: 00:00:04
+output file name=+DATA/parker/controlfile/control01.ctl
+output file name=+FRA/parker/controlfile/control02.ctl
+Finished restore at 03-Nov-19 17:42:42
+
+RMAN> ALTER DATABASE MOUNT;
+
+database mounted
+released channel: ORA_DISK_1
+
+RMAN> crosscheck backup;
+
+Starting implicit crosscheck backup at 03-Nov-19 17:43:02
+allocated channel: ORA_DISK_1
+channel ORA_DISK_1: SID=1149 device type=DISK
+allocated channel: ORA_DISK_2
+channel ORA_DISK_2: SID=1150 device type=DISK
+Crosschecked 7 objects
+Finished implicit crosscheck backup at 03-Nov-19 17:43:03
+
+Starting implicit crosscheck copy at 03-Nov-19 17:43:03
+using channel ORA_DISK_1
+using channel ORA_DISK_2
+Finished implicit crosscheck copy at 03-Nov-19 17:43:03
+
+searching for all files in the recovery area
+cataloging files...
+no files cataloged
+
+using channel ORA_DISK_1
+using channel ORA_DISK_2
+crosschecked backup piece: found to be 'AVAILABLE'
+backup piece handle=/home/oracle/backup/SPF_2441856931PARKER20191103_1_1.bkp RECID=1 STAMP=1023383280
+crosschecked backup piece: found to be 'AVAILABLE'
+backup piece handle=/home/oracle/backup/DB_2441856931PARKER20191103_3_1.bkp RECID=2 STAMP=1023383282
+crosschecked backup piece: found to be 'AVAILABLE'
+backup piece handle=/home/oracle/backup/DB_2441856931PARKER20191103_2_1.bkp RECID=3 STAMP=1023383282
+crosschecked backup piece: found to be 'AVAILABLE'
+backup piece handle=/home/oracle/backup/DB_2441856931PARKER20191103_5_1.bkp RECID=4 STAMP=1023383347
+crosschecked backup piece: found to be 'AVAILABLE'
+backup piece handle=/home/oracle/backup/DB_2441856931PARKER20191103_4_1.bkp RECID=5 STAMP=1023383348
+crosschecked backup piece: found to be 'AVAILABLE'
+backup piece handle=/home/oracle/backup/ARC_2441856931PARKER20191103_7_1.bkp RECID=6 STAMP=1023383350
+crosschecked backup piece: found to be 'AVAILABLE'
+backup piece handle=/home/oracle/backup/ARC_2441856931PARKER20191103_6_1.bkp RECID=7 STAMP=1023383350
+Crosschecked 7 objects
+
+
+RMAN> crosscheck archivelog all;
+
+released channel: ORA_DISK_1
+released channel: ORA_DISK_2
+allocated channel: ORA_DISK_1
+channel ORA_DISK_1: SID=1149 device type=DISK
+allocated channel: ORA_DISK_2
+channel ORA_DISK_2: SID=1150 device type=DISK
+specification does not match any archived log in the repository
+
+RMAN> delete noprompt expired backup;
+
+using channel ORA_DISK_1
+using channel ORA_DISK_2
+specification does not match any backup in the repository
+
+RMAN> delete noprompt expired archivelog all;
+
+released channel: ORA_DISK_1
+released channel: ORA_DISK_2
+allocated channel: ORA_DISK_1
+channel ORA_DISK_1: SID=1149 device type=DISK
+allocated channel: ORA_DISK_2
+channel ORA_DISK_2: SID=1150 device type=DISK
+specification does not match any archived log in the repository
+
+RMAN> catalog start with '/home/oracle/backup/' noprompt;
+
+searching for all files that match the pattern /home/oracle/backup/
+
+List of Files Unknown to the Database
+=====================================
+File Name: /home/oracle/backup/initPARKER.ora
+File Name: /home/oracle/backup/nohupRMAN-Fullbackup_20191103.log
+File Name: /home/oracle/backup/initPARKER_ori_20191103.ora
+File Name: /home/oracle/backup/RMAN-Fullbackup.sh
+File Name: /home/oracle/backup/CTRL_2441856931PARKER20191103_8_1.bkp
+File Name: /home/oracle/backup/orapwPARKER
+File Name: /home/oracle/backup/RMAN-Fullbackup_20191103.log
+File Name: /home/oracle/backup/STBY_2441856931PARKER20191103_9_1.bkp
+cataloging files...
+cataloging done
+
+List of Cataloged Files
+=======================
+File Name: /home/oracle/backup/CTRL_2441856931PARKER20191103_8_1.bkp
+File Name: /home/oracle/backup/STBY_2441856931PARKER20191103_9_1.bkp
+
+List of Files Which Where Not Cataloged
+=======================================
+File Name: /home/oracle/backup/initPARKER.ora
+  RMAN-07517: Reason: The file header is corrupted
+File Name: /home/oracle/backup/nohupRMAN-Fullbackup_20191103.log
+  RMAN-07517: Reason: The file header is corrupted
+File Name: /home/oracle/backup/initPARKER_ori_20191103.ora
+  RMAN-07517: Reason: The file header is corrupted
+File Name: /home/oracle/backup/RMAN-Fullbackup.sh
+  RMAN-07517: Reason: The file header is corrupted
+File Name: /home/oracle/backup/orapwPARKER
+  RMAN-07517: Reason: The file header is corrupted
+File Name: /home/oracle/backup/RMAN-Fullbackup_20191103.log
+  RMAN-07517: Reason: The file header is corrupted
+
+RMAN> list backup summary;
+
+
+List of Backups
+===============
+Key     TY LV S Device Type Completion Time    #Pieces #Copies Compressed Tag
+------- -- -- - ----------- ------------------ ------- ------- ---------- ---
+1       B  F  A DISK        03-Nov-19 17:08:00 1       1       YES        SPFILE
+2       B  F  A DISK        03-Nov-19 17:09:02 1       1       YES        DATABASE
+3       B  F  A DISK        03-Nov-19 17:09:06 1       1       YES        DATABASE
+4       B  F  A DISK        03-Nov-19 17:09:07 1       1       YES        DATABASE
+5       B  F  A DISK        03-Nov-19 17:09:08 1       1       YES        DATABASE
+6       B  A  A DISK        03-Nov-19 17:09:10 1       1       YES        ARCHIVELOGS
+7       B  A  A DISK        03-Nov-19 17:09:11 1       1       YES        ARCHIVELOGS
+8       B  F  A DISK        03-Nov-19 17:09:11 1       1       YES        PRIMCONTROL
+9       B  F  A DISK        03-Nov-19 17:09:14 1       1       YES        STBYCONTROL
+
+RMAN> run{
+2> RESTORE DATABASE;}
+
+Starting restore at 03-Nov-19 17:46:41
+using channel ORA_DISK_1
+using channel ORA_DISK_2
+
+channel ORA_DISK_1: starting datafile backup set restore
+channel ORA_DISK_1: specifying datafile(s) to restore from backup set
+channel ORA_DISK_1: restoring datafile 00002 to +DATA/parker/datafile/sysaux.257.943067079
+channel ORA_DISK_1: restoring datafile 00003 to +DATA/parker/datafile/undotbs1.258.943067081
+channel ORA_DISK_1: restoring datafile 00004 to +DATA/parker/datafile/users.259.943067081
+channel ORA_DISK_1: reading from backup piece /home/oracle/backup/DB_2441856931PARKER20191103_3_1.bkp
+channel ORA_DISK_2: starting datafile backup set restore
+channel ORA_DISK_2: specifying datafile(s) to restore from backup set
+channel ORA_DISK_2: restoring datafile 00001 to +DATA/parker/datafile/system.256.943067079
+channel ORA_DISK_2: restoring datafile 00005 to +DATA/parker/datafile/example.269.943067403
+channel ORA_DISK_2: reading from backup piece /home/oracle/backup/DB_2441856931PARKER20191103_2_1.bkp
+channel ORA_DISK_1: piece handle=/home/oracle/backup/DB_2441856931PARKER20191103_3_1.bkp tag=DATABASE
+channel ORA_DISK_1: restored backup piece 1
+channel ORA_DISK_1: restore complete, elapsed time: 00:03:15
+channel ORA_DISK_2: piece handle=/home/oracle/backup/DB_2441856931PARKER20191103_2_1.bkp tag=DATABASE
+channel ORA_DISK_2: restored backup piece 1
+channel ORA_DISK_2: restore complete, elapsed time: 00:03:15
+Finished restore at 03-Nov-19 17:49:56
+
+RMAN> exit;
+
+
+Recovery Manager complete.
+[oracle@spiderman backup]$
+
+### Check Sequence Number Database
+##################################
+[oracle@spiderman backup]$ rlwrap sqlplus / as sysdba
+
+SQL*Plus: Release 11.2.0.4.0 Production on Sun Nov 3 17:56:26 2019
+
+Copyright (c) 1982, 2013, Oracle.  All rights reserved.
+
+
+Connected to:
+Oracle Database 11g Enterprise Edition Release 11.2.0.4.0 - 64bit Production
+With the Partitioning, Automatic Storage Management, OLAP, Data Mining
+and Real Application Testing options
+
+SQL> COL NAME FOR A65;
+SQL> SELECT NAME, THREAD#, SEQUENCE# FROM V$ARCHIVED_LOG ORDER BY 3;
+
+NAME								     THREAD#  SEQUENCE#
+----------------------------------------------------------------- ---------- ----------
+									   1	      5
+									   1	      6
+									   1	      7
+									   1	      8
+									   1	      9
+									   1	     10
+									   1	     11
+
+7 rows selected.
+
+Elapsed: 00:00:00.01
+SQL> exit
+Disconnected from Oracle Database 11g Enterprise Edition Release 11.2.0.4.0 - 64bit Production
+With the Partitioning, Automatic Storage Management, OLAP, Data Mining
+and Real Application Testing options
+[oracle@spiderman backup]$
+
+### Recover Database (Last Sequence# + 1)
+#########################################
+[oracle@spiderman backup]$ rlwrap rman target=/
+
+Recovery Manager: Release 11.2.0.4.0 - Production on Sun Nov 3 17:57:34 2019
+
+Copyright (c) 1982, 2011, Oracle and/or its affiliates.  All rights reserved.
+
+connected to target database: PARKER (DBID=2441856931, not open)
+
+RMAN> run{
+2> set until sequence 12;
+3> recover database;}
+
+executing command: SET until clause
+
+Starting recover at 03-Nov-19 17:58:08
+using target database control file instead of recovery catalog
+allocated channel: ORA_DISK_1
+channel ORA_DISK_1: SID=1149 device type=DISK
+allocated channel: ORA_DISK_2
+channel ORA_DISK_2: SID=1147 device type=DISK
+
+starting media recovery
+
+channel ORA_DISK_1: starting archived log restore to default destination
+channel ORA_DISK_1: restoring archived log
+archived log thread=1 sequence=11
+channel ORA_DISK_1: reading from backup piece /home/oracle/backup/ARC_2441856931PARKER20191103_7_1.bkp
+channel ORA_DISK_1: piece handle=/home/oracle/backup/ARC_2441856931PARKER20191103_7_1.bkp tag=ARCHIVELOGS
+channel ORA_DISK_1: restored backup piece 1
+channel ORA_DISK_1: restore complete, elapsed time: 00:00:01
+archived log file name=+FRA/parker/archivelog/2019_11_03/thread_1_seq_11.259.1023386291 thread=1 sequence=11
+channel default: deleting archived log(s)
+archived log file name=+FRA/parker/archivelog/2019_11_03/thread_1_seq_11.259.1023386291 RECID=8 STAMP=1023386290
+media recovery complete, elapsed time: 00:00:00
+Finished recover at 03-Nov-19 17:58:11
+
+RMAN>
+
+### Open Resetlogs The DB
+#########################
+RMAN> alter database open resetlogs;
+
+database opened
+
+RMAN> exit;
+
+
+Recovery Manager complete.
+[oracle@spiderman backup]$
+
+### Check DB Status After Recover and Open Resetlogs
+####################################################
+[oracle@spiderman backup]$ rlwrap sqlplus / as sysdba
+
+SQL*Plus: Release 11.2.0.4.0 Production on Sun Nov 3 18:02:34 2019
+
+Copyright (c) 1982, 2013, Oracle.  All rights reserved.
+
+
+Connected to:
+Oracle Database 11g Enterprise Edition Release 11.2.0.4.0 - 64bit Production
+With the Partitioning, Automatic Storage Management, OLAP, Data Mining
+and Real Application Testing options
+
+SQL> SELECT NAME,OPEN_MODE FROM V$DATABASE UNION ALL SELECT INSTANCE_NAME,STATUS FROM V$INSTANCE;
+
+NAME		 OPEN_MODE
+---------------- --------------------
+PARKER		 READ WRITE
+PARKER		 OPEN
+
+Elapsed: 00:00:00.00
+SQL> SELECT * FROM SCOTT.BAND;
+
+	ID NAME 							     GENRE
+---------- ----------------------------------------------------------------- ------------------------------
+	 1 Green Day							     Punk Rock
+	 2 Blink 182							     Punk Rock
+	 3 Slipknot							     Heavy Metal
+	 4 Lamb of God							     Death Metal
+	 5 Guns N Roses 						     Rock
+	 6 Sum 41							     Punk Rock
+
+6 rows selected.
+
+Elapsed: 00:00:00.00
+SQL>
+
+### Create spfile from pfile
+############################
+SQL> create spfile='+DATA/PARKER/PARAMETERFILE/spfilePARKER.ora' from pfile='/home/oracle/backup/initPARKER.ora';
+
+File created.
+
+Elapsed: 00:00:00.62
+SQL> exit;
+Disconnected from Oracle Database 11g Enterprise Edition Release 11.2.0.4.0 - 64bit Production
+With the Partitioning, Automatic Storage Management, OLAP, Data Mining
+and Real Application Testing options
+[oracle@spiderman backup]$
+
+### Restore passwordfile
+########################
+[oracle@spiderman backup]$ rsync -vrah /home/oracle/backup/orapwPARKER $ORACLE_HOME/dbs/orapwPARKER
+sending incremental file list
+orapwPARKER
+
+sent 1.64K bytes  received 31 bytes  3.33K bytes/sec
+total size is 1.54K  speedup is 0.92
+[oracle@spiderman backup]$ ls -lh $ORACLE_HOME/dbs
+total 16K
+-rw-rw----. 1 oracle asmadmin 1.6K Nov  3 17:59 hc_PARKER.dat
+-rw-r--r--. 1 oracle oinstall 2.8K May 15  2009 init.ora
+-rw-r-----. 1 oracle asmadmin   24 Nov  3 17:42 lkPARKER
+-rw-r-----. 1 oracle oinstall 1.5K May  4  2017 orapwPARKER
+[oracle@spiderman backup]$
+
+### Add DB into The HAS
+#######################
+[oracle@spiderman backup]$ env|grep ORA
+ORACLE_UNQNAME=PARKER
+ORACLE_SID=PARKER
+ORACLE_BASE=/z01/app/oracle
+ORACLE_HOSTNAME=spiderman.marvel.com
+ORACLE_HOME=/z01/app/oracle/product/11204/db_h1
+[oracle@spiderman backup]$ srvctl add database -help
+
+Adds a database configuration to be managed by Oracle Restart.
+
+Usage: srvctl add database -d <db_unique_name> -o <oracle_home> [-m <domain_name>] [-p <spfile>] [-r {PRIMARY | PHYSICAL_STANDBY | LOGICAL_STANDBY | SNAPSHOT_STANDBY}] [-s <start_options>] [-t <stop_options>] [-n <db_name>] [-i <inst_name>] [-y {AUTOMATIC | MANUAL | NORESTART}] [-a "<diskgroup_list>"]
+    -d <db_unique_name>      Unique name for the database
+    -o <oracle_home>         ORACLE_HOME path
+    -m <domain>              Domain for database. Must be set if database has DB_DOMAIN set.
+    -p <spfile>              Server parameter file path
+    -r <role>                Role of the database (primary, physical_standby, logical_standby, snapshot_standby)
+    -s <start_options>       Startup options for the database. Examples of startup options are OPEN, MOUNT, or 'READ ONLY'.
+    -t <stop_options>        Stop options for the database. Examples of shutdown options are NORMAL, TRANSACTIONAL, IMMEDIATE, or ABORT.
+    -n <db_name>             Database name (DB_NAME), if different from the unique name given by the -d option
+    -i <inst_name>           Instance name
+    -y <dbpolicy>            Management policy for the database (AUTOMATIC, MANUAL, or NORESTART)
+    -a "<diskgroup_list>"    Comma separated list of disk groups
+    -h                       Print usage
+[oracle@spiderman backup]$ srvctl add database -d PARKER -o /z01/app/oracle/product/11204/db_h1 -m marvel.com -p +DATA/PARKER/PARAMETERFILE/spfilePARKER.ora -r PRIMARY -s OPEN -t IMMEDIATE -n PARKER -i PARKER -y AUTOMATIC -a "DATA","FRA"
+[oracle@spiderman backup]$ srvctl config database -d parker
+Database unique name: PARKER
+Database name: PARKER
+Oracle home: /z01/app/oracle/product/11204/db_h1
+Oracle user: oracle
+Spfile: +DATA/PARKER/PARAMETERFILE/spfilePARKER.ora
+Domain: marvel.com
+Start options: open
+Stop options: immediate
+Database role: PRIMARY
+Management policy: AUTOMATIC
+Database instance: PARKER
+Disk Groups: DATA,FRA
+Services: 
+[oracle@spiderman backup]$
+
+### Shutdown DB
+###############
+[oracle@spiderman backup]$ rlwrap sqlplus / as sysdba
+
+SQL*Plus: Release 11.2.0.4.0 Production on Sun Nov 3 18:12:12 2019
+
+Copyright (c) 1982, 2013, Oracle.  All rights reserved.
+
+
+Connected to:
+Oracle Database 11g Enterprise Edition Release 11.2.0.4.0 - 64bit Production
+With the Partitioning, Automatic Storage Management, OLAP, Data Mining
+and Real Application Testing options
+
+SQL> shu immediate;
+Database closed.
+Database dismounted.
+ORACLE instance shut down.
+SQL> exit
+Disconnected from Oracle Database 11g Enterprise Edition Release 11.2.0.4.0 - 64bit Production
+With the Partitioning, Automatic Storage Management, OLAP, Data Mining
+and Real Application Testing options
+[oracle@spiderman backup]$
+
+### Create pfile that Specify The spfile
+########################################
+[oracle@spiderman backup]$ echo spfile=\'+DATA/PARKER/PARAMETERFILE/spfilePARKER.ora\' > $ORACLE_HOME/dbs/init$ORACLE_SID.ora
+[oracle@spiderman backup]$ cat $ORACLE_HOME/dbs/initPARKER.ora
+spfile='+DATA/PARKER/PARAMETERFILE/spfilePARKER.ora'
+[oracle@spiderman backup]$
+
+### Edit oratab
+###############
+[oracle@spiderman backup]$ echo $ORACLE_SID:$ORACLE_HOME:Y >> /etc/oratab
+[oracle@spiderman backup]$ cat /etc/oratab
+#Backup file is  /z01/app/grid/product/11204/grid/srvm/admin/oratab.bak.spiderman line added by Agent
+#
+
+
+
+# This file is used by ORACLE utilities.  It is created by root.sh
+# and updated by either Database Configuration Assistant while creating
+# a database or ASM Configuration Assistant while creating ASM instance.
+
+# A colon, ':', is used as the field terminator.  A new line terminates
+# the entry.  Lines beginning with a pound sign, '#', are comments.
+#
+# Entries are of the form:
+#   $ORACLE_SID:$ORACLE_HOME:<N|Y>:
+#
+# The first and second fields are the system identifier and home
+# directory of the database respectively.  The third filed indicates
+# to the dbstart utility that the database should , "Y", or should not,
+# "N", be brought up at system boot time.
+#
+# Multiple entries with the same $ORACLE_SID are not allowed.
+#
+#
++ASM:/z01/app/grid/product/11204/grid:N		# line added by Agent
+PARKER:/z01/app/oracle/product/11204/db_h1:Y
+[oracle@spiderman backup]$
+
+### Start DB by Using srvctl
+############################
+[oracle@spiderman backup]$ srvctl start database -d parker
+[oracle@spiderman backup]$ srvctl status database -d parker
+Database is running.
+[oracle@spiderman backup]$
+
+### Check HAS Status
+####################
+[oracle@spiderman backup]$ su - grid
+Password: 
+[grid@spiderman ~]$ crsctl stat res -t
+--------------------------------------------------------------------------------
+NAME           TARGET  STATE        SERVER                   STATE_DETAILS       
+--------------------------------------------------------------------------------
+Local Resources
+--------------------------------------------------------------------------------
+ora.DATA.dg
+               ONLINE  ONLINE       spiderman                                    
+ora.FRA.dg
+               ONLINE  ONLINE       spiderman                                    
+ora.LISTENER.lsnr
+               ONLINE  ONLINE       spiderman                                    
+ora.asm
+               ONLINE  ONLINE       spiderman                Started             
+ora.ons
+               OFFLINE OFFLINE      spiderman                                    
+--------------------------------------------------------------------------------
+Cluster Resources
+--------------------------------------------------------------------------------
+ora.cssd
+      1        ONLINE  ONLINE       spiderman                                    
+ora.diskmon
+      1        OFFLINE OFFLINE                                                   
+ora.evmd
+      1        ONLINE  ONLINE       spiderman                                    
+ora.parker.db
+      1        ONLINE  ONLINE       spiderman                Open                
+[grid@spiderman ~]$

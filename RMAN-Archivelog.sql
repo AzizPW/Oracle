@@ -40,3 +40,13 @@ LIST COPY OF ARCHIVELOG UNTIL TIME 'TRUNC(SYSDATE-9)';
 DELETE NOPROMPT COPY OF ARCHIVELOG UNTIL TIME 'TRUNC(SYSDATE-9)';
 
 CONFIGURE ARCHIVELOG DELETION POLICY TO APPLIED ON ALL STANDBY;
+
+### Delete Archivelog Script
+############################
+[orekel@rhino ~]$ vi /home/orekel/scripts/RMAN-DelArc.sh; chmod +x /home/orekel/scripts/RMAN-DelArc.sh; cat /home/orekel/scripts/RMAN-DelArc.sh;
+#!/bin/bash
+source /home/orekel/.bash_profile; export NLS_DATE_FORMAT='DD-Mon-RR HH24:MI:SS';
+$ORACLE_HOME/bin/rman target=/ log=/backup/RMAN-DelArc_`date +%Y%m%d`.log << EOF
+DELETE NOPROMPT ARCHIVELOG UNTIL TIME 'TRUNC(SYSDATE-2)';
+EOF
+[orekel@rhino ~]$ nohup /home/orekel/scripts/RMAN-DelArc.sh >> ~/nohupRMAN-DelArc_`date +%Y%m%d`.log 2>&1 &
