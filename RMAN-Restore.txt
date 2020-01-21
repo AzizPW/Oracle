@@ -2,8 +2,9 @@
 ### Oracle DB 11.2.0.4 Single ASM ###############################
 ### RMAN Backup Restore on rhel6 ################################
 ### by AzizPW - Database Administrator ##########################
-### PT Mitra Integrasi Informatika ##############################
-### Sun, 03 Nov 2019# ###########################################
+### PT Mitra Integrasi Informatika - Metrodata Group ############
+### Created: Sun, 03 Nov 2019 ###################################
+### Updated: Tue, 21 Jan 2020 ###################################
 #################################################################
 
 ### Test Create and Insert Table Before Backup
@@ -63,12 +64,12 @@ Elapsed: 00:00:00.00
 SQL> SELECT * FROM SCOTT.BAND;
 
 	ID NAME 					      GENRE
----------- -------------------------------------------------- ------------------------------
-	 1 Green Day					      Punk Rock
-	 2 Blink 182					      Punk Rock
+------ ------------------------------ ------------------------------
+	 1 Green Day					  Punk Rock
+	 2 Blink 182					  Punk Rock
 	 3 Slipknot					      Heavy Metal
-	 4 Lamb of God					      Death Metal
-	 5 Guns N Roses 				      Rock
+	 4 Lamb of God					  Death Metal
+	 5 Guns N Roses 				  Rock
 	 6 Sum 41					      Punk Rock
 
 6 rows selected.
@@ -384,8 +385,9 @@ total size is 1.54K  speedup is 0.92
 
 ### Drop database by DBCA or command line
 #########################################
+https://github.com/AzizPW/Oracle/blob/master/DropDatabase.sql
 run dbca or
-SQL> drop database;
+SQL> DROP DATABASE;
 
 ### Edit pfile for Restore
 ##########################
@@ -625,7 +627,7 @@ SQL> COL NAME FOR A65;
 SQL> SELECT NAME, THREAD#, SEQUENCE# FROM V$ARCHIVED_LOG ORDER BY 3;
 
 NAME								     THREAD#  SEQUENCE#
------------------------------------------------------------------ ---------- ----------
+-------------------------------------- ---------- ----------
 									   1	      5
 									   1	      6
 									   1	      7
@@ -642,6 +644,30 @@ Disconnected from Oracle Database 11g Enterprise Edition Release 11.2.0.4.0 - 64
 With the Partitioning, Automatic Storage Management, OLAP, Data Mining
 and Real Application Testing options
 [oracle@spiderman backup]$
+
+############################
+#### Update on 20200121 ####
+Ref:  https://gavinsoorma.com/2013/02/restoring-a-asm-backup-to-non-asm-and-restoring-from-rac-to-single-instance
+We need to identify the archive log sequence number which we will use in the SET UNTIL command. RMAN will perform recovery of the database until the log sequence number that we need to determine. Run the RMAN command LIST BACKUP OF ARCHIVELOG ALL. Note the last or latest archive log backup for each thread (since this backup was taken from a RAC database). Then among the two archive log sequence numbers, identify the one which has the lower NEXT_SCN number. That will be the archive log sequence that we need to make a note of. Remember, we need to add 1 to this number which is then used in the SET UNTIL SEQUENCE clause of the RMAN RECOVER command. For example, we see that for thread 1, the most recent archive log backup available belongs to log sequence number 144 while for thread 2 the most recent archive log backup available belongs to log sequence number 139 . Comparing, the NEXT_SCN value for both those sequence numbers, we can see that for sequence 144 , the NEXT_SCN value is lower (736746 compared with 736760).
+
+Thrd 	Seq     Low SCN    	Low Time  Next SCN   Next Time
+
+  1    144   736706 		28-MAR-12 736746 	28-MAR-12
+
+....
+....
+
+  2    139   736740 		28-MAR-12 736760 	28-MAR-12
+
+RMAN> run {
+set until sequence 145 thread 1;
+recover database;
+}
+
+SQL> COL NAME FOR A65;
+SQL> COL NEXT_CHANGE# FOR 999999999999999;
+SQL> SELECT NAME, THREAD#, SEQUENCE#, NEXT_CHANGE# FROM V$ARCHIVED_LOG ORDER BY 3;
+############################
 
 ### Recover Database (Last Sequence# + 1)
 #########################################
@@ -720,12 +746,12 @@ Elapsed: 00:00:00.00
 SQL> SELECT * FROM SCOTT.BAND;
 
 	ID NAME 							     GENRE
----------- ----------------------------------------------------------------- ------------------------------
-	 1 Green Day							     Punk Rock
-	 2 Blink 182							     Punk Rock
+------ ------------------------------------- ------------------------------
+	 1 Green Day							 Punk Rock
+	 2 Blink 182							 Punk Rock
 	 3 Slipknot							     Heavy Metal
-	 4 Lamb of God							     Death Metal
-	 5 Guns N Roses 						     Rock
+	 4 Lamb of God							 Death Metal
+	 5 Guns N Roses 						 Rock
 	 6 Sum 41							     Punk Rock
 
 6 rows selected.
