@@ -1,0 +1,5 @@
+ODA
+###
+https://docs.oracle.com/cd/E22693_01/doc.12/e22692/chklist.htm
+https://docs.oracle.com/cd/E88132_01/doc.122/e88393/managing-oracle-databases.htm#CMTXL-GUID-6F448D24-E953-4074-8E63-26DD4B50E41E
+https://docs.oracle.com/en/engineered-systems/oracle-database-appliance/18.3/cmtxl/odacli-comparison-chart.html#GUID-D3B1AA09-ED1F-459C-8172-A01964856700

@@ -1,0 +1,936 @@
+[root@punk ~]# cd postgrescommunity/
+[root@punk postgrescommunity]# ls -lh
+total 8.0K
+-rw-r--r--. 1 root root 6.2K Mar 17 12:07 pgdg-redhat-repo-latest.noarch.rpm
+[root@punk postgrescommunity]# yum install -y pgdg-redhat-repo-latest.noarch.rpm
+Loaded plugins: langpacks, product-id, search-disabled-repos, subscription-manager
+This system is not registered with an entitlement server. You can use subscription-manager to register.
+Repository InstallMedia is listed more than once in the configuration
+Examining pgdg-redhat-repo-latest.noarch.rpm: pgdg-redhat-repo-42.0-8.noarch
+Marking pgdg-redhat-repo-latest.noarch.rpm to be installed
+Resolving Dependencies
+--> Running transaction check
+---> Package pgdg-redhat-repo.noarch 0:42.0-8 will be installed
+--> Finished Dependency Resolution
+
+Dependencies Resolved
+
+=======================================================================================================================================================================================================================================
+ Package                                                  Arch                                           Version                                         Repository                                                               Size
+=======================================================================================================================================================================================================================================
+Installing:
+ pgdg-redhat-repo                                         noarch                                         42.0-8                                          /pgdg-redhat-repo-latest.noarch                                          11 k
+
+Transaction Summary
+=======================================================================================================================================================================================================================================
+Install  1 Package
+
+Total size: 11 k
+Installed size: 11 k
+Downloading packages:
+Running transaction check
+Running transaction test
+Transaction test succeeded
+Running transaction
+  Installing : pgdg-redhat-repo-42.0-8.noarch                                                                                                                                                                                      1/1
+  Verifying  : pgdg-redhat-repo-42.0-8.noarch                                                                                                                                                                                      1/1
+
+Installed:
+  pgdg-redhat-repo.noarch 0:42.0-8
+
+Complete!
+[root@punk postgrescommunity]# ls -lh /etc/yum.repos.d/
+total 24K
+-r--r--r--. 1 root root  212 Jan 15 11:42 media.repo
+-r--r--r--. 1 root root  114 Jul 23  2019 packagekit-media.repo
+-rw-r--r--. 1 root root 8.9K Mar 11 15:14 pgdg-redhat-all.repo
+-rw-r--r--. 1 root root  358 Jan 15 11:31 redhat.repo
+[root@punk postgrescommunity]# ls -lh /etc/yum.repos.d/pgdg-redhat-all.repo
+-rw-r--r--. 1 root root 8.9K Mar 11 15:14 /etc/yum.repos.d/pgdg-redhat-all.repo
+[root@punk postgrescommunity]# cat /etc/yum.repos.d/pgdg-redhat-all.repo
+
+# PGDG Red Hat Enterprise Linux / CentOS stable repositories:
+
+[pgdg12]
+name=PostgreSQL 12 for RHEL/CentOS $releasever - $basearch
+baseurl=https://download.postgresql.org/pub/repos/yum/12/redhat/rhel-$releasever-$basearch
+enabled=1
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-PGDG
+
+[pgdg11]
+name=PostgreSQL 11 for RHEL/CentOS $releasever - $basearch
+baseurl=https://download.postgresql.org/pub/repos/yum/11/redhat/rhel-$releasever-$basearch
+enabled=1
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-PGDG
+
+[pgdg10]
+name=PostgreSQL 10 for RHEL/CentOS $releasever - $basearch
+baseurl=https://download.postgresql.org/pub/repos/yum/10/redhat/rhel-$releasever-$basearch
+enabled=1
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-PGDG
+
+[pgdg96]
+name=PostgreSQL 9.6 for RHEL/CentOS $releasever - $basearch
+baseurl=https://download.postgresql.org/pub/repos/yum/9.6/redhat/rhel-$releasever-$basearch
+enabled=1
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-PGDG
+
+[pgdg95]
+name=PostgreSQL 9.5 for RHEL/CentOS $releasever - $basearch
+baseurl=https://download.postgresql.org/pub/repos/yum/9.5/redhat/rhel-$releasever-$basearch
+enabled=1
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-PGDG
+
+[pgdg94]
+name=PostgreSQL 9.4 for RHEL/CentOS $releasever - $basearch
+baseurl=https://download.postgresql.org/pub/repos/yum/9.4/redhat/rhel-$releasever-$basearch
+enabled=1
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-PGDG
+
+# PGDG RHEL/CentOS Updates Testing repositories. (These packages should not be used in production)
+# Available for 9.6 and above.
+
+[pgdg13-updates-testing]
+name=PostgreSQL 13 for RHEL/CentOS $releasever - $basearch - Updates testing
+baseurl=https://download.postgresql.org/pub/repos/yum/testing/13/redhat/rhel-$releasever-$basearch
+enabled=0
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-PGDG
+
+[pgdg12-updates-testing]
+name=PostgreSQL 12 for RHEL/CentOS $releasever - $basearch - Updates testing
+baseurl=https://download.postgresql.org/pub/repos/yum/testing/12/redhat/rhel-$releasever-$basearch
+enabled=0
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-PGDG
+
+[pgdg11-updates-testing]
+name=PostgreSQL 11 for RHEL/CentOS $releasever - $basearch - Updates testing
+baseurl=https://download.postgresql.org/pub/repos/yum/testing/11/redhat/rhel-$releasever-$basearch
+enabled=0
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-PGDG
+
+[pgdg10-updates-testing]
+name=PostgreSQL 10 for RHEL/CentOS $releasever - $basearch - Updates testing
+baseurl=https://download.postgresql.org/pub/repos/yum/testing/10/redhat/rhel-$releasever-$basearch
+enabled=0
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-PGDG
+
+[pgdg96-updates-testing]
+name=PostgreSQL 9.6 for RHEL/CentOS $releasever - $basearch - Updates testing
+baseurl=https://download.postgresql.org/pub/repos/yum/testing/9.6/redhat/rhel-$releasever-$basearch
+enabled=0
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-PGDG
+
+# PGDG Source RPMs (SRPM), and their testing repositories:
+
+[pgdg12-source]
+name=PostgreSQL 12 for RHEL/CentOS $releasever - $basearch - Source
+failovermethod=priority
+baseurl=https://download.postgresql.org/pub/repos/yum/srpms/12/redhat/rhel-$releasever-$basearch
+enabled=0
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-PGDG
+
+[pgdg12-source-updates-testing]
+name=PostgreSQL 12 for RHEL/CentOS $releasever - $basearch - Source update testing
+failovermethod=priority
+baseurl=https://download.postgresql.org/pub/repos/yum/srpms/testing/12/redhat/rhel-$releasever-$basearch
+enabled=0
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-PGDG
+
+[pgdg11-source]
+name=PostgreSQL 11 for RHEL/CentOS $releasever - $basearch - Source
+failovermethod=priority
+baseurl=https://download.postgresql.org/pub/repos/yum/srpms/11/redhat/rhel-$releasever-$basearch
+enabled=0
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-PGDG
+
+[pgdg11-source-updates-testing]
+name=PostgreSQL 11 for RHEL/CentOS $releasever - $basearch - Source update testing
+failovermethod=priority
+baseurl=https://download.postgresql.org/pub/repos/yum/srpms/testing/11/redhat/rhel-$releasever-$basearch
+enabled=0
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-PGDG
+
+[pgdg10-source]
+name=PostgreSQL 10 for RHEL/CentOS $releasever - $basearch - Source
+failovermethod=priority
+baseurl=https://download.postgresql.org/pub/repos/yum/srpms/10/redhat/rhel-$releasever-$basearch
+enabled=0
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-PGDG
+
+[pgdg10-source-updates-testing]
+name=PostgreSQL 10 for RHEL/CentOS $releasever - $basearch - Source update testing
+failovermethod=priority
+baseurl=https://download.postgresql.org/pub/repos/yum/srpms/testing/10/redhat/rhel-$releasever-$basearch
+enabled=0
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-PGDG
+
+[pgdg96-source]
+name=PostgreSQL 9.6 for RHEL/CentOS $releasever - $basearch - Source
+failovermethod=priority
+baseurl=https://download.postgresql.org/pub/repos/yum/srpms/9.6/redhat/rhel-$releasever-$basearch
+enabled=0
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-PGDG
+
+[pgdg96-source-updates-testing]
+name=PostgreSQL 9.6 for RHEL/CentOS $releasever - $basearch - Source update testing
+failovermethod=priority
+baseurl=https://download.postgresql.org/pub/repos/yum/srpms/testing/9.6/redhat/rhel-$releasever-$basearch
+enabled=0
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-PGDG
+
+[pgdg95-source]
+name=PostgreSQL 9.5 for RHEL/CentOS $releasever - $basearch - Source
+failovermethod=priority
+baseurl=https://download.postgresql.org/pub/repos/yum/srpms/9.5/redhat/rhel-$releasever-$basearch
+enabled=0
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-PGDG
+
+[pgdg94-source]
+name=PostgreSQL 9.4 for RHEL/CentOS $releasever - $basearch - Source
+failovermethod=priority
+baseurl=https://download.postgresql.org/pub/repos/yum/srpms/9.4/redhat/rhel-$releasever-$basearch
+enabled=0
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-PGDG
+
+# Debuginfo/debugsource packages for stable repos
+
+[pgdg13-updates-debuginfo]
+name=PostgreSQL 13 for RHEL/CentOS $releasever - $basearch - Debuginfo
+baseurl=https://download.postgresql.org/pub/repos/yum/debug/13/redhat/rhel-$releasever-$basearch
+enabled=0
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-PGDG
+
+[pgdg12-updates-debuginfo]
+name=PostgreSQL 12 for RHEL/CentOS $releasever - $basearch - Debuginfo
+baseurl=https://download.postgresql.org/pub/repos/yum/debug/12/redhat/rhel-$releasever-$basearch
+enabled=0
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-PGDG
+
+[pgdg11-updates-debuginfo]
+name=PostgreSQL 11 for RHEL/CentOS $releasever - $basearch - Debuginfo
+baseurl=https://download.postgresql.org/pub/repos/yum/debug/11/redhat/rhel-$releasever-$basearch
+enabled=0
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-PGDG
+
+[pgdg10-updates-debuginfo]
+name=PostgreSQL 10 for RHEL/CentOS $releasever - $basearch - Debuginfo
+baseurl=https://download.postgresql.org/pub/repos/yum/debug/10/redhat/rhel-$releasever-$basearch
+enabled=0
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-PGDG
+
+[pgdg96-updates-debuginfo]
+name=PostgreSQL 9.6 for RHEL/CentOS $releasever - $basearch - Debuginfo
+baseurl=https://download.postgresql.org/pub/repos/yum/debug/9.6/redhat/rhel-$releasever-$basearch
+enabled=0
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-PGDG
+
+[pgdg95-updates-debuginfo]
+name=PostgreSQL 9.5 for RHEL/CentOS $releasever - $basearch - Debuginfo
+baseurl=https://download.postgresql.org/pub/repos/yum/debug/9.5/redhat/rhel-$releasever-$basearch
+enabled=0
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-PGDG
+
+# Debuginfo/debugsource packages for testing repos
+# Available for 9.6 and above.
+
+[pgdg13-updates-testing-debuginfo]
+name=PostgreSQL 13 for RHEL/CentOS $releasever - $basearch - Debuginfo
+baseurl=https://download.postgresql.org/pub/repos/yum/testing/debug/13/redhat/rhel-$releasever-$basearch
+enabled=0
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-PGDG
+
+[pgdg12-updates-testing-debuginfo]
+name=PostgreSQL 12 for RHEL/CentOS $releasever - $basearch - Debuginfo
+baseurl=https://download.postgresql.org/pub/repos/yum/testing/debug/12/redhat/rhel-$releasever-$basearch
+enabled=0
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-PGDG
+
+[pgdg11-updates-testing-debuginfo]
+name=PostgreSQL 11 for RHEL/CentOS $releasever - $basearch - Debuginfo
+baseurl=https://download.postgresql.org/pub/repos/yum/testing/debug/11/redhat/rhel-$releasever-$basearch
+enabled=0
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-PGDG
+
+[pgdg10-updates-testing-debuginfo]
+name=PostgreSQL 10 for RHEL/CentOS $releasever - $basearch - Debuginfo
+baseurl=https://download.postgresql.org/pub/repos/yum/testing/debug/10/redhat/rhel-$releasever-$basearch
+enabled=0
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-PGDG
+
+[pgdg96-updates-testing-debuginfo]
+name=PostgreSQL 9.6 for RHEL/CentOS $releasever - $basearch - Debuginfo
+baseurl=https://download.postgresql.org/pub/repos/yum/testing/debug/9.6/redhat/rhel-$releasever-$basearch
+enabled=0
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-PGDG
+[root@punk postgrescommunity]# yum install postgresql12
+Loaded plugins: langpacks, product-id, search-disabled-repos, subscription-manager
+This system is not registered with an entitlement server. You can use subscription-manager to register.
+Repository InstallMedia is listed more than once in the configuration
+pgdg10                                                                                                                                                                                                          | 3.6 kB  00:00:00
+pgdg11                                                                                                                                                                                                          | 3.6 kB  00:00:00
+pgdg12                                                                                                                                                                                                          | 3.6 kB  00:00:00
+pgdg94                                                                                                                                                                                                          | 3.6 kB  00:00:00
+pgdg95                                                                                                                                                                                                          | 3.6 kB  00:00:00
+pgdg96                                                                                                                                                                                                          | 3.6 kB  00:00:00
+(1/12): pgdg12/7Server/x86_64/group_gz                                                                                                                                                                          |  245 B  00:00:01
+(2/12): pgdg11/7Server/x86_64/group_gz                                                                                                                                                                          |  245 B  00:00:01
+(3/12): pgdg10/7Server/x86_64/group_gz                                                                                                                                                                          |  245 B  00:00:01
+(4/12): pgdg94/7Server/x86_64/group_gz                                                                                                                                                                          |  247 B  00:00:00
+(5/12): pgdg95/7Server/x86_64/group_gz                                                                                                                                                                          |  249 B  00:00:00
+(6/12): pgdg12/7Server/x86_64/primary_db                                                                                                                                                                        | 193 kB  00:00:01
+(7/12): pgdg11/7Server/x86_64/primary_db                                                                                                                                                                        | 356 kB  00:00:03
+(8/12): pgdg10/7Server/x86_64/primary_db                                                                                                                                                                        | 386 kB  00:00:03
+(9/12): pgdg96/7Server/x86_64/group_gz                                                                                                                                                                          |  249 B  00:00:00
+(10/12): pgdg94/7Server/x86_64/primary_db                                                                                                                                                                       | 399 kB  00:00:01
+(11/12): pgdg96/7Server/x86_64/primary_db                                                                                                                                                                       | 399 kB  00:00:00
+(12/12): pgdg95/7Server/x86_64/primary_db                                                                                                                                                                       | 439 kB  00:00:02
+Resolving Dependencies
+--> Running transaction check
+---> Package postgresql12.x86_64 0:12.2-2PGDG.rhel7 will be installed
+--> Processing Dependency: postgresql12-libs(x86-64) = 12.2-2PGDG.rhel7 for package: postgresql12-12.2-2PGDG.rhel7.x86_64
+--> Processing Dependency: libpq.so.5()(64bit) for package: postgresql12-12.2-2PGDG.rhel7.x86_64
+--> Running transaction check
+---> Package postgresql12-libs.x86_64 0:12.2-2PGDG.rhel7 will be installed
+--> Finished Dependency Resolution
+
+Dependencies Resolved
+
+=======================================================================================================================================================================================================================================
+ Package                                                      Arch                                              Version                                                        Repository                                         Size
+=======================================================================================================================================================================================================================================
+Installing:
+ postgresql12                                                 x86_64                                            12.2-2PGDG.rhel7                                               pgdg12                                            1.6 M
+Installing for dependencies:
+ postgresql12-libs                                            x86_64                                            12.2-2PGDG.rhel7                                               pgdg12                                            367 k
+
+Transaction Summary
+=======================================================================================================================================================================================================================================
+Install  1 Package (+1 Dependent package)
+
+Total download size: 1.9 M
+Installed size: 9.7 M
+Is this ok [y/d/N]: y
+Downloading packages:
+warning: /var/cache/yum/x86_64/7Server/pgdg12/packages/postgresql12-libs-12.2-2PGDG.rhel7.x86_64.rpm: Header V4 DSA/SHA1 Signature, key ID 442df0f8: NOKEY                                           ] 156 kB/s | 463 kB  00:00:09 ETA
+Public key for postgresql12-libs-12.2-2PGDG.rhel7.x86_64.rpm is not installed
+(1/2): postgresql12-libs-12.2-2PGDG.rhel7.x86_64.rpm                                                                                                                                                            | 367 kB  00:00:03
+postgresql12-12.2-2PGDG.rhel7. FAILED                                                                48% [===========================================-                                               ]   37 B/s | 943 kB  07:51:14 ETA
+https://download.postgresql.org/pub/repos/yum/12/redhat/rhel-7Server-x86_64/postgresql12-12.2-2PGDG.rhel7.x86_64.rpm: [Errno 12] Timeout on https://download.postgresql.org/pub/repos/yum/12/redhat/rhel-7Server-x86_64/postgresql12-12.2-2PGDG.rhel7.x86_64.rpm: (28, 'Operation too slow. Less than 1000 bytes/sec transferred the last 30 seconds')
+Trying other mirror.
+(2/2): postgresql12-12.2-2PGDG.rhel7.x86_64.rpm                                                                                                                                                                 | 1.6 MB  00:00:17
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Total                                                                                                                                                                                                   31 kB/s | 1.9 MB  00:01:03
+Retrieving key from file:///etc/pki/rpm-gpg/RPM-GPG-KEY-PGDG
+Importing GPG key 0x442DF0F8:
+ Userid     : "PostgreSQL RPM Building Project <pgsqlrpms-hackers@pgfoundry.org>"
+ Fingerprint: 68c9 e2b9 1a37 d136 fe74 d176 1f16 d2e1 442d f0f8
+ Package    : pgdg-redhat-repo-42.0-8.noarch (@/pgdg-redhat-repo-latest.noarch)
+ From       : /etc/pki/rpm-gpg/RPM-GPG-KEY-PGDG
+Is this ok [y/N]: y
+Running transaction check
+Running transaction test
+Transaction test succeeded
+Running transaction
+  Installing : postgresql12-libs-12.2-2PGDG.rhel7.x86_64                                                                                                                                                                           1/2
+  Installing : postgresql12-12.2-2PGDG.rhel7.x86_64                                                                                                                                                                                2/2
+  Verifying  : postgresql12-12.2-2PGDG.rhel7.x86_64                                                                                                                                                                                1/2
+  Verifying  : postgresql12-libs-12.2-2PGDG.rhel7.x86_64                                                                                                                                                                           2/2
+
+Installed:
+  postgresql12.x86_64 0:12.2-2PGDG.rhel7
+
+Dependency Installed:
+  postgresql12-libs.x86_64 0:12.2-2PGDG.rhel7
+
+Complete!
+[root@punk postgrescommunity]# yum install postgresql12-server
+Loaded plugins: langpacks, product-id, search-disabled-repos, subscription-manager
+This system is not registered with an entitlement server. You can use subscription-manager to register.
+Repository InstallMedia is listed more than once in the configuration
+Resolving Dependencies
+--> Running transaction check
+---> Package postgresql12-server.x86_64 0:12.2-2PGDG.rhel7 will be installed
+--> Finished Dependency Resolution
+
+Dependencies Resolved
+
+=======================================================================================================================================================================================================================================
+ Package                                                        Arch                                              Version                                                      Repository                                         Size
+=======================================================================================================================================================================================================================================
+Installing:
+ postgresql12-server                                            x86_64                                            12.2-2PGDG.rhel7                                             pgdg12                                            4.9 M
+
+Transaction Summary
+=======================================================================================================================================================================================================================================
+Install  1 Package
+
+Total download size: 4.9 M
+Installed size: 19 M
+Is this ok [y/d/N]: y
+Downloading packages:
+postgresql12-server-12.2-2PGDG.rhel7.x86_64.rpm                                                                                                                                                                 | 4.9 MB  00:01:08
+Running transaction check
+Running transaction test
+Transaction test succeeded
+Running transaction
+  Installing : postgresql12-server-12.2-2PGDG.rhel7.x86_64                                                                                                                                                                         1/1
+  Verifying  : postgresql12-server-12.2-2PGDG.rhel7.x86_64                                                                                                                                                                         1/1
+
+Installed:
+  postgresql12-server.x86_64 0:12.2-2PGDG.rhel7
+
+Complete!
+[root@punk postgrescommunity]# /usr/pgsql-12/bin/postgresql-12-setup initdb
+Initializing database ... OK
+
+[root@punk postgrescommunity]# systemctl enable postgresql-12
+Created symlink from /etc/systemd/system/multi-user.target.wants/postgresql-12.service to /usr/lib/systemd/system/postgresql-12.service.
+[root@punk postgrescommunity]# systemctl start postgresql-12
+[root@punk postgrescommunity]# id postgres
+uid=26(postgres) gid=26(postgres) groups=26(postgres)
+[root@punk postgrescommunity]# ls -lh
+total 1.8M
+-rw-r--r--. 1 root root 6.2K Mar 17 12:07 pgdg-redhat-repo-latest.noarch.rpm
+-rw-r--r--. 1 root root 180K Mar 17 12:50 python36-asn1crypto-0.24.0-7.el7.noarch.rpm
+-rw-r--r--. 1 root root 219K Mar 17 12:50 python36-cffi-1.9.1-3.el7.x86_64.rpm
+-rw-r--r--. 1 root root 127K Mar 17 12:43 python36-click-6.7-8.el7.noarch.rpm
+-rw-r--r--. 1 root root 510K Mar 17 12:45 python36-cryptography-2.3-2.el7.x86_64.rpm
+-rw-r--r--. 1 root root  99K Mar 17 12:50 python36-idna-2.7-2.el7.noarch.rpm
+-rw-r--r--. 1 root root 273K Mar 17 12:43 python36-paramiko-2.1.1-0.10.el7.noarch.rpm
+-rw-r--r--. 1 root root 104K Mar 17 12:52 python36-ply-3.9-2.el7.noarch.rpm
+-rw-r--r--. 1 root root 174K Mar 17 12:45 python36-pyasn1-0.4.7-1.el7.noarch.rpm
+-rw-r--r--. 1 root root  96K Mar 17 12:51 python36-pycparser-2.14-2.el7.noarch.rpm
+-rw-r--r--. 1 root root  33K Mar 17 12:50 python36-six-1.12.0-1.el7.noarch.rpm
+[root@punk postgrescommunity]# yum install python36-click-6.7-8.el7.noarch.rpm python36-paramiko-2.1.1-0.10.el7.noarch.rpm python36-pyasn1-0.4.7-1.el7.noarch.rpm python36-cryptography-2.3-2.el7.x86_64.rpm python36-cffi-1.9.1-3.el7.x86_64.rpm python36-six-1.12.0-1.el7.noarch.rpm python36-idna-2.7-2.el7.noarch.rpm python36-asn1crypto-0.24.0-7.el7.noarch.rpm python36-pycparser-2.14-2.el7.noarch.rpm python36-ply-3.9-2.el7.noarch.rpm
+Loaded plugins: langpacks, product-id, search-disabled-repos, subscription-manager
+This system is not registered with an entitlement server. You can use subscription-manager to register.
+Repository InstallMedia is listed more than once in the configuration
+Examining python36-click-6.7-8.el7.noarch.rpm: python36-click-6.7-8.el7.noarch
+Marking python36-click-6.7-8.el7.noarch.rpm to be installed
+Examining python36-paramiko-2.1.1-0.10.el7.noarch.rpm: python36-paramiko-2.1.1-0.10.el7.noarch
+Marking python36-paramiko-2.1.1-0.10.el7.noarch.rpm to be installed
+Examining python36-pyasn1-0.4.7-1.el7.noarch.rpm: python36-pyasn1-0.4.7-1.el7.noarch
+Marking python36-pyasn1-0.4.7-1.el7.noarch.rpm to be installed
+Examining python36-cryptography-2.3-2.el7.x86_64.rpm: python36-cryptography-2.3-2.el7.x86_64
+Marking python36-cryptography-2.3-2.el7.x86_64.rpm to be installed
+Examining python36-cffi-1.9.1-3.el7.x86_64.rpm: python36-cffi-1.9.1-3.el7.x86_64
+Marking python36-cffi-1.9.1-3.el7.x86_64.rpm to be installed
+Examining python36-six-1.12.0-1.el7.noarch.rpm: python36-six-1.12.0-1.el7.noarch
+Marking python36-six-1.12.0-1.el7.noarch.rpm to be installed
+Examining python36-idna-2.7-2.el7.noarch.rpm: python36-idna-2.7-2.el7.noarch
+Marking python36-idna-2.7-2.el7.noarch.rpm to be installed
+Examining python36-asn1crypto-0.24.0-7.el7.noarch.rpm: python36-asn1crypto-0.24.0-7.el7.noarch
+Marking python36-asn1crypto-0.24.0-7.el7.noarch.rpm to be installed
+Examining python36-pycparser-2.14-2.el7.noarch.rpm: python36-pycparser-2.14-2.el7.noarch
+Marking python36-pycparser-2.14-2.el7.noarch.rpm to be installed
+Examining python36-ply-3.9-2.el7.noarch.rpm: python36-ply-3.9-2.el7.noarch
+Marking python36-ply-3.9-2.el7.noarch.rpm to be installed
+Resolving Dependencies
+--> Running transaction check
+---> Package python36-asn1crypto.noarch 0:0.24.0-7.el7 will be installed
+--> Processing Dependency: python(abi) = 3.6 for package: python36-asn1crypto-0.24.0-7.el7.noarch
+---> Package python36-cffi.x86_64 0:1.9.1-3.el7 will be installed
+--> Processing Dependency: libpython3.6m.so.1.0()(64bit) for package: python36-cffi-1.9.1-3.el7.x86_64
+---> Package python36-click.noarch 0:6.7-8.el7 will be installed
+---> Package python36-cryptography.x86_64 0:2.3-2.el7 will be installed
+---> Package python36-idna.noarch 0:2.7-2.el7 will be installed
+---> Package python36-paramiko.noarch 0:2.1.1-0.10.el7 will be installed
+---> Package python36-ply.noarch 0:3.9-2.el7 will be installed
+---> Package python36-pyasn1.noarch 0:0.4.7-1.el7 will be installed
+---> Package python36-pycparser.noarch 0:2.14-2.el7 will be installed
+---> Package python36-six.noarch 0:1.12.0-1.el7 will be installed
+--> Running transaction check
+---> Package python3.x86_64 0:3.6.8-10.el7 will be installed
+--> Processing Dependency: python3-setuptools for package: python3-3.6.8-10.el7.x86_64
+--> Processing Dependency: python3-pip for package: python3-3.6.8-10.el7.x86_64
+---> Package python3-libs.x86_64 0:3.6.8-10.el7 will be installed
+--> Running transaction check
+---> Package python3-pip.noarch 0:9.0.3-5.el7 will be installed
+---> Package python3-setuptools.noarch 0:39.2.0-10.el7 will be installed
+--> Finished Dependency Resolution
+
+Dependencies Resolved
+
+=============================================================================================================================================================================================================
+ Package                                           Arch                               Version                                     Repository                                                            Size
+=============================================================================================================================================================================================================
+Installing:
+ python36-asn1crypto                               noarch                             0.24.0-7.el7                                /python36-asn1crypto-0.24.0-7.el7.noarch                             1.2 M
+ python36-cffi                                     x86_64                             1.9.1-3.el7                                 /python36-cffi-1.9.1-3.el7.x86_64                                    959 k
+ python36-click                                    noarch                             6.7-8.el7                                   /python36-click-6.7-8.el7.noarch                                     644 k
+ python36-cryptography                             x86_64                             2.3-2.el7                                   /python36-cryptography-2.3-2.el7.x86_64                              2.7 M
+ python36-idna                                     noarch                             2.7-2.el7                                   /python36-idna-2.7-2.el7.noarch                                      831 k
+ python36-paramiko                                 noarch                             2.1.1-0.10.el7                              /python36-paramiko-2.1.1-0.10.el7.noarch                             1.6 M
+ python36-ply                                      noarch                             3.9-2.el7                                   /python36-ply-3.9-2.el7.noarch                                       469 k
+ python36-pyasn1                                   noarch                             0.4.7-1.el7                                 /python36-pyasn1-0.4.7-1.el7.noarch                                  988 k
+ python36-pycparser                                noarch                             2.14-2.el7                                  /python36-pycparser-2.14-2.el7.noarch                                738 k
+ python36-six                                      noarch                             1.12.0-1.el7                                /python36-six-1.12.0-1.el7.noarch                                    134 k
+Installing for dependencies:
+ python3                                           x86_64                             3.6.8-10.el7                                InstallMedia                                                          69 k
+ python3-libs                                      x86_64                             3.6.8-10.el7                                InstallMedia                                                         7.0 M
+ python3-pip                                       noarch                             9.0.3-5.el7                                 InstallMedia                                                         1.8 M
+ python3-setuptools                                noarch                             39.2.0-10.el7                               InstallMedia                                                         629 k
+
+Transaction Summary
+=============================================================================================================================================================================================================
+Install  10 Packages (+4 Dependent packages)
+
+Total size: 20 M
+Total download size: 9.4 M
+Installed size: 58 M
+Is this ok [y/d/N]: y
+Downloading packages:
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Total                                                                                                                                                                         47 MB/s | 9.4 MB  00:00:00
+Running transaction check
+Running transaction test
+Transaction test succeeded
+Running transaction
+  Installing : python3-pip-9.0.3-5.el7.noarch                                                                                                                                                           1/14
+  Installing : python3-setuptools-39.2.0-10.el7.noarch                                                                                                                                                  2/14
+  Installing : python3-3.6.8-10.el7.x86_64                                                                                                                                                              3/14
+  Installing : python3-libs-3.6.8-10.el7.x86_64                                                                                                                                                         4/14
+  Installing : python36-pyasn1-0.4.7-1.el7.noarch                                                                                                                                                       5/14
+  Installing : python36-ply-3.9-2.el7.noarch                                                                                                                                                            6/14
+  Installing : python36-pycparser-2.14-2.el7.noarch                                                                                                                                                     7/14
+  Installing : python36-cffi-1.9.1-3.el7.x86_64                                                                                                                                                         8/14
+  Installing : python36-idna-2.7-2.el7.noarch                                                                                                                                                           9/14
+  Installing : python36-six-1.12.0-1.el7.noarch                                                                                                                                                        10/14
+  Installing : python36-asn1crypto-0.24.0-7.el7.noarch                                                                                                                                                 11/14
+  Installing : python36-cryptography-2.3-2.el7.x86_64                                                                                                                                                  12/14
+  Installing : python36-paramiko-2.1.1-0.10.el7.noarch                                                                                                                                                 13/14
+  Installing : python36-click-6.7-8.el7.noarch                                                                                                                                                         14/14
+  Verifying  : python36-pycparser-2.14-2.el7.noarch                                                                                                                                                     1/14
+  Verifying  : python36-pyasn1-0.4.7-1.el7.noarch                                                                                                                                                       2/14
+  Verifying  : python36-ply-3.9-2.el7.noarch                                                                                                                                                            3/14
+  Verifying  : python36-click-6.7-8.el7.noarch                                                                                                                                                          4/14
+  Verifying  : python36-idna-2.7-2.el7.noarch                                                                                                                                                           5/14
+  Verifying  : python36-six-1.12.0-1.el7.noarch                                                                                                                                                         6/14
+  Verifying  : python3-libs-3.6.8-10.el7.x86_64                                                                                                                                                         7/14
+  Verifying  : python36-cryptography-2.3-2.el7.x86_64                                                                                                                                                   8/14
+  Verifying  : python36-asn1crypto-0.24.0-7.el7.noarch                                                                                                                                                  9/14
+  Verifying  : python36-cffi-1.9.1-3.el7.x86_64                                                                                                                                                        10/14
+  Verifying  : python3-pip-9.0.3-5.el7.noarch                                                                                                                                                          11/14
+  Verifying  : python3-setuptools-39.2.0-10.el7.noarch                                                                                                                                                 12/14
+  Verifying  : python36-paramiko-2.1.1-0.10.el7.noarch                                                                                                                                                 13/14
+  Verifying  : python3-3.6.8-10.el7.x86_64                                                                                                                                                             14/14
+
+Installed:
+  python36-asn1crypto.noarch 0:0.24.0-7.el7   python36-cffi.x86_64 0:1.9.1-3.el7   python36-click.noarch 0:6.7-8.el7      python36-cryptography.x86_64 0:2.3-2.el7   python36-idna.noarch 0:2.7-2.el7
+  python36-paramiko.noarch 0:2.1.1-0.10.el7   python36-ply.noarch 0:3.9-2.el7      python36-pyasn1.noarch 0:0.4.7-1.el7   python36-pycparser.noarch 0:2.14-2.el7     python36-six.noarch 0:1.12.0-1.el7
+
+Dependency Installed:
+  python3.x86_64 0:3.6.8-10.el7                 python3-libs.x86_64 0:3.6.8-10.el7                 python3-pip.noarch 0:9.0.3-5.el7                 python3-setuptools.noarch 0:39.2.0-10.el7
+
+Complete!
+[root@punk postgrescommunity]# yum install pgadmin4
+Loaded plugins: langpacks, product-id, search-disabled-repos, subscription-manager
+This system is not registered with an entitlement server. You can use subscription-manager to register.
+Repository InstallMedia is listed more than once in the configuration
+Resolving Dependencies
+--> Running transaction check
+---> Package pgadmin4.x86_64 0:4.19-3.rhel7 will be installed
+--> Processing Dependency: pgadmin4-python3-sqlalchemy >= 1.2.18 for package: pgadmin4-4.19-3.rhel7.x86_64
+--> Processing Dependency: pgadmin4-python3-flask-compress >= 1.4.0 for package: pgadmin4-4.19-3.rhel7.x86_64
+--> Processing Dependency: pgadmin4-web for package: pgadmin4-4.19-3.rhel7.x86_64
+--> Processing Dependency: pgadmin4-python3-mako for package: pgadmin4-4.19-3.rhel7.x86_64
+--> Processing Dependency: pgadmin4-python3-flask-babelex for package: pgadmin4-4.19-3.rhel7.x86_64
+--> Processing Dependency: pgadmin4-python3-babel for package: pgadmin4-4.19-3.rhel7.x86_64
+--> Processing Dependency: pgadmin4-python3-alembic for package: pgadmin4-4.19-3.rhel7.x86_64
+--> Running transaction check
+---> Package pgadmin4-python3-alembic.noarch 0:0.9.7-4.rhel7 will be installed
+--> Processing Dependency: pgadmin4-python3-dateutil for package: pgadmin4-python3-alembic-0.9.7-4.rhel7.noarch
+---> Package pgadmin4-python3-babel.noarch 0:2.3.4-3.rhel7 will be installed
+---> Package pgadmin4-python3-flask-babelex.noarch 0:0.9.3-2.rhel7 will be installed
+--> Processing Dependency: pgadmin4-python3-speaklater for package: pgadmin4-python3-flask-babelex-0.9.3-2.rhel7.noarch
+--> Processing Dependency: pgadmin4-python3-jinja2 for package: pgadmin4-python3-flask-babelex-0.9.3-2.rhel7.noarch
+--> Processing Dependency: pgadmin4-python3-flask for package: pgadmin4-python3-flask-babelex-0.9.3-2.rhel7.noarch
+---> Package pgadmin4-python3-flask-compress.noarch 0:1.4.0-1.rhel7 will be installed
+---> Package pgadmin4-python3-mako.noarch 0:1.1.1-1.rhel7 will be installed
+---> Package pgadmin4-python3-sqlalchemy.x86_64 0:1.3.13-2.rhel7 will be installed
+---> Package pgadmin4-web.noarch 0:4.19-3.rhel7 will be installed
+--> Processing Dependency: python3-psycopg2 >= 2.8 for package: pgadmin4-web-4.19-3.rhel7.noarch
+--> Processing Dependency: pgadmin4-pytz >= 2018.9 for package: pgadmin4-web-4.19-3.rhel7.noarch
+--> Processing Dependency: pgadmin4-python3-wtforms >= 2.2.1 for package: pgadmin4-web-4.19-3.rhel7.noarch
+--> Processing Dependency: pgadmin4-python3-werkzeug >= 0.15.4 for package: pgadmin4-web-4.19-3.rhel7.noarch
+--> Processing Dependency: pgadmin4-python3-sshtunnel >= 0.1.4 for package: pgadmin4-web-4.19-3.rhel7.noarch
+--> Processing Dependency: pgadmin4-python3-sqlparse >= 0.2.4 for package: pgadmin4-web-4.19-3.rhel7.noarch
+--> Processing Dependency: pgadmin4-python3-six >= 1.12.0 for package: pgadmin4-web-4.19-3.rhel7.noarch
+--> Processing Dependency: pgadmin4-python3-simplejson >= 3.16.0 for package: pgadmin4-web-4.19-3.rhel7.noarch
+--> Processing Dependency: pgadmin4-python3-psutil >= 5.5.1 for package: pgadmin4-web-4.19-3.rhel7.noarch
+--> Processing Dependency: pgadmin4-python3-passlib >= 1.7.2 for package: pgadmin4-web-4.19-3.rhel7.noarch
+--> Processing Dependency: pgadmin4-python3-flask-wtf >= 0.14.2 for package: pgadmin4-web-4.19-3.rhel7.noarch
+--> Processing Dependency: pgadmin4-python3-flask-sqlalchemy >= 2.3.2 for package: pgadmin4-web-4.19-3.rhel7.noarch
+--> Processing Dependency: pgadmin4-python3-flask-security-too >= 3.3.3 for package: pgadmin4-web-4.19-3.rhel7.noarch
+--> Processing Dependency: pgadmin4-python3-flask-principal >= 0.4.0 for package: pgadmin4-web-4.19-3.rhel7.noarch
+--> Processing Dependency: pgadmin4-python3-flask-paranoid >= 0.2 for package: pgadmin4-web-4.19-3.rhel7.noarch
+--> Processing Dependency: pgadmin4-python3-flask-migrate >= 2.4.0 for package: pgadmin4-web-4.19-3.rhel7.noarch
+--> Processing Dependency: pgadmin4-python3-flask-login >= 0.4.1 for package: pgadmin4-web-4.19-3.rhel7.noarch
+--> Processing Dependency: pgadmin4-python3-flask-gravatar >= 0.5.0 for package: pgadmin4-web-4.19-3.rhel7.noarch
+--> Processing Dependency: pgadmin4-python3-blinker >= 1.4 for package: pgadmin4-web-4.19-3.rhel7.noarch
+--> Processing Dependency: pgadmin4-python3-backports.csv >= 1.0.5 for package: pgadmin4-web-4.19-3.rhel7.noarch
+--> Processing Dependency: pgadmin4-python3-Flask-Mail >= 0.9.1 for package: pgadmin4-web-4.19-3.rhel7.noarch
+--> Processing Dependency: pgadmin4-python3-mod_wsgi for package: pgadmin4-web-4.19-3.rhel7.noarch
+--> Processing Dependency: pgadmin4-docs for package: pgadmin4-web-4.19-3.rhel7.noarch
+--> Processing Dependency: httpd for package: pgadmin4-web-4.19-3.rhel7.noarch
+--> Running transaction check
+---> Package httpd.x86_64 0:2.4.6-90.el7 will be installed
+--> Processing Dependency: httpd-tools = 2.4.6-90.el7 for package: httpd-2.4.6-90.el7.x86_64
+--> Processing Dependency: /etc/mime.types for package: httpd-2.4.6-90.el7.x86_64
+--> Processing Dependency: libaprutil-1.so.0()(64bit) for package: httpd-2.4.6-90.el7.x86_64
+--> Processing Dependency: libapr-1.so.0()(64bit) for package: httpd-2.4.6-90.el7.x86_64
+---> Package pgadmin4-docs.noarch 0:4.19-3.rhel7 will be installed
+---> Package pgadmin4-python3-Flask-Mail.noarch 0:0.9.1-5.rhel7 will be installed
+---> Package pgadmin4-python3-backports.csv.noarch 1:1.0.5-4.rhel7 will be installed
+---> Package pgadmin4-python3-blinker.noarch 0:1.4-4.rhel7 will be installed
+---> Package pgadmin4-python3-dateutil.noarch 1:2.8.0-2.rhel7 will be installed
+---> Package pgadmin4-python3-flask.noarch 1:1.0.2-2.rhel7 will be installed
+--> Processing Dependency: pgadmin4-python3-itsdangerous for package: 1:pgadmin4-python3-flask-1.0.2-2.rhel7.noarch
+---> Package pgadmin4-python3-flask-gravatar.noarch 0:0.5.0-2.rhel7 will be installed
+---> Package pgadmin4-python3-flask-login.noarch 0:0.4.1-2.rhel7 will be installed
+---> Package pgadmin4-python3-flask-migrate.noarch 0:2.4.0-2.rhel7 will be installed
+---> Package pgadmin4-python3-flask-paranoid.noarch 0:0.2-2.rhel7 will be installed
+---> Package pgadmin4-python3-flask-principal.noarch 0:0.4.0-15.rhel7 will be installed
+---> Package pgadmin4-python3-flask-security-too.noarch 0:3.3.3-1.rhel7 will be installed
+---> Package pgadmin4-python3-flask-sqlalchemy.noarch 0:2.4.1-1.rhel7 will be installed
+---> Package pgadmin4-python3-flask-wtf.noarch 0:0.14.3-2.rhel7 will be installed
+---> Package pgadmin4-python3-jinja2.noarch 0:2.8-10.rhel7 will be installed
+--> Processing Dependency: pgadmin4-python3-markupsafe for package: pgadmin4-python3-jinja2-2.8-10.rhel7.noarch
+---> Package pgadmin4-python3-mod_wsgi.x86_64 0:4.6.8-2.rhel7 will be installed
+---> Package pgadmin4-python3-passlib.noarch 0:1.7.2-1.rhel7 will be installed
+---> Package pgadmin4-python3-psutil.x86_64 0:5.5.1-2.rhel7 will be installed
+---> Package pgadmin4-python3-simplejson.x86_64 0:3.16.0-2.rhel7 will be installed
+---> Package pgadmin4-python3-six.noarch 0:1.12.0-4.rhel7 will be installed
+---> Package pgadmin4-python3-speaklater.noarch 0:1.3-4.rhel7 will be installed
+---> Package pgadmin4-python3-sqlparse.noarch 0:0.2.4-2.rhel7 will be installed
+---> Package pgadmin4-python3-sshtunnel.noarch 0:0.1.4-2.rhel7 will be installed
+---> Package pgadmin4-python3-werkzeug.noarch 0:0.15.4-2.rhel7 will be installed
+---> Package pgadmin4-python3-wtforms.noarch 0:2.2.1-2.rhel7 will be installed
+---> Package pgadmin4-pytz.noarch 0:2018.9-2.rhel7 will be installed
+---> Package python3-psycopg2.x86_64 0:2.8.3-3.rhel7 will be installed
+--> Running transaction check
+---> Package apr.x86_64 0:1.4.8-5.el7 will be installed
+---> Package apr-util.x86_64 0:1.5.2-6.el7 will be installed
+---> Package httpd-tools.x86_64 0:2.4.6-90.el7 will be installed
+---> Package mailcap.noarch 0:2.1.41-2.el7 will be installed
+---> Package pgadmin4-python3-itsdangerous.noarch 0:0.24-11.rhel7 will be installed
+---> Package pgadmin4-python3-markupsafe.x86_64 0:0.23-14.rhel7 will be installed
+--> Finished Dependency Resolution
+
+Dependencies Resolved
+
+=============================================================================================================================================================================================================
+ Package                                                            Arch                                  Version                                          Repository                                   Size
+=============================================================================================================================================================================================================
+Installing:
+ pgadmin4                                                           x86_64                                4.19-3.rhel7                                     pgdg10                                       12 k
+Installing for dependencies:
+ apr                                                                x86_64                                1.4.8-5.el7                                      InstallMedia                                104 k
+ apr-util                                                           x86_64                                1.5.2-6.el7                                      InstallMedia                                 92 k
+ httpd                                                              x86_64                                2.4.6-90.el7                                     InstallMedia                                1.2 M
+ httpd-tools                                                        x86_64                                2.4.6-90.el7                                     InstallMedia                                 91 k
+ mailcap                                                            noarch                                2.1.41-2.el7                                     InstallMedia                                 31 k
+ pgadmin4-docs                                                      noarch                                4.19-3.rhel7                                     pgdg10                                       42 M
+ pgadmin4-python3-Flask-Mail                                        noarch                                0.9.1-5.rhel7                                    pgdg10                                       19 k
+ pgadmin4-python3-alembic                                           noarch                                0.9.7-4.rhel7                                    pgdg10                                      265 k
+ pgadmin4-python3-babel                                             noarch                                2.3.4-3.rhel7                                    pgdg10                                      4.8 M
+ pgadmin4-python3-backports.csv                                     noarch                                1:1.0.5-4.rhel7                                  pgdg10                                       28 k
+ pgadmin4-python3-blinker                                           noarch                                1.4-4.rhel7                                      pgdg10                                      107 k
+ pgadmin4-python3-dateutil                                          noarch                                1:2.8.0-2.rhel7                                  pgdg10                                      286 k
+ pgadmin4-python3-flask                                             noarch                                1:1.0.2-2.rhel7                                  pgdg10                                      151 k
+ pgadmin4-python3-flask-babelex                                     noarch                                0.9.3-2.rhel7                                    pgdg10                                       18 k
+ pgadmin4-python3-flask-compress                                    noarch                                1.4.0-1.rhel7                                    pgdg10                                       11 k
+ pgadmin4-python3-flask-gravatar                                    noarch                                0.5.0-2.rhel7                                    pgdg10                                       12 k
+ pgadmin4-python3-flask-login                                       noarch                                0.4.1-2.rhel7                                    pgdg10                                       30 k
+ pgadmin4-python3-flask-migrate                                     noarch                                2.4.0-2.rhel7                                    pgdg10                                       24 k
+ pgadmin4-python3-flask-paranoid                                    noarch                                0.2-2.rhel7                                      pgdg10                                       10 k
+ pgadmin4-python3-flask-principal                                   noarch                                0.4.0-15.rhel7                                   pgdg10                                       16 k
+ pgadmin4-python3-flask-security-too                                noarch                                3.3.3-1.rhel7                                    pgdg10                                      140 k
+ pgadmin4-python3-flask-sqlalchemy                                  noarch                                2.4.1-1.rhel7                                    pgdg10                                       78 k
+ pgadmin4-python3-flask-wtf                                         noarch                                0.14.3-2.rhel7                                   pgdg10                                       55 k
+ pgadmin4-python3-itsdangerous                                      noarch                                0.24-11.rhel7                                    pgdg10                                       25 k
+ pgadmin4-python3-jinja2                                            noarch                                2.8-10.rhel7                                     pgdg10                                      245 k
+ pgadmin4-python3-mako                                              noarch                                1.1.1-1.rhel7                                    pgdg10                                      134 k
+ pgadmin4-python3-markupsafe                                        x86_64                                0.23-14.rhel7                                    pgdg10                                       30 k
+ pgadmin4-python3-mod_wsgi                                          x86_64                                4.6.8-2.rhel7                                    pgdg10                                      779 k
+ pgadmin4-python3-passlib                                           noarch                                1.7.2-1.rhel7                                    pgdg10                                      750 k
+ pgadmin4-python3-psutil                                            x86_64                                5.5.1-2.rhel7                                    pgdg10                                      378 k
+ pgadmin4-python3-simplejson                                        x86_64                                3.16.0-2.rhel7                                   pgdg10                                      187 k
+ pgadmin4-python3-six                                               noarch                                1.12.0-4.rhel7                                   pgdg10                                       31 k
+ pgadmin4-python3-speaklater                                        noarch                                1.3-4.rhel7                                      pgdg10                                       11 k
+ pgadmin4-python3-sqlalchemy                                        x86_64                                1.3.13-2.rhel7                                   pgdg10                                      3.9 M
+ pgadmin4-python3-sqlparse                                          noarch                                0.2.4-2.rhel7                                    pgdg10                                       74 k
+ pgadmin4-python3-sshtunnel                                         noarch                                0.1.4-2.rhel7                                    pgdg10                                       40 k
+ pgadmin4-python3-werkzeug                                          noarch                                0.15.4-2.rhel7                                   pgdg10                                      464 k
+ pgadmin4-python3-wtforms                                           noarch                                2.2.1-2.rhel7                                    pgdg10                                      181 k
+ pgadmin4-pytz                                                      noarch                                2018.9-2.rhel7                                   pgdg10                                       48 k
+ pgadmin4-web                                                       noarch                                4.19-3.rhel7                                     pgdg10                                      5.1 M
+ python3-psycopg2                                                   x86_64                                2.8.3-3.rhel7                                    pgdg10                                      170 k
+
+Transaction Summary
+=============================================================================================================================================================================================================
+Install  1 Package (+41 Dependent packages)
+
+Total download size: 62 M
+Installed size: 153 M
+Is this ok [y/d/N]: y
+Downloading packages:
+(1/37): pgadmin4-4.19-3.rhel7.x86_64.rpm                                                                                                                                              |  12 kB  00:00:01
+(2/37): pgadmin4-python3-Flask-Mail-0.9.1-5.rhel7.noarch.rpm                                                                                                                          |  19 kB  00:00:00
+(3/37): pgadmin4-python3-alembic-0.9.7-4.rhel7.noarch.rpm                                                                                                                             | 265 kB  00:00:00
+(4/37): pgadmin4-python3-babel-2.3.4-3.rhel7.noarch.rpm                                                                                                                               | 4.8 MB  00:00:08
+(5/37): pgadmin4-python3-backports.csv-1.0.5-4.rhel7.noarch.rpm                                                                                                                       |  28 kB  00:00:00
+(6/37): pgadmin4-python3-blinker-1.4-4.rhel7.noarch.rpm                                                                                                                               | 107 kB  00:00:00
+(7/37): pgadmin4-python3-dateutil-2.8.0-2.rhel7.noarch.rpm                                                                                                                            | 286 kB  00:00:00
+(8/37): pgadmin4-python3-flask-1.0.2-2.rhel7.noarch.rpm                                                                                                                               | 151 kB  00:00:00
+(9/37): pgadmin4-python3-flask-babelex-0.9.3-2.rhel7.noarch.rpm                                                                                                                       |  18 kB  00:00:00
+(10/37): pgadmin4-python3-flask-compress-1.4.0-1.rhel7.noarch.rpm                                                                                                                     |  11 kB  00:00:00
+(11/37): pgadmin4-python3-flask-gravatar-0.5.0-2.rhel7.noarch.rpm                                                                                                                     |  12 kB  00:00:00
+(12/37): pgadmin4-python3-flask-login-0.4.1-2.rhel7.noarch.rpm                                                                                                                        |  30 kB  00:00:00
+(13/37): pgadmin4-python3-flask-migrate-2.4.0-2.rhel7.noarch.rpm                                                                                                                      |  24 kB  00:00:00
+(14/37): pgadmin4-python3-flask-paranoid-0.2-2.rhel7.noarch.rpm                                                                                                                       |  10 kB  00:00:00
+(15/37): pgadmin4-python3-flask-principal-0.4.0-15.rhel7.noarch.rpm                                                                                                                   |  16 kB  00:00:00
+(16/37): pgadmin4-python3-flask-security-too-3.3.3-1.rhel7.noarch.rpm                                                                                                                 | 140 kB  00:00:00
+(17/37): pgadmin4-python3-flask-sqlalchemy-2.4.1-1.rhel7.noarch.rpm                                                                                                                   |  78 kB  00:00:00
+(18/37): pgadmin4-python3-flask-wtf-0.14.3-2.rhel7.noarch.rpm                                                                                                                         |  55 kB  00:00:00
+(19/37): pgadmin4-python3-itsdangerous-0.24-11.rhel7.noarch.rpm                                                                                                                       |  25 kB  00:00:00
+(20/37): pgadmin4-python3-jinja2-2.8-10.rhel7.noarch.rpm                                                                                                                              | 245 kB  00:00:00
+(21/37): pgadmin4-python3-mako-1.1.1-1.rhel7.noarch.rpm                                                                                                                               | 134 kB  00:00:00
+(22/37): pgadmin4-python3-markupsafe-0.23-14.rhel7.x86_64.rpm                                                                                                                         |  30 kB  00:00:00
+(23/37): pgadmin4-python3-mod_wsgi-4.6.8-2.rhel7.x86_64.rpm                                                                                                                           | 779 kB  00:00:01
+(24/37): pgadmin4-python3-passlib-1.7.2-1.rhel7.noarch.rpm                                                                                                                            | 750 kB  00:00:01
+(25/37): pgadmin4-python3-psutil-5.5.1-2.rhel7.x86_64.rpm                                                                                                                             | 378 kB  00:00:00
+(26/37): pgadmin4-python3-simplejson-3.16.0-2.rhel7.x86_64.rpm                                                                                                                        | 187 kB  00:00:00
+(27/37): pgadmin4-python3-six-1.12.0-4.rhel7.noarch.rpm                                                                                                                               |  31 kB  00:00:00
+(28/37): pgadmin4-python3-speaklater-1.3-4.rhel7.noarch.rpm                                                                                                                           |  11 kB  00:00:00
+(29/37): pgadmin4-python3-sqlalchemy-1.3.13-2.rhel7.x86_64.rpm                                                                                                                        | 3.9 MB  00:00:05
+(30/37): pgadmin4-python3-sqlparse-0.2.4-2.rhel7.noarch.rpm                                                                                                                           |  74 kB  00:00:00
+(31/37): pgadmin4-python3-sshtunnel-0.1.4-2.rhel7.noarch.rpm                                                                                                                          |  40 kB  00:00:00
+(32/37): pgadmin4-python3-werkzeug-0.15.4-2.rhel7.noarch.rpm                                                                                                                          | 464 kB  00:00:00
+(33/37): pgadmin4-python3-wtforms-2.2.1-2.rhel7.noarch.rpm                                                                                                                            | 181 kB  00:00:00
+(34/37): pgadmin4-pytz-2018.9-2.rhel7.noarch.rpm                                                                                                                                      |  48 kB  00:00:00
+(35/37): pgadmin4-web-4.19-3.rhel7.noarch.rpm                                                                                                                                         | 5.1 MB  00:00:06
+(36/37): python3-psycopg2-2.8.3-3.rhel7.x86_64.rpm                                                                                                                                    | 170 kB  00:00:00
+(37/37): pgadmin4-docs-4.19-3.rhel7.noarch.rpm                                                                                                                                                                  |  42 MB  00:14:36
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Total                                                                                                                                                                                                   72 kB/s |  62 MB  00:14:37
+Running transaction check
+Running transaction test
+Transaction test succeeded
+Running transaction
+  Installing : pgadmin4-python3-babel-2.3.4-3.rhel7.noarch                                                                                                                                                                        1/42
+  Installing : apr-1.4.8-5.el7.x86_64                                                                                                                                                                                             2/42
+  Installing : apr-util-1.5.2-6.el7.x86_64                                                                                                                                                                                        3/42
+  Installing : pgadmin4-python3-blinker-1.4-4.rhel7.noarch                                                                                                                                                                        4/42
+  Installing : pgadmin4-python3-six-1.12.0-4.rhel7.noarch                                                                                                                                                                         5/42
+  Installing : 1:pgadmin4-python3-dateutil-2.8.0-2.rhel7.noarch                                                                                                                                                                   6/42
+  Installing : pgadmin4-python3-sqlalchemy-1.3.13-2.rhel7.x86_64                                                                                                                                                                  7/42
+  Installing : pgadmin4-python3-werkzeug-0.15.4-2.rhel7.noarch                                                                                                                                                                    8/42
+  Installing : pgadmin4-python3-flask-compress-1.4.0-1.rhel7.noarch                                                                                                                                                               9/42
+  Installing : pgadmin4-python3-speaklater-1.3-4.rhel7.noarch                                                                                                                                                                    10/42
+  Installing : pgadmin4-python3-alembic-0.9.7-4.rhel7.noarch                                                                                                                                                                     11/42
+  Installing : httpd-tools-2.4.6-90.el7.x86_64                                                                                                                                                                                   12/42
+  Installing : pgadmin4-python3-simplejson-3.16.0-2.rhel7.x86_64                                                                                                                                                                 13/42
+  Installing : pgadmin4-python3-sshtunnel-0.1.4-2.rhel7.noarch                                                                                                                                                                   14/42
+  Installing : pgadmin4-python3-markupsafe-0.23-14.rhel7.x86_64                                                                                                                                                                  15/42
+  Installing : pgadmin4-python3-jinja2-2.8-10.rhel7.noarch                                                                                                                                                                       16/42
+  Installing : pgadmin4-python3-sqlparse-0.2.4-2.rhel7.noarch                                                                                                                                                                    17/42
+  Installing : python3-psycopg2-2.8.3-3.rhel7.x86_64                                                                                                                                                                             18/42
+  Installing : pgadmin4-python3-mako-1.1.1-1.rhel7.noarch                                                                                                                                                                        19/42
+  Installing : pgadmin4-python3-itsdangerous-0.24-11.rhel7.noarch                                                                                                                                                                20/42
+  Installing : 1:pgadmin4-python3-flask-1.0.2-2.rhel7.noarch                                                                                                                                                                     21/42
+  Installing : pgadmin4-python3-flask-principal-0.4.0-15.rhel7.noarch                                                                                                                                                            22/42
+  Installing : pgadmin4-python3-flask-migrate-2.4.0-2.rhel7.noarch                                                                                                                                                               23/42
+  Installing : pgadmin4-python3-flask-gravatar-0.5.0-2.rhel7.noarch                                                                                                                                                              24/42
+  Installing : pgadmin4-python3-flask-login-0.4.1-2.rhel7.noarch                                                                                                                                                                 25/42
+  Installing : pgadmin4-python3-flask-babelex-0.9.3-2.rhel7.noarch                                                                                                                                                               26/42
+  Installing : pgadmin4-python3-Flask-Mail-0.9.1-5.rhel7.noarch                                                                                                                                                                  27/42
+  Installing : pgadmin4-pytz-2018.9-2.rhel7.noarch                                                                                                                                                                               28/42
+  Installing : pgadmin4-python3-passlib-1.7.2-1.rhel7.noarch                                                                                                                                                                     29/42
+  Installing : 1:pgadmin4-python3-backports.csv-1.0.5-4.rhel7.noarch                                                                                                                                                             30/42
+  Installing : pgadmin4-python3-wtforms-2.2.1-2.rhel7.noarch                                                                                                                                                                     31/42
+  Installing : pgadmin4-docs-4.19-3.rhel7.noarch                                                                                                                                                                                 32/42
+  Installing : pgadmin4-python3-flask-sqlalchemy-2.4.1-1.rhel7.noarch                                                                                                                                                            33/42
+  Installing : pgadmin4-python3-flask-paranoid-0.2-2.rhel7.noarch                                                                                                                                                                34/42
+  Installing : pgadmin4-python3-psutil-5.5.1-2.rhel7.x86_64                                                                                                                                                                      35/42
+  Installing : mailcap-2.1.41-2.el7.noarch                                                                                                                                                                                       36/42
+  Installing : httpd-2.4.6-90.el7.x86_64                                                                                                                                                                                         37/42
+  Installing : pgadmin4-python3-mod_wsgi-4.6.8-2.rhel7.x86_64                                                                                                                                                                    38/42
+  Installing : pgadmin4-python3-flask-security-too-3.3.3-1.rhel7.noarch                                                                                                                                                          39/42
+  Installing : pgadmin4-python3-flask-wtf-0.14.3-2.rhel7.noarch                                                                                                                                                                  40/42
+  Installing : pgadmin4-web-4.19-3.rhel7.noarch                                                                                                                                                                                  41/42
+  Installing : pgadmin4-4.19-3.rhel7.x86_64                                                                                                                                                                                      42/42
+  Verifying  : pgadmin4-python3-alembic-0.9.7-4.rhel7.noarch                                                                                                                                                                      1/42
+  Verifying  : pgadmin4-python3-flask-wtf-0.14.3-2.rhel7.noarch                                                                                                                                                                   2/42
+  Verifying  : pgadmin4-python3-flask-security-too-3.3.3-1.rhel7.noarch                                                                                                                                                           3/42
+  Verifying  : mailcap-2.1.41-2.el7.noarch                                                                                                                                                                                        4/42
+  Verifying  : httpd-2.4.6-90.el7.x86_64                                                                                                                                                                                          5/42
+  Verifying  : apr-1.4.8-5.el7.x86_64                                                                                                                                                                                             6/42
+  Verifying  : pgadmin4-web-4.19-3.rhel7.noarch                                                                                                                                                                                   7/42
+  Verifying  : pgadmin4-python3-psutil-5.5.1-2.rhel7.x86_64                                                                                                                                                                       8/42
+  Verifying  : pgadmin4-python3-flask-paranoid-0.2-2.rhel7.noarch                                                                                                                                                                 9/42
+  Verifying  : pgadmin4-python3-flask-principal-0.4.0-15.rhel7.noarch                                                                                                                                                            10/42
+  Verifying  : pgadmin4-python3-flask-sqlalchemy-2.4.1-1.rhel7.noarch                                                                                                                                                            11/42
+  Verifying  : pgadmin4-docs-4.19-3.rhel7.noarch                                                                                                                                                                                 12/42
+  Verifying  : pgadmin4-python3-wtforms-2.2.1-2.rhel7.noarch                                                                                                                                                                     13/42
+  Verifying  : pgadmin4-python3-flask-migrate-2.4.0-2.rhel7.noarch                                                                                                                                                               14/42
+  Verifying  : pgadmin4-python3-mod_wsgi-4.6.8-2.rhel7.x86_64                                                                                                                                                                    15/42
+  Verifying  : 1:pgadmin4-python3-backports.csv-1.0.5-4.rhel7.noarch                                                                                                                                                             16/42
+  Verifying  : pgadmin4-python3-speaklater-1.3-4.rhel7.noarch                                                                                                                                                                    17/42
+  Verifying  : pgadmin4-python3-flask-gravatar-0.5.0-2.rhel7.noarch                                                                                                                                                              18/42
+  Verifying  : pgadmin4-4.19-3.rhel7.x86_64                                                                                                                                                                                      19/42
+  Verifying  : pgadmin4-python3-flask-login-0.4.1-2.rhel7.noarch                                                                                                                                                                 20/42
+  Verifying  : pgadmin4-python3-flask-compress-1.4.0-1.rhel7.noarch                                                                                                                                                              21/42
+  Verifying  : pgadmin4-python3-werkzeug-0.15.4-2.rhel7.noarch                                                                                                                                                                   22/42
+  Verifying  : 1:pgadmin4-python3-dateutil-2.8.0-2.rhel7.noarch                                                                                                                                                                  23/42
+  Verifying  : apr-util-1.5.2-6.el7.x86_64                                                                                                                                                                                       24/42
+  Verifying  : pgadmin4-python3-passlib-1.7.2-1.rhel7.noarch                                                                                                                                                                     25/42
+  Verifying  : pgadmin4-pytz-2018.9-2.rhel7.noarch                                                                                                                                                                               26/42
+  Verifying  : pgadmin4-python3-babel-2.3.4-3.rhel7.noarch                                                                                                                                                                       27/42
+  Verifying  : httpd-tools-2.4.6-90.el7.x86_64                                                                                                                                                                                   28/42
+  Verifying  : pgadmin4-python3-Flask-Mail-0.9.1-5.rhel7.noarch                                                                                                                                                                  29/42
+  Verifying  : pgadmin4-python3-sqlalchemy-1.3.13-2.rhel7.x86_64                                                                                                                                                                 30/42
+  Verifying  : pgadmin4-python3-flask-babelex-0.9.3-2.rhel7.noarch                                                                                                                                                               31/42
+  Verifying  : pgadmin4-python3-six-1.12.0-4.rhel7.noarch                                                                                                                                                                        32/42
+  Verifying  : pgadmin4-python3-blinker-1.4-4.rhel7.noarch                                                                                                                                                                       33/42
+  Verifying  : pgadmin4-python3-itsdangerous-0.24-11.rhel7.noarch                                                                                                                                                                34/42
+  Verifying  : pgadmin4-python3-mako-1.1.1-1.rhel7.noarch                                                                                                                                                                        35/42
+  Verifying  : python3-psycopg2-2.8.3-3.rhel7.x86_64                                                                                                                                                                             36/42
+  Verifying  : pgadmin4-python3-sqlparse-0.2.4-2.rhel7.noarch                                                                                                                                                                    37/42
+  Verifying  : pgadmin4-python3-markupsafe-0.23-14.rhel7.x86_64                                                                                                                                                                  38/42
+  Verifying  : pgadmin4-python3-sshtunnel-0.1.4-2.rhel7.noarch                                                                                                                                                                   39/42
+  Verifying  : 1:pgadmin4-python3-flask-1.0.2-2.rhel7.noarch                                                                                                                                                                     40/42
+  Verifying  : pgadmin4-python3-jinja2-2.8-10.rhel7.noarch                                                                                                                                                                       41/42
+  Verifying  : pgadmin4-python3-simplejson-3.16.0-2.rhel7.x86_64                                                                                                                                                                 42/42
+
+Installed:
+  pgadmin4.x86_64 0:4.19-3.rhel7
+
+Dependency Installed:
+  apr.x86_64 0:1.4.8-5.el7                                   apr-util.x86_64 0:1.5.2-6.el7                            httpd.x86_64 0:2.4.6-90.el7                            httpd-tools.x86_64 0:2.4.6-90.el7
+  mailcap.noarch 0:2.1.41-2.el7                              pgadmin4-docs.noarch 0:4.19-3.rhel7                      pgadmin4-python3-Flask-Mail.noarch 0:0.9.1-5.rhel7     pgadmin4-python3-alembic.noarch 0:0.9.7-4.rhel7
+  pgadmin4-python3-babel.noarch 0:2.3.4-3.rhel7              pgadmin4-python3-backports.csv.noarch 1:1.0.5-4.rhel7    pgadmin4-python3-blinker.noarch 0:1.4-4.rhel7          pgadmin4-python3-dateutil.noarch 1:2.8.0-2.rhel7
+  pgadmin4-python3-flask.noarch 1:1.0.2-2.rhel7              pgadmin4-python3-flask-babelex.noarch 0:0.9.3-2.rhel7    pgadmin4-python3-flask-compress.noarch 0:1.4.0-1.rhel7 pgadmin4-python3-flask-gravatar.noarch 0:0.5.0-2.rhel7
+  pgadmin4-python3-flask-login.noarch 0:0.4.1-2.rhel7        pgadmin4-python3-flask-migrate.noarch 0:2.4.0-2.rhel7    pgadmin4-python3-flask-paranoid.noarch 0:0.2-2.rhel7   pgadmin4-python3-flask-principal.noarch 0:0.4.0-15.rhel7
+  pgadmin4-python3-flask-security-too.noarch 0:3.3.3-1.rhel7 pgadmin4-python3-flask-sqlalchemy.noarch 0:2.4.1-1.rhel7 pgadmin4-python3-flask-wtf.noarch 0:0.14.3-2.rhel7     pgadmin4-python3-itsdangerous.noarch 0:0.24-11.rhel7
+  pgadmin4-python3-jinja2.noarch 0:2.8-10.rhel7              pgadmin4-python3-mako.noarch 0:1.1.1-1.rhel7             pgadmin4-python3-markupsafe.x86_64 0:0.23-14.rhel7     pgadmin4-python3-mod_wsgi.x86_64 0:4.6.8-2.rhel7
+  pgadmin4-python3-passlib.noarch 0:1.7.2-1.rhel7            pgadmin4-python3-psutil.x86_64 0:5.5.1-2.rhel7           pgadmin4-python3-simplejson.x86_64 0:3.16.0-2.rhel7    pgadmin4-python3-six.noarch 0:1.12.0-4.rhel7
+  pgadmin4-python3-speaklater.noarch 0:1.3-4.rhel7           pgadmin4-python3-sqlalchemy.x86_64 0:1.3.13-2.rhel7      pgadmin4-python3-sqlparse.noarch 0:0.2.4-2.rhel7       pgadmin4-python3-sshtunnel.noarch 0:0.1.4-2.rhel7
+  pgadmin4-python3-werkzeug.noarch 0:0.15.4-2.rhel7          pgadmin4-python3-wtforms.noarch 0:2.2.1-2.rhel7          pgadmin4-pytz.noarch 0:2018.9-2.rhel7                  pgadmin4-web.noarch 0:4.19-3.rhel7
+  python3-psycopg2.x86_64 0:2.8.3-3.rhel7
+
+Complete!
+[root@punk postgrescommunity]# su - postgres
+-bash-4.2$ psql
+psql (12.2)
+Type "help" for help.
+
+postgres=# exit
+-bash-4.2$ psql --version
+psql (PostgreSQL) 12.2
+-bash-4.2$ psql
+psql (12.2)
+Type "help" for help.
+
+postgres=# select version ();
+                                                 version
+---------------------------------------------------------------------------------------------------------
+ PostgreSQL 12.2 on x86_64-pc-linux-gnu, compiled by gcc (GCC) 4.8.5 20150623 (Red Hat 4.8.5-39), 64-bit
+(1 row)
+
+postgres=# show server_version;
+ server_version
+----------------
+ 12.2
+(1 row)
+
+postgres=# show config_file;
+              config_file
+----------------------------------------
+ /var/lib/pgsql/12/data/postgresql.conf
+(1 row)
+
+postgres=# show hba_file;
+              hba_file
+------------------------------------
+ /var/lib/pgsql/12/data/pg_hba.conf
+(1 row)
+
+postgres=# show ident_file;
+              ident_file
+--------------------------------------
+ /var/lib/pgsql/12/data/pg_ident.conf
+(1 row)
+
+postgres=# show data_directory;
+     data_directory
+------------------------
+ /var/lib/pgsql/12/data
+(1 row)
+
+postgres=# show log_directory; show log_filename ;
+ log_directory
+---------------
+ log
+(1 row)
+
+   log_filename
+-------------------
+ postgresql-%a.log
+(1 row)
+
+postgres=#
+
+[root@punk ~]# systemctl stop postgresql-12.service
+[root@punk ~]# systemctl status postgresql-12.service
+● postgresql-12.service - PostgreSQL 12 database server
+   Loaded: loaded (/usr/lib/systemd/system/postgresql-12.service; enabled; vendor preset: disabled)
+   Active: inactive (dead) since Tue 2020-03-17 18:10:55 WIB; 7s ago
+     Docs: https://www.postgresql.org/docs/12/static/
+  Process: 1507 ExecStart=/usr/pgsql-12/bin/postmaster -D ${PGDATA} (code=exited, status=0/SUCCESS)
+  Process: 1482 ExecStartPre=/usr/pgsql-12/bin/postgresql-12-check-db-dir ${PGDATA} (code=exited, status=0/SUCCESS)
+ Main PID: 1507 (code=exited, status=0/SUCCESS)
+
+Mar 17 15:43:16 punk.com postmaster[1507]: 2020-03-17 15:43:16.712 WIB [1507] LOG:  starting PostgreSQL 12.2 on x86_64-pc-linux-gnu, compiled by gcc (GCC) 4.8.5 20150623 (Red Hat 4.8.5-39), 64-bit
+Mar 17 15:43:16 punk.com postmaster[1507]: 2020-03-17 15:43:16.856 WIB [1507] LOG:  listening on IPv6 address "::1", port 5432
+Mar 17 15:43:16 punk.com postmaster[1507]: 2020-03-17 15:43:16.859 WIB [1507] LOG:  listening on IPv4 address "127.0.0.1", port 5432
+Mar 17 15:43:17 punk.com postmaster[1507]: 2020-03-17 15:43:17.099 WIB [1507] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
+Mar 17 15:43:17 punk.com postmaster[1507]: 2020-03-17 15:43:17.110 WIB [1507] LOG:  listening on Unix socket "/tmp/.s.PGSQL.5432"
+Mar 17 15:43:24 punk.com postmaster[1507]: 2020-03-17 15:43:24.762 WIB [1507] LOG:  redirecting log output to logging collector process
+Mar 17 15:43:24 punk.com postmaster[1507]: 2020-03-17 15:43:24.762 WIB [1507] HINT:  Future log output will appear in directory "log".
+Mar 17 15:43:27 punk.com systemd[1]: Started PostgreSQL 12 database server.
+Mar 17 18:10:55 punk.com systemd[1]: Stopping PostgreSQL 12 database server...
+Mar 17 18:10:55 punk.com systemd[1]: Stopped PostgreSQL 12 database server.
+[root@punk ~]#

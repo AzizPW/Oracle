@@ -1,0 +1,1113 @@
+##################################################################
+### Oracle DB 11.2.0.4 Upgrade to 19c on Red Hat 7.7 by AzizPW ###
+### Failover Data Guard ##########################################
+### Technical Consultant #########################################
+### PT Mitra Integrasi Informatika ###############################
+##################################################################
+### Prepare for PT FIF ###########################################
+### Mon, 09 March 2020 ###########################################
+##################################################################
+
+Reference:
+Oracle 19c - Complete Checklist for Manual Upgrades to Non-CDB Oracle Database 19c (Doc ID 2539778.1)
+
+### Start Physical Standby
+##########################
+[oracle@punk scripts]$ lsnrctl start LISTENER; rlwrap sqlplus / as sysdba
+
+LSNRCTL for Linux: Version 19.0.0.0.0 - Production on 08-MAR-2020 23:09:08
+
+Copyright (c) 1991, 2019, Oracle.  All rights reserved.
+
+Starting /a01/app/oracle/product/19.3.0.0/dbh_1/bin/tnslsnr: please wait...
+
+TNSLSNR for Linux: Version 19.0.0.0.0 - Production
+System parameter file is /a01/app/oracle/product/19.3.0.0/dbh_1/network/admin/listener.ora
+Log messages written to /a01/app/oracle/diag/tnslsnr/punk/listener/alert/log.xml
+Listening on: (DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=punk.com)(PORT=1521)))
+Listening on: (DESCRIPTION=(ADDRESS=(PROTOCOL=ipc)(KEY=EXTPROC1521)))
+
+Connecting to (DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=punk.com)(PORT=1521)))
+STATUS of the LISTENER
+------------------------
+Alias                     LISTENER
+Version                   TNSLSNR for Linux: Version 19.0.0.0.0 - Production
+Start Date                08-MAR-2020 23:09:08
+Uptime                    0 days 0 hr. 0 min. 5 sec
+Trace Level               off
+Security                  ON: Local OS Authentication
+SNMP                      OFF
+Listener Parameter File   /a01/app/oracle/product/19.3.0.0/dbh_1/network/admin/listener.ora
+Listener Log File         /a01/app/oracle/diag/tnslsnr/punk/listener/alert/log.xml
+Listening Endpoints Summary...
+  (DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=punk.com)(PORT=1521)))
+  (DESCRIPTION=(ADDRESS=(PROTOCOL=ipc)(KEY=EXTPROC1521)))
+The listener supports no services
+The command completed successfully
+
+SQL*Plus: Release 19.0.0.0.0 - Production on Sun Mar 8 23:09:14 2020
+Version 19.3.0.0.0
+
+Copyright (c) 1982, 2019, Oracle.  All rights reserved.
+
+Connected to an idle instance.
+
+SQL> STARTUP MOUNT;
+ORACLE instance started.
+
+Total System Global Area 3221222464 bytes
+Fixed Size                  8901696 bytes
+Variable Size             654311424 bytes
+Database Buffers         2550136832 bytes
+Redo Buffers                7872512 bytes
+Database mounted.
+SQL> RECOVER MANAGED STANDBY DATABASE DISCONNECT FROM SESSION;
+Media recovery complete.
+SQL>
+
+### Ensure the ODG gap is 0
+###########################
+SQL> @gap.sql
+
+PROCESS   STATUS        SEQUENCE#
+--------- ------------ ----------
+DGRD      ALLOCATED             0
+ARCH      CLOSING              20
+DGRD      ALLOCATED             0
+ARCH      CLOSING              21
+ARCH      CONNECTED             0
+ARCH      CONNECTED             0
+ARCH      CONNECTED             0
+ARCH      CONNECTED             0
+ARCH      CONNECTED             0
+ARCH      CONNECTED             0
+RFS       IDLE                  0
+RFS       IDLE                  0
+RFS       IDLE                 22
+RFS       IDLE                  0
+MRP0      APPLYING_LOG         22
+
+15 rows selected.
+
+Elapsed: 00:00:00.06
+
+NAME      DB_UNIQUE_NAME        DBID PLATFORM_NAME             OPEN_MODE            LOG_MODE     DATABASE_ROLE    CURRENT_SCN
+--------- --------------- ---------- ------------------------- -------------------- ------------ ---------------- --------------------
+DUT       DUTPUNK          250479864 Linux x86 64-bit          MOUNTED              ARCHIVELOG   PHYSICAL STANDBY 1051051
+
+Elapsed: 00:00:00.02
+
+INSTANCE_NAME    HOST_NAME                                                        STATUS
+---------------- ---------------------------------------------------------------- ------------
+DUT              punk.com                                                         MOUNTED
+
+Elapsed: 00:00:00.01
+
+    Thread Last Seq Received Last Seq Applied        Gap Resu
+---------- ----------------- ---------------- ---------- ----
+         1                21               21          0 Sync
+
+Elapsed: 00:00:00.01
+SQL> @gap
+
+PROCESS   STATUS        SEQUENCE#
+--------- ------------ ----------
+DGRD      ALLOCATED             0
+ARCH      CLOSING              20
+DGRD      ALLOCATED             0
+ARCH      CLOSING              21
+ARCH      CLOSING              22
+ARCH      CONNECTED             0
+ARCH      CONNECTED             0
+ARCH      CONNECTED             0
+ARCH      CONNECTED             0
+ARCH      CONNECTED             0
+RFS       IDLE                  0
+RFS       IDLE                  0
+RFS       IDLE                 23
+RFS       IDLE                  0
+MRP0      APPLYING_LOG         23
+
+15 rows selected.
+
+Elapsed: 00:00:00.01
+
+NAME      DB_UNIQUE_NAME        DBID PLATFORM_NAME             OPEN_MODE            LOG_MODE     DATABASE_ROLE    CURRENT_SCN
+--------- --------------- ---------- ------------------------- -------------------- ------------ ---------------- --------------------
+DUT       DUTPUNK          250479864 Linux x86 64-bit          MOUNTED              ARCHIVELOG   PHYSICAL STANDBY 1052190
+
+Elapsed: 00:00:00.00
+
+INSTANCE_NAME    HOST_NAME                                                        STATUS
+---------------- ---------------------------------------------------------------- ------------
+DUT              punk.com                                                         MOUNTED
+
+Elapsed: 00:00:00.00
+
+    Thread Last Seq Received Last Seq Applied        Gap Resu
+---------- ----------------- ---------------- ---------- ----
+         1                22               22          0 Sync
+
+Elapsed: 00:00:00.00
+SQL>
+
+### Failover the Standby Database
+#################################
+SQL> RECOVER MANAGED STANDBY DATABASE FINISH;
+Media recovery complete.
+SQL> ALTER DATABASE ACTIVATE STANDBY DATABASE;
+
+Database altered.
+
+Elapsed: 00:00:03.97
+SQL> SELECT NAME,DB_UNIQUE_NAME,DBID,PLATFORM_NAME,OPEN_MODE,LOG_MODE,DATABASE_ROLE,TO_CHAR(CURRENT_SCN)CURRENT_SCN FROM V$DATABASE;
+
+NAME      DB_UNIQUE_NAME        DBID PLATFORM_NAME             OPEN_MODE            LOG_MODE     DATABASE_ROLE    CURRENT_SCN
+--------- --------------- ---------- ------------------------- -------------------- ------------ ---------------- --------------------
+DUT       DUTPUNK          250479864 Linux x86 64-bit          MOUNTED              ARCHIVELOG   PRIMARY          0
+
+Elapsed: 00:00:00.67
+SQL>
+
+### Start upgrade the DB after failover
+#######################################
+ALTER DATABASE OPEN UPGRADE;
+
+Database altered.
+
+Elapsed: 00:00:05.93
+SQL> SELECT NAME,DB_UNIQUE_NAME,DBID,PLATFORM_NAME,OPEN_MODE,LOG_MODE,DATABASE_ROLE,TO_CHAR(CURRENT_SCN)CURRENT_SCN FROM V$DATABASE;
+
+NAME      DB_UNIQUE_NAME        DBID PLATFORM_NAME             OPEN_MODE            LOG_MODE     DATABASE_ROLE    CURRENT_SCN
+--------- --------------- ---------- ------------------------- -------------------- ------------ ---------------- --------------------
+DUT       DUTPUNK          250479864 Linux x86 64-bit          READ WRITE           ARCHIVELOG   PRIMARY          1070454
+
+Elapsed: 00:00:00.05
+SQL> SELECT STATUS FROM V$INSTANCE;
+
+STATUS
+------------
+OPEN MIGRATE
+
+Elapsed: 00:00:00.02
+SQL> exit;
+Disconnected from Oracle Database 19c Enterprise Edition Release 19.0.0.0.0 - Production
+Version 19.3.0.0.0
+[oracle@punk scripts]$
+
+### Upgrade the database
+########################
+[oracle@punk scripts]$ cd $ORACLE_HOME/bin; pwd
+/a01/app/oracle/product/19.3.0.0/dbh_1/bin
+[oracle@punk bin]$ nohup ./dbupgrade >> ~/nohupdbupgrade_20200308.log 2>&1 &
+[1] 5190
+[oracle@punk bin]$ top -c -p 5190
+top - 23:21:13 up 18 min,  4 users,  load average: 0.21, 0.57, 0.49
+Tasks:   1 total,   0 running,   1 sleeping,   0 stopped,   0 zombie
+%Cpu(s):  1.6 us,  0.0 sy,  0.0 ni, 96.8 id,  1.6 wa,  0.0 hi,  0.0 si,  0.0 st
+KiB Mem :  3861364 total,   461928 free,   681900 used,  2717536 buff/cache
+KiB Swap:  3145724 total,  2354172 free,   791552 used.  1198956 avail Mem
+
+   PID USER      PR  NI    VIRT    RES    SHR S  %CPU %MEM     TIME+ COMMAND
+  5190 oracle    20   0  113188   1384   1180 S   0.0  0.0   0:00.01 /bin/sh ./dbupgrade
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[oracle@punk bin]$ tail -100f ~/nohupdbupgrade_20200308.log
+
+^C[1]+  Done                    nohup ./dbupgrade >> ~/nohupdbupgrade_20200308.log 2>&1
+
+[oracle@punk bin]$ cat ~/nohupdbupgrade_20200308.log
+nohup: ignoring input
+
+Argument list for [/a01/app/oracle/product/19.3.0.0/dbh_1/rdbms/admin/catctl.pl]
+For Oracle internal use only A = 0
+Run in                       c = 0
+Do not run in                C = 0
+Input Directory              d = 0
+Echo OFF                     e = 1
+Simulate                     E = 0
+Forced cleanup               F = 0
+Log Id                       i = 0
+Child Process                I = 0
+Log Dir                      l = 0
+Priority List Name           L = 0
+Upgrade Mode active          M = 0
+SQL Process Count            n = 0
+SQL PDB Process Count        N = 0
+Open Mode Normal             o = 0
+Start Phase                  p = 0
+End Phase                    P = 0
+Reverse Order                r = 0
+AutoUpgrade Resume           R = 0
+Script                       s = 0
+Serial Run                   S = 0
+RO User Tablespaces          T = 0
+Display Phases               y = 0
+Debug catcon.pm              z = 0
+Debug catctl.pl              Z = 0
+
+catctl.pl VERSION: [19.0.0.0.0]
+           STATUS: [Production]
+            BUILD: [RDBMS_19.3.0.0.0DBRU_LINUX.X64_190417]
+
+
+/a01/app/oracle/product/19.3.0.0/dbh_1/rdbms/admin/orahome = [/a01/app/oracle/product/19.3.0.0/dbh_1]
+/a01/app/oracle/product/19.3.0.0/dbh_1/bin/orabasehome = [/a01/app/oracle/product/19.3.0.0/dbh_1]
+catctlGetOraBaseLogDir = [/a01/app/oracle/product/19.3.0.0/dbh_1]
+
+Analyzing file /a01/app/oracle/product/19.3.0.0/dbh_1/rdbms/admin/catupgrd.sql
+
+Log file directory = [/tmp/cfgtoollogs/upgrade20200308232108]
+
+catcon::set_log_file_base_path: ALL catcon-related output will be written to [/tmp/cfgtoollogs/upgrade20200308232108/catupgrd_catcon_5195.lst]
+
+catcon::set_log_file_base_path: catcon: See [/tmp/cfgtoollogs/upgrade20200308232108/catupgrd*.log] files for output generated by scripts
+
+catcon::set_log_file_base_path: catcon: See [/tmp/cfgtoollogs/upgrade20200308232108/catupgrd_*.lst] files for spool files, if any
+
+
+Number of Cpus        = 4
+Database Name         = DUTPUNK
+DataBase Version      = 11.2.0.4.0
+catcon::set_log_file_base_path: ALL catcon-related output will be written to [/a01/app/oracle/product/19.3.0.0/dbh_1/cfgtoollogs/DUTPUNK/upgrade20200308232119/catupgrd_catcon_5195.lst]
+
+catcon::set_log_file_base_path: catcon: See [/a01/app/oracle/product/19.3.0.0/dbh_1/cfgtoollogs/DUTPUNK/upgrade20200308232119/catupgrd*.log] files for output generated by scripts
+
+catcon::set_log_file_base_path: catcon: See [/a01/app/oracle/product/19.3.0.0/dbh_1/cfgtoollogs/DUTPUNK/upgrade20200308232119/catupgrd_*.lst] files for spool files, if any
+
+
+Log file directory = [/a01/app/oracle/product/19.3.0.0/dbh_1/cfgtoollogs/DUTPUNK/upgrade20200308232119]
+
+Parallel SQL Process Count            = 4
+Components in [DUTPUNK]
+    Installed [APEX APS CATALOG CATJAVA CATPROC CONTEXT EM JAVAVM ORDIM OWM SDO XDB XML XOQ]
+Not Installed [DV MGW ODM OLS RAC WK]
+
+------------------------------------------------------
+Phases [0-107]         Start Time:[2020_03_08 23:21:31]
+------------------------------------------------------
+***********   Executing Change Scripts   ***********
+Serial   Phase #:0    [DUTPUNK] Files:1    Time: 68s
+***************   Catalog Core SQL   ***************
+Serial   Phase #:1    [DUTPUNK] Files:5    Time: 35s
+Restart  Phase #:2    [DUTPUNK] Files:1    Time: 4s
+***********   Catalog Tables and Views   ***********
+Parallel Phase #:3    [DUTPUNK] Files:19   Time: 11s
+Restart  Phase #:4    [DUTPUNK] Files:1    Time: 4s
+*************   Catalog Final Scripts   ************
+Serial   Phase #:5    [DUTPUNK] Files:7    Time: 13s
+*****************   Catproc Start   ****************
+Serial   Phase #:6    [DUTPUNK] Files:1    Time: 11s
+*****************   Catproc Types   ****************
+Serial   Phase #:7    [DUTPUNK] Files:2    Time: 8s
+Restart  Phase #:8    [DUTPUNK] Files:1    Time: 4s
+****************   Catproc Tables   ****************
+Parallel Phase #:9    [DUTPUNK] Files:67   Time: 19s
+Restart  Phase #:10   [DUTPUNK] Files:1    Time: 3s
+*************   Catproc Package Specs   ************
+Serial   Phase #:11   [DUTPUNK] Files:1    Time: 46s
+Restart  Phase #:12   [DUTPUNK] Files:1    Time: 3s
+**************   Catproc Procedures   **************
+Parallel Phase #:13   [DUTPUNK] Files:94   Time: 6s
+Restart  Phase #:14   [DUTPUNK] Files:1    Time: 2s
+Parallel Phase #:15   [DUTPUNK] Files:120  Time: 10s
+Restart  Phase #:16   [DUTPUNK] Files:1    Time: 3s
+Serial   Phase #:17   [DUTPUNK] Files:22   Time: 4s
+Restart  Phase #:18   [DUTPUNK] Files:1    Time: 3s
+*****************   Catproc Views   ****************
+Parallel Phase #:19   [DUTPUNK] Files:32   Time: 150s
+Restart  Phase #:20   [DUTPUNK] Files:1    Time: 4s
+Serial   Phase #:21   [DUTPUNK] Files:3    Time: 9s
+Restart  Phase #:22   [DUTPUNK] Files:1    Time: 4s
+Parallel Phase #:23   [DUTPUNK] Files:25   Time: 133s
+Restart  Phase #:24   [DUTPUNK] Files:1    Time: 4s
+Parallel Phase #:25   [DUTPUNK] Files:12   Time: 79s
+Restart  Phase #:26   [DUTPUNK] Files:1    Time: 4s
+Serial   Phase #:27   [DUTPUNK] Files:1    Time: 0s
+Serial   Phase #:28   [DUTPUNK] Files:3    Time: 4s
+Serial   Phase #:29   [DUTPUNK] Files:1    Time: 0s
+Restart  Phase #:30   [DUTPUNK] Files:1    Time: 3s
+***************   Catproc CDB Views   **************
+Serial   Phase #:31   [DUTPUNK] Files:1    Time: 2s
+Restart  Phase #:32   [DUTPUNK] Files:1    Time: 3s
+Serial   Phase #:34   [DUTPUNK] Files:1    Time: 0s
+*****************   Catproc PLBs   *****************
+Serial   Phase #:35   [DUTPUNK] Files:293  Time: 20s
+Serial   Phase #:36   [DUTPUNK] Files:1    Time: 0s
+Restart  Phase #:37   [DUTPUNK] Files:1    Time: 3s
+Serial   Phase #:38   [DUTPUNK] Files:6    Time: 6s
+Restart  Phase #:39   [DUTPUNK] Files:1    Time: 2s
+***************   Catproc DataPump   ***************
+Serial   Phase #:40   [DUTPUNK] Files:3    Time: 45s
+Restart  Phase #:41   [DUTPUNK] Files:1    Time: 4s
+******************   Catproc SQL   *****************
+Parallel Phase #:42   [DUTPUNK] Files:13   Time: 87s
+Restart  Phase #:43   [DUTPUNK] Files:1    Time: 3s
+Parallel Phase #:44   [DUTPUNK] Files:11   Time: 9s
+Restart  Phase #:45   [DUTPUNK] Files:1    Time: 3s
+Parallel Phase #:46   [DUTPUNK] Files:3    Time: 3s
+Restart  Phase #:47   [DUTPUNK] Files:1    Time: 4s
+*************   Final Catproc scripts   ************
+Serial   Phase #:48   [DUTPUNK] Files:1    Time: 7s
+Restart  Phase #:49   [DUTPUNK] Files:1    Time: 4s
+**************   Final RDBMS scripts   *************
+Serial   Phase #:50   [DUTPUNK] Files:1    Time: 16s
+************   Upgrade Component Start   ***********
+Serial   Phase #:51   [DUTPUNK] Files:1    Time: 2s
+Restart  Phase #:52   [DUTPUNK] Files:1    Time: 4s
+**********   Upgrading Java and non-Java   *********
+Serial   Phase #:53   [DUTPUNK] Files:2    Time: 389s
+*****************   Upgrading XDB   ****************
+Restart  Phase #:54   [DUTPUNK] Files:1    Time: 3s
+Serial   Phase #:56   [DUTPUNK] Files:3    Time: 28s
+Serial   Phase #:57   [DUTPUNK] Files:3    Time: 7s
+Parallel Phase #:58   [DUTPUNK] Files:10   Time: 7s
+Parallel Phase #:59   [DUTPUNK] Files:25   Time: 9s
+Serial   Phase #:60   [DUTPUNK] Files:4    Time: 10s
+Serial   Phase #:61   [DUTPUNK] Files:1    Time: 0s
+Serial   Phase #:62   [DUTPUNK] Files:32   Time: 7s
+Serial   Phase #:63   [DUTPUNK] Files:1    Time: 0s
+Parallel Phase #:64   [DUTPUNK] Files:6    Time: 11s
+Serial   Phase #:65   [DUTPUNK] Files:2    Time: 17s
+Serial   Phase #:66   [DUTPUNK] Files:3    Time: 71s
+****************   Upgrading ORDIM   ***************
+Restart  Phase #:67   [DUTPUNK] Files:1    Time: 4s
+Serial   Phase #:69   [DUTPUNK] Files:1    Time: 4s
+Parallel Phase #:70   [DUTPUNK] Files:2    Time: 31s
+Restart  Phase #:71   [DUTPUNK] Files:1    Time: 4s
+Parallel Phase #:72   [DUTPUNK] Files:2    Time: 4s
+Serial   Phase #:73   [DUTPUNK] Files:2    Time: 4s
+*****************   Upgrading SDO   ****************
+Restart  Phase #:74   [DUTPUNK] Files:1    Time: 4s
+Serial   Phase #:76   [DUTPUNK] Files:1    Time: 29s
+Serial   Phase #:77   [DUTPUNK] Files:2    Time: 6s
+Restart  Phase #:78   [DUTPUNK] Files:1    Time: 3s
+Serial   Phase #:79   [DUTPUNK] Files:1    Time: 17s
+Restart  Phase #:80   [DUTPUNK] Files:1    Time: 4s
+Parallel Phase #:81   [DUTPUNK] Files:3    Time: 50s
+Restart  Phase #:82   [DUTPUNK] Files:1    Time: 5s
+Serial   Phase #:83   [DUTPUNK] Files:1    Time: 6s
+Restart  Phase #:84   [DUTPUNK] Files:1    Time: 5s
+Serial   Phase #:85   [DUTPUNK] Files:1    Time: 10s
+Restart  Phase #:86   [DUTPUNK] Files:1    Time: 3s
+Parallel Phase #:87   [DUTPUNK] Files:4    Time: 72s
+Restart  Phase #:88   [DUTPUNK] Files:1    Time: 4s
+Serial   Phase #:89   [DUTPUNK] Files:1    Time: 4s
+Restart  Phase #:90   [DUTPUNK] Files:1    Time: 4s
+Serial   Phase #:91   [DUTPUNK] Files:2    Time: 10s
+Restart  Phase #:92   [DUTPUNK] Files:1    Time: 3s
+Serial   Phase #:93   [DUTPUNK] Files:1    Time: 2s
+Restart  Phase #:94   [DUTPUNK] Files:1    Time: 4s
+*******   Upgrading ODM, WK, EXF, RUL, XOQ   *******
+Serial   Phase #:95   [DUTPUNK] Files:1    Time: 21s
+Restart  Phase #:96   [DUTPUNK] Files:1    Time: 2s
+***********   Final Component scripts    ***********
+Serial   Phase #:97   [DUTPUNK] Files:1    Time: 4s
+*************   Final Upgrade scripts   ************
+Serial   Phase #:98   [DUTPUNK] Files:1    Time: 201s
+*******************   Migration   ******************
+Serial   Phase #:99   [DUTPUNK] Files:1    Time: 42s
+***   End PDB Application Upgrade Pre-Shutdown   ***
+Serial   Phase #:100  [DUTPUNK] Files:1    Time: 2s
+Serial   Phase #:101  [DUTPUNK] Files:1    Time: 0s
+Serial   Phase #:102  [DUTPUNK] Files:1    Time: 50s
+*****************   Post Upgrade   *****************
+Serial   Phase #:103  [DUTPUNK] Files:1    Time: 30s
+****************   Summary report   ****************
+Serial   Phase #:104  [DUTPUNK] Files:1    Time: 2s
+***   End PDB Application Upgrade Post-Shutdown   **
+Serial   Phase #:105  [DUTPUNK] Files:1    Time: 2s
+Serial   Phase #:106  [DUTPUNK] Files:1    Time: 0s
+Serial   Phase #:107  [DUTPUNK] Files:1     Time: 30s
+
+------------------------------------------------------
+Phases [0-107]         End Time:[2020_03_08 23:56:51]
+------------------------------------------------------
+
+Grand Total Time: 2120s
+
+ LOG FILES: (/a01/app/oracle/product/19.3.0.0/dbh_1/cfgtoollogs/DUTPUNK/upgrade20200308232119/catupgrd*.log)
+
+Upgrade Summary Report Located in:
+/a01/app/oracle/product/19.3.0.0/dbh_1/cfgtoollogs/DUTPUNK/upgrade20200308232119/upg_summary.log
+
+Grand Total Upgrade Time:    [0d:0h:35m:20s]
+[oracle@punk bin]$ cd ../rdbms/admin/; pwd; ls -lh utlusts*
+/a01/app/oracle/product/19.3.0.0/dbh_1/rdbms/admin
+-rw-r--r--. 1 oracle oinstall 24K May 27  2018 utlusts.sql
+[oracle@punk admin]$
+
+### Startup database and change compatibility to 19c
+####################################################
+[oracle@punk admin]$ rlwrap sqlplus / as sysdba
+
+SQL*Plus: Release 19.0.0.0.0 - Production on Mon Mar 9 00:02:17 2020
+Version 19.3.0.0.0
+
+Copyright (c) 1982, 2019, Oracle.  All rights reserved.
+
+Connected to an idle instance.
+
+SQL> startup;
+ORACLE instance started.
+
+Total System Global Area 3221222464 bytes
+Fixed Size                  8901696 bytes
+Variable Size             805306368 bytes
+Database Buffers         2399141888 bytes
+Redo Buffers                7872512 bytes
+Database mounted.
+Database opened.
+SQL> sho parameter compat
+
+NAME                                 TYPE        VALUE
+------------------------------------ ----------- ------------------------------
+compatible                           string      11.2.0.4.0
+noncdb_compatible                    boolean     FALSE
+plsql_v2_compatibility               boolean     FALSE
+SQL> shu immediate;
+Database closed.
+Database dismounted.
+ORACLE instance shut down.
+SQL> startup;
+ORACLE instance started.
+
+Total System Global Area 3221222464 bytes
+Fixed Size                  8901696 bytes
+Variable Size             805306368 bytes
+Database Buffers         2399141888 bytes
+Redo Buffers                7872512 bytes
+Database mounted.
+Database opened.
+SQL> sho parameter compat
+
+NAME                                 TYPE        VALUE
+------------------------------------ ----------- ------------------------------
+compatible                           string      19.0.0.0.0
+noncdb_compatible                    boolean     FALSE
+plsql_v2_compatibility               boolean     FALSE
+SQL>
+
+### Run utlusts.sql in $ORACLE_HOME/rdbms/admin
+###############################################
+SQL> @utlusts.sql
+Elapsed: 00:00:00.04
+Elapsed: 00:00:00.00
+Elapsed: 00:00:00.19
+Enter value for 1: 1
+
+Oracle Database Release 19 Post-Upgrade Status Tool    03-09-2020 00:05:3
+Database Name: DUT
+
+Component                               Current         Full     Elapsed Time
+Name                                    Status          Version  HH:MM:SS
+
+Oracle Server                          UPGRADED      19.3.0.0.0  00:14:29
+JServer JAVA Virtual Machine           UPGRADED      19.3.0.0.0  00:03:02
+Oracle XDK                             UPGRADED      19.3.0.0.0  00:00:26
+Oracle Database Java Packages          UPGRADED      19.3.0.0.0  00:00:11
+OLAP Analytic Workspace                UPGRADED      19.3.0.0.0  00:00:12
+OLAP Catalog                         OPTION OFF      11.2.0.4.0  00:00:00
+Oracle Text                            UPGRADED      19.3.0.0.0  00:00:33
+Oracle Workspace Manager               UPGRADED      19.3.0.0.0  00:00:48
+Oracle Real Application Clusters     OPTION OFF      19.3.0.0.0  00:00:00
+Oracle XML Database                    UPGRADED      19.3.0.0.0  00:02:41
+Oracle Multimedia                      UPGRADED      19.3.0.0.0  00:00:43
+Spatial                                UPGRADED      19.3.0.0.0  00:03:48
+Oracle OLAP API                        UPGRADED      19.3.0.0.0  00:00:12
+Datapatch                                                        00:03:12
+Final Actions                                                    00:04:03
+Post Upgrade                                                     00:00:25
+
+Total Upgrade Time: 00:33:44
+Elapsed: 00:00:00.21
+
+Elapsed: 00:00:00.00
+Database time zone version is 14. It is older than current release time
+zone version 32. Time zone upgrade is needed using the DBMS_DST package.
+Elapsed: 00:00:00.06
+
+Elapsed: 00:00:00.00
+Elapsed: 00:00:01.81
+SQL>
+
+### Check invalid objects and recompile
+#######################################
+SELECT COUNT(1)INV_OBJ FROM DBA_OBJECTS WHERE STATUS='INVALID';
+
+   INV_OBJ
+----------
+      9155
+Elapsed: 00:00:00.08
+SQL> @?/rdbms/admin/utlrp.sql
+
+Session altered.
+
+Elapsed: 00:00:00.06
+
+TIMESTAMP
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+COMP_TIMESTAMP UTLRP_BGN              2020-03-10 14:19:23
+
+Elapsed: 00:00:04.02
+DOC>   The following PL/SQL block invokes UTL_RECOMP to recompile invalid
+DOC>   objects in the database. Recompilation time is proportional to the
+DOC>   number of invalid objects in the database, so this command may take
+DOC>   a long time to execute on a database with a large number of invalid
+DOC>   objects.
+DOC>
+DOC>   Use the following queries to track recompilation progress:
+DOC>
+DOC>   1. Query returning the number of invalid objects remaining. This
+DOC>      number should decrease with time.
+DOC>         SELECT COUNT(*) FROM obj$ WHERE status IN (4, 5, 6);
+DOC>
+DOC>   2. Query returning the number of objects compiled so far. This number
+DOC>      should increase with time.
+DOC>         SELECT COUNT(*) FROM UTL_RECOMP_COMPILED;
+DOC>
+DOC>   This script automatically chooses serial or parallel recompilation
+DOC>   based on the number of CPUs available (parameter cpu_count) multiplied
+DOC>   by the number of threads per CPU (parameter parallel_threads_per_cpu).
+DOC>   On RAC, this number is added across all RAC nodes.
+DOC>
+DOC>   UTL_RECOMP uses DBMS_SCHEDULER to create jobs for parallel
+DOC>   recompilation. Jobs are created without instance affinity so that they
+DOC>   can migrate across RAC nodes. Use the following queries to verify
+DOC>   whether UTL_RECOMP jobs are being created and run correctly:
+DOC>
+DOC>   1. Query showing jobs created by UTL_RECOMP
+DOC>         SELECT job_name FROM dba_scheduler_jobs
+DOC>            WHERE job_name like 'UTL_RECOMP_SLAVE_%';
+DOC>
+DOC>   2. Query showing UTL_RECOMP jobs that are running
+DOC>         SELECT job_name FROM dba_scheduler_running_jobs
+DOC>            WHERE job_name like 'UTL_RECOMP_SLAVE_%';
+DOC>#
+
+PL/SQL procedure successfully completed.
+
+Elapsed: 00:12:04.34
+
+TIMESTAMP
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+COMP_TIMESTAMP UTLRP_END              2020-03-10 14:31:28
+
+Elapsed: 00:00:00.62
+DOC> The following query reports the number of invalid objects.
+DOC>
+DOC> If the number is higher than expected, please examine the error
+DOC> messages reported with each object (using SHOW ERRORS) to see if they
+DOC> point to system misconfiguration or resource constraints that must be
+DOC> fixed before attempting to recompile these objects.
+DOC>#
+
+OBJECTS WITH ERRORS
+-------------------
+                  0
+
+Elapsed: 00:00:00.03
+DOC> The following query reports the number of exceptions caught during
+DOC> recompilation. If this number is non-zero, please query the error
+DOC> messages in the table UTL_RECOMP_ERRORS to see if any of these errors
+DOC> are due to misconfiguration or resource constraints that must be
+DOC> fixed before objects can compile successfully.
+DOC> Note: Typical compilation errors (due to coding errors) are not
+DOC>       logged into this table: they go into DBA_ERRORS instead.
+DOC>#
+
+ERRORS DURING RECOMPILATION
+---------------------------
+                          0
+
+Elapsed: 00:00:00.02
+
+Function created.
+
+Elapsed: 00:00:00.10
+
+PL/SQL procedure successfully completed.
+
+Elapsed: 00:00:00.89
+
+Function dropped.
+
+Elapsed: 00:00:00.08
+
+PL/SQL procedure successfully completed.
+
+Elapsed: 00:00:13.93
+SQL> SELECT COUNT(1)INV_OBJ FROM DBA_OBJECTS WHERE STATUS='INVALID';
+
+   INV_OBJ
+----------
+         0
+
+Elapsed: 00:00:00.08
+SQL>
+
+### Check database version
+##########################
+SQL> SELECT BANNER FROM V$VERSION;
+
+BANNER
+--------------------------------------------------------------------------------
+Oracle Database 19c Enterprise Edition Release 19.0.0.0.0 - Production
+
+Elapsed: 00:00:00.10
+SQL>
+
+### Upgrade the Time Zone File Version After Upgrading Oracle Database
+######################################################################
+SQL> @?/rdbms/admin/utltz_countstats.sql
+
+Session altered.
+
+Elapsed: 00:00:00.02
+Elapsed: 00:00:00.10
+Elapsed: 00:00:00.00
+Elapsed: 00:00:00.01
+Elapsed: 00:00:00.03
+.
+Elapsed: 00:00:00.00
+Amount of TSTZ data using num_rows stats info in DBA_TABLES.
+Elapsed: 00:00:00.00
+.
+Elapsed: 00:00:00.00
+For SYS tables first ...
+Elapsed: 00:00:00.01
+Note: empty tables are not listed.
+Elapsed: 00:00:00.00
+Stat date  - Owner.TableName.ColumnName - num_rows
+Elapsed: 00:00:00.00
+08/03/2020 - SYS.AQ$_ALERT_QT_S.CREATION_TIME - 5
+08/03/2020 - SYS.AQ$_ALERT_QT_S.DELETION_TIME - 5
+08/03/2020 - SYS.AQ$_ALERT_QT_S.MODIFICATION_TIME - 5
+24/08/2013 - SYS.AQ$_AQ$_MEM_MC_S.CREATION_TIME - 3
+24/08/2013 - SYS.AQ$_AQ$_MEM_MC_S.DELETION_TIME - 3
+24/08/2013 - SYS.AQ$_AQ$_MEM_MC_S.MODIFICATION_TIME - 3
+24/08/2013 - SYS.AQ$_AQ_PROP_TABLE_S.CREATION_TIME - 1
+24/08/2013 - SYS.AQ$_AQ_PROP_TABLE_S.DELETION_TIME - 1
+24/08/2013 - SYS.AQ$_AQ_PROP_TABLE_S.MODIFICATION_TIME - 1
+24/08/2013 - SYS.AQ$_SCHEDULER$_EVENT_QTAB_S.CREATION_TIME - 1
+24/08/2013 - SYS.AQ$_SCHEDULER$_EVENT_QTAB_S.DELETION_TIME - 1
+24/08/2013 - SYS.AQ$_SCHEDULER$_EVENT_QTAB_S.MODIFICATION_TIME - 1
+24/08/2013 - SYS.AQ$_SCHEDULER$_REMDB_JOBQTAB_S.CREATION_TIME - 1
+24/08/2013 - SYS.AQ$_SCHEDULER$_REMDB_JOBQTAB_S.DELETION_TIME - 1
+24/08/2013 - SYS.AQ$_SCHEDULER$_REMDB_JOBQTAB_S.MODIFICATION_TIME - 1
+24/08/2013 - SYS.AQ$_SCHEDULER_FILEWATCHER_QT_S.CREATION_TIME - 1
+24/08/2013 - SYS.AQ$_SCHEDULER_FILEWATCHER_QT_S.DELETION_TIME - 1
+24/08/2013 - SYS.AQ$_SCHEDULER_FILEWATCHER_QT_S.MODIFICATION_TIME - 1
+08/03/2020 - SYS.AQ$_SUBSCRIBER_TABLE.CREATION_TIME - 1
+08/03/2020 - SYS.AQ$_SUBSCRIBER_TABLE.DELETION_TIME - 1
+08/03/2020 - SYS.AQ$_SUBSCRIBER_TABLE.MODIFICATION_TIME - 1
+08/03/2020 - SYS.KET$_AUTOTASK_STATUS.ABA_START_TIME - 1
+08/03/2020 - SYS.KET$_AUTOTASK_STATUS.ABA_STATE_TIME - 1
+08/03/2020 - SYS.KET$_AUTOTASK_STATUS.MW_RECORD_TIME - 1
+08/03/2020 - SYS.KET$_AUTOTASK_STATUS.MW_START_TIME - 1
+08/03/2020 - SYS.KET$_AUTOTASK_STATUS.RECONCILE_TIME - 1
+24/08/2013 - SYS.KET$_CLIENT_CONFIG.FIELD_2 - 7
+24/08/2013 - SYS.KET$_CLIENT_CONFIG.LAST_CHANGE - 7
+08/03/2020 - SYS.KET$_CLIENT_TASKS.CURR_WIN_START - 3
+08/03/2020 - SYS.KET$_CLIENT_TASKS.LG_DATE - 3
+08/03/2020 - SYS.KET$_CLIENT_TASKS.LT_DATE - 3
+24/08/2013 - SYS.OPTSTAT_HIST_CONTROL$.SPARE6 - 19
+24/08/2013 - SYS.OPTSTAT_HIST_CONTROL$.SVAL2 - 19
+24/08/2013 - SYS.RADM_FPTM$.TSWTZ_COL - 1
+08/03/2020 - SYS.SCHEDULER$_EVENT_LOG.LOG_DATE - 68
+08/03/2020 - SYS.SCHEDULER$_GLOBAL_ATTRIBUTE.ATTR_TSTAMP - 11
+08/03/2020 - SYS.SCHEDULER$_JOB.END_DATE - 15
+08/03/2020 - SYS.SCHEDULER$_JOB.LAST_ENABLED_TIME - 15
+08/03/2020 - SYS.SCHEDULER$_JOB.LAST_END_DATE - 15
+08/03/2020 - SYS.SCHEDULER$_JOB.LAST_START_DATE - 15
+08/03/2020 - SYS.SCHEDULER$_JOB.NEXT_RUN_DATE - 15
+08/03/2020 - SYS.SCHEDULER$_JOB.START_DATE - 15
+08/03/2020 - SYS.SCHEDULER$_JOB_RUN_DETAILS.LOG_DATE - 45
+08/03/2020 - SYS.SCHEDULER$_JOB_RUN_DETAILS.REQ_START_DATE - 45
+08/03/2020 - SYS.SCHEDULER$_JOB_RUN_DETAILS.START_DATE - 45
+24/08/2013 - SYS.SCHEDULER$_SCHEDULE.END_DATE - 3
+24/08/2013 - SYS.SCHEDULER$_SCHEDULE.REFERENCE_DATE - 3
+08/03/2020 - SYS.SCHEDULER$_WINDOW.ACTUAL_START_DATE - 9
+08/03/2020 - SYS.SCHEDULER$_WINDOW.END_DATE - 9
+08/03/2020 - SYS.SCHEDULER$_WINDOW.LAST_START_DATE - 9
+08/03/2020 - SYS.SCHEDULER$_WINDOW.MANUAL_OPEN_TIME - 9
+08/03/2020 - SYS.SCHEDULER$_WINDOW.NEXT_START_DATE - 9
+08/03/2020 - SYS.SCHEDULER$_WINDOW.START_DATE - 9
+08/03/2020 - SYS.STATS_TARGET$.END_TIME - 591
+08/03/2020 - SYS.STATS_TARGET$.START_TIME - 591
+08/03/2020 - SYS.WRI$_ALERT_HISTORY.CREATION_TIME - 60
+08/03/2020 - SYS.WRI$_ALERT_HISTORY.TIME_SUGGESTED - 60
+08/03/2020 - SYS.WRI$_OPTSTAT_IND_HISTORY.SAVTIME - 4879
+08/03/2020 - SYS.WRI$_OPTSTAT_IND_HISTORY.SPARE6 - 4879
+08/03/2020 - SYS.WRI$_OPTSTAT_OPR.END_TIME - 160
+08/03/2020 - SYS.WRI$_OPTSTAT_OPR.SPARE6 - 160
+08/03/2020 - SYS.WRI$_OPTSTAT_OPR.START_TIME - 160
+08/03/2020 - SYS.WRI$_OPTSTAT_TAB_HISTORY.SAVTIME - 3477
+08/03/2020 - SYS.WRI$_OPTSTAT_TAB_HISTORY.SPARE6 - 3477
+08/03/2020 - SYS.WRM$_DATABASE_INSTANCE.STARTUP_TIME_TZ - 10
+08/03/2020 - SYS.WRM$_SNAPSHOT.BEGIN_INTERVAL_TIME_TZ - 3
+08/03/2020 - SYS.WRM$_SNAPSHOT.END_INTERVAL_TIME_TZ - 3
+Total numrows of SYS TSTZ columns is : 18980
+There are in total 165 SYS TSTZ columns.
+Elapsed: 00:00:02.59
+.
+Elapsed: 00:00:00.01
+For non-SYS tables ...
+Elapsed: 00:00:00.00
+Note: empty tables are not listed.
+Elapsed: 00:00:00.00
+Stat date  - Owner.Tablename.Columnname - num_rows
+Elapsed: 00:00:00.00
+24/08/2013 - IX.AQ$_ORDERS_QUEUETABLE_L.DEQUEUE_TIME - 2
+24/08/2013 - IX.AQ$_ORDERS_QUEUETABLE_S.CREATION_TIME - 4
+24/08/2013 - IX.AQ$_ORDERS_QUEUETABLE_S.DELETION_TIME - 4
+24/08/2013 - IX.AQ$_ORDERS_QUEUETABLE_S.MODIFICATION_TIME - 4
+24/08/2013 - IX.AQ$_STREAMS_QUEUE_TABLE_S.CREATION_TIME - 1
+24/08/2013 - IX.AQ$_STREAMS_QUEUE_TABLE_S.DELETION_TIME - 1
+24/08/2013 - IX.AQ$_STREAMS_QUEUE_TABLE_S.MODIFICATION_TIME - 1
+Total numrows of non-SYS TSTZ columns is : 17
+There are in total 26 non-SYS TSTZ columns.
+Elapsed: 00:00:02.14
+Elapsed: 00:00:00.00
+Total Minutes elapsed : 0
+Elapsed: 00:00:00.01
+
+Session altered.
+
+Elapsed: 00:00:00.00
+SQL> @?/rdbms/admin/utltz_countstar.sql
+
+Session altered.
+
+Elapsed: 00:00:00.06
+Elapsed: 00:00:00.01
+Elapsed: 00:00:00.00
+Elapsed: 00:00:00.01
+Elapsed: 00:00:00.00
+.
+Elapsed: 00:00:00.01
+Estimating amount of TSTZ data using COUNT(*).
+Elapsed: 00:00:00.00
+This might take some time ...
+Elapsed: 00:00:00.00
+.
+Elapsed: 00:00:00.01
+For SYS tables first ...
+Elapsed: 00:00:00.00
+Note: empty tables are not listed.
+Elapsed: 00:00:00.00
+Owner.TableName.ColumnName - COUNT(*) of that column
+Elapsed: 00:00:00.01
+SYS.ALERT_QT.SYS_NC00029$ - 41
+SYS.AQ$_ALERT_QT_S.CREATION_TIME - 5
+SYS.AQ$_ALERT_QT_S.DELETION_TIME - 5
+SYS.AQ$_ALERT_QT_S.MODIFICATION_TIME - 5
+SYS.AQ$_AQ$_MEM_MC_S.CREATION_TIME - 3
+SYS.AQ$_AQ$_MEM_MC_S.DELETION_TIME - 3
+SYS.AQ$_AQ$_MEM_MC_S.MODIFICATION_TIME - 3
+SYS.AQ$_AQ_PROP_TABLE_S.CREATION_TIME - 1
+SYS.AQ$_AQ_PROP_TABLE_S.DELETION_TIME - 1
+SYS.AQ$_AQ_PROP_TABLE_S.MODIFICATION_TIME - 1
+SYS.AQ$_ORA$PREPLUGIN_BACKUP_QTB_S.CREATION_TIME - 1
+SYS.AQ$_ORA$PREPLUGIN_BACKUP_QTB_S.DELETION_TIME - 1
+SYS.AQ$_ORA$PREPLUGIN_BACKUP_QTB_S.MODIFICATION_TIME - 1
+SYS.AQ$_PDB_MON_EVENT_QTABLE$_S.CREATION_TIME - 1
+SYS.AQ$_PDB_MON_EVENT_QTABLE$_S.DELETION_TIME - 1
+SYS.AQ$_PDB_MON_EVENT_QTABLE$_S.MODIFICATION_TIME - 1
+SYS.AQ$_SCHEDULER$_EVENT_QTAB_S.CREATION_TIME - 3
+SYS.AQ$_SCHEDULER$_EVENT_QTAB_S.DELETION_TIME - 3
+SYS.AQ$_SCHEDULER$_EVENT_QTAB_S.MODIFICATION_TIME - 3
+SYS.AQ$_SCHEDULER$_REMDB_JOBQTAB_S.CREATION_TIME - 1
+SYS.AQ$_SCHEDULER$_REMDB_JOBQTAB_S.DELETION_TIME - 1
+SYS.AQ$_SCHEDULER$_REMDB_JOBQTAB_S.MODIFICATION_TIME - 1
+SYS.AQ$_SCHEDULER_FILEWATCHER_QT_S.CREATION_TIME - 1
+SYS.AQ$_SCHEDULER_FILEWATCHER_QT_S.DELETION_TIME - 1
+SYS.AQ$_SCHEDULER_FILEWATCHER_QT_S.MODIFICATION_TIME - 1
+SYS.AQ$_SUBSCRIBER_TABLE.CREATION_TIME - 1
+SYS.AQ$_SUBSCRIBER_TABLE.DELETION_TIME - 1
+SYS.AQ$_SUBSCRIBER_TABLE.MODIFICATION_TIME - 1
+SYS.AQ$_SYS$SERVICE_METRICS_TAB_S.CREATION_TIME - 4
+SYS.AQ$_SYS$SERVICE_METRICS_TAB_S.DELETION_TIME - 4
+SYS.AQ$_SYS$SERVICE_METRICS_TAB_S.MODIFICATION_TIME - 4
+SYS.KET$_AUTOTASK_STATUS.ABA_START_TIME - 1
+SYS.KET$_AUTOTASK_STATUS.ABA_STATE_TIME - 1
+SYS.KET$_AUTOTASK_STATUS.MW_RECORD_TIME - 1
+SYS.KET$_AUTOTASK_STATUS.MW_START_TIME - 1
+SYS.KET$_AUTOTASK_STATUS.RECONCILE_TIME - 1
+SYS.KET$_CLIENT_CONFIG.FIELD_2 - 7
+SYS.KET$_CLIENT_CONFIG.LAST_CHANGE - 7
+SYS.KET$_CLIENT_TASKS.CURR_WIN_START - 3
+SYS.KET$_CLIENT_TASKS.LG_DATE - 3
+SYS.KET$_CLIENT_TASKS.LT_DATE - 3
+SYS.OPTSTAT_HIST_CONTROL$.SPARE6 - 45
+SYS.OPTSTAT_HIST_CONTROL$.SVAL2 - 45
+SYS.OPTSTAT_SNAPSHOT$.TIMESTAMP - 54
+SYS.OPTSTAT_USER_PREFS$.CHGTIME - 72
+SYS.RADM_FPTM$.TSWTZ_COL - 1
+SYS.REG$.NTFN_GROUPING_START_TIME - 2
+SYS.REG$.REG_TIME - 2
+SYS.SCHEDULER$_EVENT_LOG.LOG_DATE - 107
+SYS.SCHEDULER$_GLOBAL_ATTRIBUTE.ATTR_TSTAMP - 11
+SYS.SCHEDULER$_JOB.END_DATE - 23
+SYS.SCHEDULER$_JOB.LAST_ENABLED_TIME - 23
+SYS.SCHEDULER$_JOB.LAST_END_DATE - 23
+SYS.SCHEDULER$_JOB.LAST_START_DATE - 23
+SYS.SCHEDULER$_JOB.NEXT_RUN_DATE - 23
+SYS.SCHEDULER$_JOB.START_DATE - 23
+SYS.SCHEDULER$_JOB_RUN_DETAILS.LOG_DATE - 68
+SYS.SCHEDULER$_JOB_RUN_DETAILS.REQ_START_DATE - 68
+SYS.SCHEDULER$_JOB_RUN_DETAILS.START_DATE - 68
+SYS.SCHEDULER$_SCHEDULE.END_DATE - 4
+SYS.SCHEDULER$_SCHEDULE.REFERENCE_DATE - 4
+SYS.SCHEDULER$_WINDOW.ACTUAL_START_DATE - 9
+SYS.SCHEDULER$_WINDOW.END_DATE - 9
+SYS.SCHEDULER$_WINDOW.LAST_START_DATE - 9
+SYS.SCHEDULER$_WINDOW.MANUAL_OPEN_TIME - 9
+SYS.SCHEDULER$_WINDOW.NEXT_START_DATE - 9
+SYS.SCHEDULER$_WINDOW.START_DATE - 9
+SYS.STATS_TARGET$.END_TIME - 591
+SYS.STATS_TARGET$.START_TIME - 591
+SYS.WRI$_ALERT_HISTORY.CREATION_TIME - 31
+SYS.WRI$_ALERT_HISTORY.TIME_SUGGESTED - 31
+SYS.WRI$_ALERT_OUTSTANDING.CREATION_TIME - 1
+SYS.WRI$_ALERT_OUTSTANDING.TIME_SUGGESTED - 1
+SYS.WRI$_OPTSTAT_HISTGRM_HISTORY.SAVTIME - 25399
+SYS.WRI$_OPTSTAT_HISTGRM_HISTORY.SPARE6 - 25399
+SYS.WRI$_OPTSTAT_HISTHEAD_HISTORY.SAVTIME - 11324
+SYS.WRI$_OPTSTAT_HISTHEAD_HISTORY.SPARE6 - 11324
+SYS.WRI$_OPTSTAT_IND_HISTORY.SAVTIME - 1411
+SYS.WRI$_OPTSTAT_IND_HISTORY.SPARE6 - 1411
+SYS.WRI$_OPTSTAT_OPR.END_TIME - 350
+SYS.WRI$_OPTSTAT_OPR.SPARE6 - 350
+SYS.WRI$_OPTSTAT_OPR.START_TIME - 350
+SYS.WRI$_OPTSTAT_OPR_TASKS.END_TIME - 338
+SYS.WRI$_OPTSTAT_OPR_TASKS.SPARE6 - 338
+SYS.WRI$_OPTSTAT_OPR_TASKS.START_TIME - 338
+SYS.WRI$_OPTSTAT_TAB_HISTORY.SAVTIME - 944
+SYS.WRI$_OPTSTAT_TAB_HISTORY.SPARE6 - 944
+SYS.WRM$_DATABASE_INSTANCE.STARTUP_TIME_TZ - 13
+SYS.WRM$_PDB_INSTANCE.OPEN_TIME_TZ - 1
+SYS.WRM$_PDB_INSTANCE.STARTUP_TIME_TZ - 1
+SYS.WRM$_PDB_IN_SNAP.OPEN_TIME_TZ - 2
+SYS.WRM$_SNAPSHOT.BEGIN_INTERVAL_TIME_TZ - 5
+SYS.WRM$_SNAPSHOT.END_INTERVAL_TIME_TZ - 5
+SYS.XS$PRIN.END_DATE - 15
+SYS.XS$PRIN.START_DATE - 15
+Total count * of SYS TSTZ columns is : 82398
+There are in total 165 SYS TSTZ columns.
+Elapsed: 00:00:04.80
+.
+Elapsed: 00:00:00.00
+For non-SYS tables ...
+Elapsed: 00:00:00.01
+Note: empty tables are not listed.
+Elapsed: 00:00:00.00
+Owner.TableName.ColumnName - COUNT(*) of that column
+Elapsed: 00:00:00.01
+GSMADMIN_INTERNAL.AQ$_CHANGE_LOG_QUEUE_TABLE_S.CREATION_TIME - 1
+GSMADMIN_INTERNAL.AQ$_CHANGE_LOG_QUEUE_TABLE_S.DELETION_TIME - 1
+GSMADMIN_INTERNAL.AQ$_CHANGE_LOG_QUEUE_TABLE_S.MODIFICATION_TIME - 1
+IX.AQ$_ORDERS_QUEUETABLE_S.CREATION_TIME - 4
+IX.AQ$_ORDERS_QUEUETABLE_S.DELETION_TIME - 4
+IX.AQ$_ORDERS_QUEUETABLE_S.MODIFICATION_TIME - 4
+IX.AQ$_STREAMS_QUEUE_TABLE_S.CREATION_TIME - 1
+IX.AQ$_STREAMS_QUEUE_TABLE_S.DELETION_TIME - 1
+IX.AQ$_STREAMS_QUEUE_TABLE_S.MODIFICATION_TIME - 1
+WMSYS.AQ$_WM$EVENT_QUEUE_TABLE_S.CREATION_TIME - 1
+WMSYS.AQ$_WM$EVENT_QUEUE_TABLE_S.DELETION_TIME - 1
+WMSYS.AQ$_WM$EVENT_QUEUE_TABLE_S.MODIFICATION_TIME - 1
+WMSYS.WM$WORKSPACES_TABLE$.CREATETIME - 1
+WMSYS.WM$WORKSPACES_TABLE$.LAST_CHANGE - 1
+Total count * of non-SYS TSTZ columns is :  23
+There are in total 26 non-SYS TSTZ columns.
+Elapsed: 00:00:02.25
+Elapsed: 00:00:00.00
+Total Minutes elapsed : 0
+Elapsed: 00:00:00.01
+
+Session altered.
+
+Elapsed: 00:00:00.00
+SQL> @?/rdbms/admin/utltz_upg_check.sql
+
+Session altered.
+
+Elapsed: 00:00:00.00
+Elapsed: 00:00:00.00
+INFO: Starting with RDBMS DST update preparation.
+Elapsed: 00:00:00.01
+INFO: NO actual RDBMS DST update will be done by this script.
+Elapsed: 00:00:00.00
+INFO: If an ERROR occurs the script will EXIT sqlplus.
+Elapsed: 00:00:00.00
+INFO: Doing checks for known issues ...
+Elapsed: 00:00:00.00
+INFO: Database version is 19.0.0.0 .
+INFO: Database RDBMS DST version is DSTv14 .
+INFO: No known issues detected.
+Elapsed: 00:00:00.52
+INFO: Now detecting new RDBMS DST version.
+Elapsed: 00:00:00.01
+A prepare window has been successfully started.
+INFO: Newest RDBMS DST version detected is DSTv32 .
+Elapsed: 00:00:01.23
+INFO: Next step is checking all TSTZ data.
+Elapsed: 00:00:00.01
+INFO: It might take a while before any further output is seen ...
+Elapsed: 00:00:00.00
+A prepare window has been successfully ended.
+INFO: A newer RDBMS DST version than the one currently used is found.
+INFO: Note that NO DST update was yet done.
+INFO: Now run utltz_upg_apply.sql to do the actual RDBMS DST update.
+INFO: Note that the utltz_upg_apply.sql script will
+INFO: restart the database 2 times WITHOUT any confirmation or prompt.
+Elapsed: 00:00:11.09
+Elapsed: 00:00:00.00
+Elapsed: 00:00:00.10
+
+Session altered.
+
+Elapsed: 00:00:00.00
+SQL> @?/rdbms/admin/utltz_upg_apply.sql
+
+Session altered.
+
+Elapsed: 00:00:00.00
+INFO: If an ERROR occurs, the script will EXIT SQL*Plus.
+Elapsed: 00:00:00.00
+Elapsed: 00:00:00.02
+Elapsed: 00:00:00.00
+INFO: The database RDBMS DST version will be updated to DSTv32 .
+Elapsed: 00:00:00.04
+WARNING: This script will restart the database 2 times
+WARNING: WITHOUT asking ANY confirmation.
+WARNING: Hit control-c NOW if this is not intended.
+Elapsed: 00:00:00.05
+Elapsed: 00:00:03.00
+INFO: Restarting the database in UPGRADE mode to start the DST upgrade.
+Elapsed: 00:00:00.01
+Elapsed: 00:00:00.01
+Database closed.
+Database dismounted.
+ORACLE instance shut down.
+ORACLE instance started.
+
+Total System Global Area 3221222464 bytes
+Fixed Size                  8901696 bytes
+Variable Size             922746880 bytes
+Database Buffers         2281701376 bytes
+Redo Buffers                7872512 bytes
+Database mounted.
+Database opened.
+INFO: Starting the RDBMS DST upgrade.
+Elapsed: 00:00:00.06
+INFO: Upgrading all SYS owned TSTZ data.
+Elapsed: 00:00:00.01
+INFO: It might take time before any further output is seen ...
+Elapsed: 00:00:00.00
+An upgrade window has been successfully started.
+Elapsed: 00:00:38.33
+INFO: Restarting the database in NORMAL mode to upgrade non-SYS TSTZ data.
+Elapsed: 00:00:00.76
+Elapsed: 00:00:00.44
+Database closed.
+Database dismounted.
+ORACLE instance shut down.
+ORACLE instance started.
+
+Total System Global Area 3221222464 bytes
+Fixed Size                  8901696 bytes
+Variable Size             922746880 bytes
+Database Buffers         2281701376 bytes
+Redo Buffers                7872512 bytes
+Database mounted.
+Database opened.
+INFO: Upgrading all non-SYS TSTZ data.
+Elapsed: 00:00:00.02
+INFO: It might take time before any further output is seen ...
+Elapsed: 00:00:00.01
+INFO: Do NOT start any application yet that uses TSTZ data!
+Elapsed: 00:00:00.01
+INFO: Next is a list of all upgraded tables:
+Table list: "MDSYS"."SDO_DIAG_MESSAGES_TABLE"
+Number of failures: 0
+Table list: "IX"."AQ$_STREAMS_QUEUE_TABLE_S"
+Number of failures: 0
+Table list: "IX"."AQ$_ORDERS_QUEUETABLE_S"
+Number of failures: 0
+Table list: "IX"."AQ$_STREAMS_QUEUE_TABLE_L"
+Number of failures: 0
+Table list: "IX"."AQ$_ORDERS_QUEUETABLE_L"
+Number of failures: 0
+Table list: "GSMADMIN_INTERNAL"."AQ$_CHANGE_LOG_QUEUE_TABLE_S"
+Number of failures: 0
+Table list: "GSMADMIN_INTERNAL"."AQ$_CHANGE_LOG_QUEUE_TABLE_L"
+Number of failures: 0
+INFO: Total failures during update of TSTZ data: 0 .
+An upgrade window has been successfully ended.
+INFO: Your new Server RDBMS DST version is DSTv32 .
+Elapsed: 00:00:39.04
+INFO: The RDBMS DST update is successfully finished.
+Elapsed: 00:00:00.02
+INFO: Make sure to exit this SQL*Plus session.
+Elapsed: 00:00:00.01
+INFO: Do not use it for timezone related selects.
+Elapsed: 00:00:00.00
+Elapsed: 00:00:00.32
+Elapsed: 00:00:00.09
+
+Session altered.
+
+Elapsed: 00:00:00.04
+SQL>

@@ -1,0 +1,1503 @@
+##################################################################
+### Oracle DB 11.2.0.4 Upgrade to 12cR2 on Red Hat 7.7 by AzizPW #
+### RMAN backup - restore ########################################
+### Technical Consultant #########################################
+### PT Mitra Integrasi Informatika ###############################
+##################################################################
+### Prepare for Bank Indonesia ###################################
+### Sun, 20 October 2019 #########################################
+##################################################################
+
+Reference:
+Doc ID 2173141.1
+
+### Source 11.2.0.4
+###################
+[orekel@bebek ~]$ env|grep ORA
+ORACLE_UNQNAME=duck
+ORACLE_SID=duck
+ORACLE_BASE=/u01/app/orekel
+ORACLE_HOSTNAME=bebek.localdomain
+ORACLE_HOME=/u01/app/orekel/product/11.2.0.4/db_1
+[orekel@bebek ~]$ rlwrap sqlplus / as sysdba
+
+SQL*Plus: Release 11.2.0.4.0 Production on Sun Oct 20 19:48:06 2019
+
+Copyright (c) 1982, 2013, Oracle.  All rights reserved.
+
+Connected to an idle instance.
+
+SQL> startup;
+ORACLE instance started.
+
+Total System Global Area 1068937216 bytes
+Fixed Size		    2260088 bytes
+Variable Size		  629146504 bytes
+Database Buffers	  432013312 bytes
+Redo Buffers		    5517312 bytes
+Database mounted.
+Database opened.
+SQL> select banner from v$version;
+
+BANNER
+--------------------------------------------------------------------------------
+Oracle Database 11g Enterprise Edition Release 11.2.0.4.0 - 64bit Production
+PL/SQL Release 11.2.0.4.0 - Production
+CORE	11.2.0.4.0	Production
+TNS for Linux: Version 11.2.0.4.0 - Production
+NLSRTL Version 11.2.0.4.0 - Production
+
+Elapsed: 00:00:00.00
+SQL> sho parameter pfile;
+
+NAME				     TYPE	 VALUE
+------------------------------------ ----------- ------------------------------
+spfile				     string	 /u01/app/orekel/product/11.2.0.4/db_1/dbs/spfileduck.ora
+SQL> sho parameter compatib;
+
+NAME				     TYPE	 VALUE
+------------------------------------ ----------- ------------------------------
+compatible			     string	 11.2.0.4.0
+plsql_v2_compatibility		     boolean	 FALSE
+SQL> --Check database files location
+SQL> select member from v$logfile union all select name from v$controlfile union all select name from v$tempfile union all select name from v$datafile order by 1;
+
+MEMBER
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+/mp01/DUCK/controlfile/o1_mf_cymx6v07_.ctl
+/mp01/onlinelog-duck/o1_mf_1_cymx6xnd_.log
+/mp01/onlinelog-duck/o1_mf_2_cymx6zml_.log
+/mp01/onlinelog-duck/o1_mf_3_cymx71kj_.log
+/mp01/oradata-duck/azizpw01.dbf
+/mp01/oradata-duck/azizpw02.dbf
+/mp01/oradata-duck/azizpw_ix01.dbf
+/mp01/oradata-duck/o1_mf_example_cymx7ktv_.dbf
+/mp01/oradata-duck/o1_mf_sysaux_cymx44z6_.dbf
+/mp01/oradata-duck/o1_mf_system_cymx44wp_.dbf
+/mp01/oradata-duck/o1_mf_temp_cymx7bnb_.tmp
+/mp01/oradata-duck/o1_mf_undotbs1_cymx4503_.dbf
+/mp01/oradata-duck/o1_mf_users_cymx450p_.dbf
+/mp01/oradata-duck/ogg_data01.dbf
+/u01/app/orekel/fast_recovery_area/DUCK/controlfile/o1_mf_cymx6v1m_.ctl
+/u01/app/orekel/fast_recovery_area/DUCK/onlinelog/o1_mf_1_cymx6xot_.log
+/u01/app/orekel/fast_recovery_area/DUCK/onlinelog/o1_mf_2_cymx6zo8_.log
+/u01/app/orekel/fast_recovery_area/DUCK/onlinelog/o1_mf_3_cymx71lx_.log
+
+18 rows selected.
+
+Elapsed: 00:00:00.02
+SQL> archive log list;
+Database log mode	       Archive Mode
+Automatic archival	       Enabled
+Archive destination	       /ARC/duck
+Oldest online log sequence     40
+Next log sequence to archive   42
+Current log sequence	       42
+SQL> select instance_name from v$instance;
+
+INSTANCE_NAME
+----------------
+duck
+
+Elapsed: 00:00:00.00
+SQL> !pwd
+/home/orekel
+
+SQL> create pfile='/home/orekel/initduck_20191020.ora' from spfile;
+
+File created.
+
+Elapsed: 00:00:00.01
+SQL>
+
+run
+{
+    allocate channel dbbackup1 type disk;
+    allocate channel dbbackup2 type disk;
+    allocate channel dbbackup3 type disk;
+    allocate channel dbbackup4 type disk;
+	allocate channel dbbackup5 type disk;
+	allocate channel dbbackup6 type disk;
+	allocate channel dbbackup7 type disk;
+	allocate channel dbbackup8 type disk;
+    backup spfile tag 'SPFile' format '/home/orekel/backup/rmanfull/SPF_%I_%d_%s_%p_%T';
+    backup as compressed backupset current controlfile tag 'Controlfile' format '/home/orekel/backup/rmanfull/CTRL_%I_%d_%s_%p_%T';
+    backup as compressed backupset database tag 'FULLBACKUP' format '/home/orekel/backup/rmanfull/FULLDB_%I_%d_%s_%p_%T';
+    sql 'alter system archive log current';
+    backup as compressed backupset archivelog all delete all input tag 'Archivelog' format '/home/orekel/backup/rmanfull/ARCH_%I_%d_%s_%p_%T';
+    release channel dbbackup1;
+    release channel dbbackup2;
+    release channel dbbackup3;
+    release channel dbbackup4;
+	release channel dbbackup5;
+	release channel dbbackup6;
+	release channel dbbackup7;
+	release channel dbbackup8;
+    CROSSCHECK BACKUP;
+    DELETE NOPROMPT OBSOLETE RECOVERY WINDOW OF 14 DAYS;
+    DELETE NOPROMPT EXPIRED BACKUP;
+}
+
+[orekel@bebek ~]$ mv initduck_20191020.ora backup/rmanfull/
+[orekel@bebek ~]$ ls -lh backup/rmanfull/
+total 993M
+-rw-r-----. 1 orekel oinstall  72M Oct 20 19:57 ARCH_1538635403_DUCK_10_1_20191020
+-rw-r-----. 1 orekel oinstall  73M Oct 20 19:57 ARCH_1538635403_DUCK_11_1_20191020
+-rw-r-----. 1 orekel oinstall  66M Oct 20 19:57 ARCH_1538635403_DUCK_12_1_20191020
+-rw-r-----. 1 orekel oinstall  71M Oct 20 19:57 ARCH_1538635403_DUCK_13_1_20191020
+-rw-r-----. 1 orekel oinstall  73M Oct 20 19:57 ARCH_1538635403_DUCK_14_1_20191020
+-rw-r-----. 1 orekel oinstall  69M Oct 20 19:57 ARCH_1538635403_DUCK_15_1_20191020
+-rw-r-----. 1 orekel oinstall  67M Oct 20 19:57 ARCH_1538635403_DUCK_16_1_20191020
+-rw-r-----. 1 orekel oinstall  11M Oct 20 19:57 ARCH_1538635403_DUCK_17_1_20191020
+-rw-r-----. 1 orekel oinstall 1.1M Oct 20 19:55 CTRL_1538635403_DUCK_2_1_20191020
+-rw-r-----. 1 orekel oinstall 196M Oct 20 19:56 FULLDB_1538635403_DUCK_3_1_20191020
+-rw-r-----. 1 orekel oinstall 177M Oct 20 19:56 FULLDB_1538635403_DUCK_4_1_20191020
+-rw-r-----. 1 orekel oinstall  78M Oct 20 19:56 FULLDB_1538635403_DUCK_5_1_20191020
+-rw-r-----. 1 orekel oinstall  22M Oct 20 19:56 FULLDB_1538635403_DUCK_6_1_20191020
+-rw-r-----. 1 orekel oinstall  22M Oct 20 19:56 FULLDB_1538635403_DUCK_7_1_20191020
+-rw-r-----. 1 orekel oinstall 1.1M Oct 20 19:56 FULLDB_1538635403_DUCK_8_1_20191020
+-rw-r-----. 1 orekel oinstall  96K Oct 20 19:56 FULLDB_1538635403_DUCK_9_1_20191020
+-rw-r--r--. 1 orekel oinstall 1.2K Oct 20 19:52 initduck_20191020.ora
+-rw-r-----. 1 orekel oinstall  96K Oct 20 19:55 SPF_1538635403_DUCK_1_1_20191020
+[orekel@bebek ~]$
+
+### Target 12.2.0.1
+###################
+[orekel@rhino bebek-11.2.0.4-rmanfull]$ vi initduck_20191020.ora
+[orekel@rhino bebek-11.2.0.4-rmanfull]$ cat initduck_20191020.ora
+duck.__db_cache_size=494927872
+duck.__java_pool_size=4194304
+duck.__large_pool_size=8388608
+duck.__oracle_base='/z02/app/orekel'#ORACLE_BASE set from environment
+duck.__pga_aggregate_target=373293056
+duck.__sga_target=700448768
+duck.__shared_io_pool_size=0
+duck.__shared_pool_size=176160768
+duck.__streams_pool_size=4194304
+*.audit_file_dest='/z02/app/orekel/admin/duck/adump'
+*.audit_trail='db'
+*.compatible='12.2.0.1.0'
+*.control_files='/mp01/controlfile-duck/o1_mf_cymx6v07_.ctl','/mp01/controlfile-duck/o1_mf_cymx6v1m_.ctl'
+*.db_block_size=8192
+*.db_create_file_dest='/mp01'
+*.db_domain='animal.net'
+*.db_name='duck'
+*.db_recovery_file_dest='/z02/app/orekel/fast_recovery_area'
+*.db_recovery_file_dest_size=4385144832
+*.diagnostic_dest='/z02/app/orekel'
+*.dispatchers='(PROTOCOL=TCP) (SERVICE=duckXDB)'
+*.enable_goldengate_replication=TRUE
+*.job_queue_processes=1000
+*.log_archive_dest_1='LOCATION=/z02/archivelogs'
+*.log_archive_format='DUCK_%t_%s_%r.arc'
+*.memory_target=1073741824
+*.open_cursors=300
+*.processes=150
+*.recyclebin='OFF'
+*.remote_login_passwordfile='EXCLUSIVE'
+*.undo_retention=86400
+*.undo_tablespace='UNDOTBS1'
+[orekel@rhino bebek-11.2.0.4-rmanfull]$ mkdir -p /z02/app/orekel/admin/duck/adump /z02/app/orekel/fast_recovery_area
+[orekel@rhino bebek-11.2.0.4-rmanfull]$ cd ~
+[orekel@rhino ~]$ env|grep ORA
+ORACLE_UNQNAME=DUCK
+ORACLE_SID=duck
+ORACLE_BASE=/z02/app/orekel
+ORACLE_HOSTNAME=rhino.animal.net
+ORACLE_HOME=/z02/app/orekel/product/12.2.0.1/db_1
+[orekel@rhino ~]$ ls -lh /z02/bebek-11.2.0.4-rmanfull/*
+-rw-r--r--. 1 orekel oinstall  72M Oct 21 03:32 /z02/bebek-11.2.0.4-rmanfull/ARCH_1538635403_DUCK_10_1_20191020
+-rw-r--r--. 1 orekel oinstall  73M Oct 21 03:32 /z02/bebek-11.2.0.4-rmanfull/ARCH_1538635403_DUCK_11_1_20191020
+-rw-r--r--. 1 orekel oinstall  66M Oct 21 03:32 /z02/bebek-11.2.0.4-rmanfull/ARCH_1538635403_DUCK_12_1_20191020
+-rw-r--r--. 1 orekel oinstall  71M Oct 21 03:32 /z02/bebek-11.2.0.4-rmanfull/ARCH_1538635403_DUCK_13_1_20191020
+-rw-r--r--. 1 orekel oinstall  73M Oct 21 03:32 /z02/bebek-11.2.0.4-rmanfull/ARCH_1538635403_DUCK_14_1_20191020
+-rw-r--r--. 1 orekel oinstall  69M Oct 21 03:32 /z02/bebek-11.2.0.4-rmanfull/ARCH_1538635403_DUCK_15_1_20191020
+-rw-r--r--. 1 orekel oinstall  67M Oct 21 03:33 /z02/bebek-11.2.0.4-rmanfull/ARCH_1538635403_DUCK_16_1_20191020
+-rw-r--r--. 1 orekel oinstall  11M Oct 21 03:32 /z02/bebek-11.2.0.4-rmanfull/ARCH_1538635403_DUCK_17_1_20191020
+-rw-r--r--. 1 orekel oinstall 1.1M Oct 21 03:32 /z02/bebek-11.2.0.4-rmanfull/CTRL_1538635403_DUCK_2_1_20191020
+-rw-r--r--. 1 orekel oinstall 196M Oct 21 03:33 /z02/bebek-11.2.0.4-rmanfull/FULLDB_1538635403_DUCK_3_1_20191020
+-rw-r--r--. 1 orekel oinstall 177M Oct 21 03:33 /z02/bebek-11.2.0.4-rmanfull/FULLDB_1538635403_DUCK_4_1_20191020
+-rw-r--r--. 1 orekel oinstall  78M Oct 21 03:33 /z02/bebek-11.2.0.4-rmanfull/FULLDB_1538635403_DUCK_5_1_20191020
+-rw-r--r--. 1 orekel oinstall  22M Oct 21 03:33 /z02/bebek-11.2.0.4-rmanfull/FULLDB_1538635403_DUCK_6_1_20191020
+-rw-r--r--. 1 orekel oinstall  22M Oct 21 03:33 /z02/bebek-11.2.0.4-rmanfull/FULLDB_1538635403_DUCK_7_1_20191020
+-rw-r--r--. 1 orekel oinstall 1.1M Oct 21 03:33 /z02/bebek-11.2.0.4-rmanfull/FULLDB_1538635403_DUCK_8_1_20191020
+-rw-r--r--. 1 orekel oinstall  96K Oct 21 03:33 /z02/bebek-11.2.0.4-rmanfull/FULLDB_1538635403_DUCK_9_1_20191020
+-rw-r--r--. 1 orekel oinstall 1.2K Oct 21 03:38 /z02/bebek-11.2.0.4-rmanfull/initduck_20191020.ora
+-rw-r--r--. 1 orekel oinstall  96K Oct 21 03:33 /z02/bebek-11.2.0.4-rmanfull/SPF_1538635403_DUCK_1_1_20191020
+[orekel@rhino ~]$ du -sh /z02/bebek-11.2.0.4-rmanfull/
+993M    /z02/bebek-11.2.0.4-rmanfull/
+[orekel@rhino ~]$ rlwrap rman target=/
+
+Recovery Manager: Release 12.2.0.1.0 - Production on Mon Oct 21 03:41:43 2019
+
+Copyright (c) 1982, 2017, Oracle and/or its affiliates.  All rights reserved.
+
+connected to target database (not started)
+
+RMAN> STARTUP NOMOUNT PFILE='/z02/bebek-11.2.0.4-rmanfull/initduck_20191020.ora'
+
+Oracle instance started
+
+Total System Global Area    1073741824 bytes
+
+Fixed Size                     8628936 bytes
+Variable Size                620758328 bytes
+Database Buffers             436207616 bytes
+Redo Buffers                   8146944 bytes
+
+RMAN> set dbid 1538635403
+
+executing command: SET DBID
+
+RMAN> RESTORE PRIMARY CONTROLFILE FROM '/z02/bebek-11.2.0.4-rmanfull/CTRL_1538635403_DUCK_2_1_20191020';
+
+Starting restore at 21-Oct-19 03:43:26
+using target database control file instead of recovery catalog
+allocated channel: ORA_DISK_1
+channel ORA_DISK_1: SID=142 device type=DISK
+
+channel ORA_DISK_1: restoring control file
+channel ORA_DISK_1: restore complete, elapsed time: 00:00:01
+output file name=/mp01/controlfile-duck/o1_mf_cymx6v07_.ctl
+output file name=/mp01/controlfile-duck/o1_mf_cymx6v1m_.ctl
+Finished restore at 21-Oct-19 03:43:28
+
+RMAN> ALTER DATABASE MOUNT;
+
+Statement processed
+released channel: ORA_DISK_1
+
+RMAN> CONFIGURE DEVICE TYPE DISK PARALLELISM 2;
+
+new RMAN configuration parameters:
+CONFIGURE DEVICE TYPE DISK PARALLELISM 2 BACKUP TYPE TO BACKUPSET;
+new RMAN configuration parameters are successfully stored
+
+RMAN> CROSSCHECK BACKUP;
+
+Starting implicit crosscheck backup at 21-Oct-19 03:45:14
+allocated channel: ORA_DISK_1
+channel ORA_DISK_1: SID=145 device type=DISK
+allocated channel: ORA_DISK_2
+channel ORA_DISK_2: SID=23 device type=DISK
+Crosschecked 1 objects
+Finished implicit crosscheck backup at 21-Oct-19 03:45:14
+
+Starting implicit crosscheck copy at 21-Oct-19 03:45:14
+using channel ORA_DISK_1
+using channel ORA_DISK_2
+Finished implicit crosscheck copy at 21-Oct-19 03:45:14
+
+searching for all files in the recovery area
+cataloging files...
+no files cataloged
+
+using channel ORA_DISK_1
+using channel ORA_DISK_2
+crosschecked backup piece: found to be 'EXPIRED'
+backup piece handle=/home/orekel/backup/rmanfull/SPF_1538635403_DUCK_1_1_20191020 RECID=1 STAMP=1022183754
+Crosschecked 1 objects
+
+
+RMAN> CROSSCHECK ARCHIVELOG ALL;
+
+released channel: ORA_DISK_1
+released channel: ORA_DISK_2
+allocated channel: ORA_DISK_1
+channel ORA_DISK_1: SID=145 device type=DISK
+allocated channel: ORA_DISK_2
+channel ORA_DISK_2: SID=23 device type=DISK
+validation failed for archived log
+archived log file name=/ARC/duck/1_7_923657165.dbf RECID=4 STAMP=925844507
+validation failed for archived log
+archived log file name=/ARC/duck/1_8_923657165.dbf RECID=5 STAMP=925844599
+validation failed for archived log
+archived log file name=/ARC/duck/1_9_923657165.dbf RECID=6 STAMP=925844669
+validation failed for archived log
+archived log file name=/ARC/duck/1_10_923657165.dbf RECID=7 STAMP=925844686
+validation failed for archived log
+archived log file name=/ARC/duck/1_11_923657165.dbf RECID=8 STAMP=925844700
+validation failed for archived log
+archived log file name=/ARC/duck/1_12_923657165.dbf RECID=9 STAMP=925844716
+validation failed for archived log
+archived log file name=/ARC/duck/1_13_923657165.dbf RECID=10 STAMP=925844748
+validation failed for archived log
+archived log file name=/ARC/duck/1_14_923657165.dbf RECID=11 STAMP=925844871
+validation failed for archived log
+archived log file name=/ARC/duck/1_15_923657165.dbf RECID=12 STAMP=925844959
+validation failed for archived log
+archived log file name=/ARC/duck/1_16_923657165.dbf RECID=13 STAMP=925845027
+validation failed for archived log
+archived log file name=/ARC/duck/1_17_923657165.dbf RECID=14 STAMP=925845072
+validation failed for archived log
+archived log file name=/ARC/duck/1_18_923657165.dbf RECID=15 STAMP=925845122
+validation failed for archived log
+archived log file name=/ARC/duck/1_19_923657165.dbf RECID=16 STAMP=925845166
+validation failed for archived log
+archived log file name=/ARC/duck/1_20_923657165.dbf RECID=17 STAMP=925845248
+validation failed for archived log
+archived log file name=/ARC/duck/1_21_923657165.dbf RECID=18 STAMP=925845338
+validation failed for archived log
+archived log file name=/ARC/duck/1_22_923657165.dbf RECID=19 STAMP=925845384
+validation failed for archived log
+archived log file name=/ARC/duck/1_23_923657165.dbf RECID=20 STAMP=925845442
+validation failed for archived log
+archived log file name=/ARC/duck/1_24_923657165.dbf RECID=21 STAMP=925845766
+validation failed for archived log
+archived log file name=/ARC/duck/1_25_923657165.dbf RECID=22 STAMP=925845838
+validation failed for archived log
+archived log file name=/ARC/duck/1_26_923657165.dbf RECID=23 STAMP=925845904
+validation failed for archived log
+archived log file name=/ARC/duck/1_27_923657165.dbf RECID=24 STAMP=925845915
+validation failed for archived log
+archived log file name=/ARC/duck/1_28_923657165.dbf RECID=25 STAMP=925845929
+validation failed for archived log
+archived log file name=/ARC/duck/1_29_923657165.dbf RECID=26 STAMP=925845940
+validation failed for archived log
+archived log file name=/ARC/duck/1_30_923657165.dbf RECID=27 STAMP=925845971
+validation failed for archived log
+archived log file name=/ARC/duck/1_31_923657165.dbf RECID=28 STAMP=925846154
+validation failed for archived log
+archived log file name=/ARC/duck/1_32_923657165.dbf RECID=29 STAMP=925846244
+validation failed for archived log
+archived log file name=/ARC/duck/1_33_923657165.dbf RECID=30 STAMP=925846343
+validation failed for archived log
+archived log file name=/ARC/duck/1_34_923657165.dbf RECID=31 STAMP=925846413
+validation failed for archived log
+archived log file name=/ARC/duck/1_35_923657165.dbf RECID=32 STAMP=925846455
+validation failed for archived log
+archived log file name=/ARC/duck/1_36_923657165.dbf RECID=33 STAMP=925846513
+validation failed for archived log
+archived log file name=/ARC/duck/1_37_923657165.dbf RECID=34 STAMP=925846608
+validation failed for archived log
+archived log file name=/ARC/duck/1_38_923657165.dbf RECID=35 STAMP=925846698
+validation failed for archived log
+archived log file name=/ARC/duck/1_39_923657165.dbf RECID=36 STAMP=925846739
+validation failed for archived log
+archived log file name=/ARC/duck/1_40_923657165.dbf RECID=37 STAMP=925846792
+validation failed for archived log
+archived log file name=/ARC/duck/1_41_923657165.dbf RECID=38 STAMP=925846912
+Crosschecked 35 objects
+
+
+RMAN> DELETE NOPROMPT EXPIRED BACKUP;
+
+using channel ORA_DISK_1
+using channel ORA_DISK_2
+
+List of Backup Pieces
+BP Key  BS Key  Pc# Cp# Status      Device Type Piece Name
+------- ------- --- --- ----------- ----------- ----------
+1       1       1   1   EXPIRED     DISK        /home/orekel/backup/rmanfull/SPF_1538635403_DUCK_1_1_20191020
+deleted backup piece
+backup piece handle=/home/orekel/backup/rmanfull/SPF_1538635403_DUCK_1_1_20191020 RECID=1 STAMP=1022183754
+Deleted 1 EXPIRED objects
+
+
+RMAN> DELETE NOPROMPT EXPIRED ARCHIVELOG ALL;
+
+released channel: ORA_DISK_1
+released channel: ORA_DISK_2
+allocated channel: ORA_DISK_1
+channel ORA_DISK_1: SID=145 device type=DISK
+allocated channel: ORA_DISK_2
+channel ORA_DISK_2: SID=23 device type=DISK
+List of Archived Log Copies for database with db_unique_name DUCK
+=====================================================================
+
+Key     Thrd Seq     S Low Time
+------- ---- ------- - ------------------
+4       1    7       X 01-Oct-16 10:37:09
+        Name: /ARC/duck/1_7_923657165.dbf
+
+5       1    8       X 21-Oct-16 19:01:44
+        Name: /ARC/duck/1_8_923657165.dbf
+
+6       1    9       X 21-Oct-16 19:03:17
+        Name: /ARC/duck/1_9_923657165.dbf
+
+7       1    10      X 21-Oct-16 19:04:25
+        Name: /ARC/duck/1_10_923657165.dbf
+
+8       1    11      X 21-Oct-16 19:04:44
+        Name: /ARC/duck/1_11_923657165.dbf
+
+9       1    12      X 21-Oct-16 19:04:58
+        Name: /ARC/duck/1_12_923657165.dbf
+
+10      1    13      X 21-Oct-16 19:05:14
+        Name: /ARC/duck/1_13_923657165.dbf
+
+11      1    14      X 21-Oct-16 19:05:47
+        Name: /ARC/duck/1_14_923657165.dbf
+
+12      1    15      X 21-Oct-16 19:07:50
+        Name: /ARC/duck/1_15_923657165.dbf
+
+13      1    16      X 21-Oct-16 19:09:17
+        Name: /ARC/duck/1_16_923657165.dbf
+
+14      1    17      X 21-Oct-16 19:10:26
+        Name: /ARC/duck/1_17_923657165.dbf
+
+15      1    18      X 21-Oct-16 19:11:11
+        Name: /ARC/duck/1_18_923657165.dbf
+
+16      1    19      X 21-Oct-16 19:12:00
+        Name: /ARC/duck/1_19_923657165.dbf
+
+17      1    20      X 21-Oct-16 19:12:45
+        Name: /ARC/duck/1_20_923657165.dbf
+
+18      1    21      X 21-Oct-16 19:14:07
+        Name: /ARC/duck/1_21_923657165.dbf
+
+19      1    22      X 21-Oct-16 19:15:37
+        Name: /ARC/duck/1_22_923657165.dbf
+
+20      1    23      X 21-Oct-16 19:16:22
+        Name: /ARC/duck/1_23_923657165.dbf
+
+21      1    24      X 21-Oct-16 19:17:20
+        Name: /ARC/duck/1_24_923657165.dbf
+
+22      1    25      X 21-Oct-16 19:22:45
+        Name: /ARC/duck/1_25_923657165.dbf
+
+23      1    26      X 21-Oct-16 19:23:57
+        Name: /ARC/duck/1_26_923657165.dbf
+
+24      1    27      X 21-Oct-16 19:25:03
+        Name: /ARC/duck/1_27_923657165.dbf
+
+25      1    28      X 21-Oct-16 19:25:14
+        Name: /ARC/duck/1_28_923657165.dbf
+
+26      1    29      X 21-Oct-16 19:25:27
+        Name: /ARC/duck/1_29_923657165.dbf
+
+27      1    30      X 21-Oct-16 19:25:39
+        Name: /ARC/duck/1_30_923657165.dbf
+
+28      1    31      X 21-Oct-16 19:26:09
+        Name: /ARC/duck/1_31_923657165.dbf
+
+29      1    32      X 21-Oct-16 19:29:13
+        Name: /ARC/duck/1_32_923657165.dbf
+
+30      1    33      X 21-Oct-16 19:30:43
+        Name: /ARC/duck/1_33_923657165.dbf
+
+31      1    34      X 21-Oct-16 19:32:21
+        Name: /ARC/duck/1_34_923657165.dbf
+
+32      1    35      X 21-Oct-16 19:33:31
+        Name: /ARC/duck/1_35_923657165.dbf
+
+33      1    36      X 21-Oct-16 19:34:13
+        Name: /ARC/duck/1_36_923657165.dbf
+
+34      1    37      X 21-Oct-16 19:35:12
+        Name: /ARC/duck/1_37_923657165.dbf
+
+35      1    38      X 21-Oct-16 19:36:47
+        Name: /ARC/duck/1_38_923657165.dbf
+
+36      1    39      X 21-Oct-16 19:38:17
+        Name: /ARC/duck/1_39_923657165.dbf
+
+37      1    40      X 21-Oct-16 19:38:57
+        Name: /ARC/duck/1_40_923657165.dbf
+
+38      1    41      X 21-Oct-16 19:39:51
+        Name: /ARC/duck/1_41_923657165.dbf
+
+deleted archived log
+archived log file name=/ARC/duck/1_7_923657165.dbf RECID=4 STAMP=925844507
+deleted archived log
+archived log file name=/ARC/duck/1_8_923657165.dbf RECID=5 STAMP=925844599
+deleted archived log
+archived log file name=/ARC/duck/1_9_923657165.dbf RECID=6 STAMP=925844669
+deleted archived log
+archived log file name=/ARC/duck/1_10_923657165.dbf RECID=7 STAMP=925844686
+deleted archived log
+archived log file name=/ARC/duck/1_11_923657165.dbf RECID=8 STAMP=925844700
+deleted archived log
+archived log file name=/ARC/duck/1_12_923657165.dbf RECID=9 STAMP=925844716
+deleted archived log
+archived log file name=/ARC/duck/1_13_923657165.dbf RECID=10 STAMP=925844748
+deleted archived log
+archived log file name=/ARC/duck/1_14_923657165.dbf RECID=11 STAMP=925844871
+deleted archived log
+archived log file name=/ARC/duck/1_15_923657165.dbf RECID=12 STAMP=925844959
+deleted archived log
+archived log file name=/ARC/duck/1_16_923657165.dbf RECID=13 STAMP=925845027
+deleted archived log
+archived log file name=/ARC/duck/1_17_923657165.dbf RECID=14 STAMP=925845072
+deleted archived log
+archived log file name=/ARC/duck/1_18_923657165.dbf RECID=15 STAMP=925845122
+deleted archived log
+archived log file name=/ARC/duck/1_19_923657165.dbf RECID=16 STAMP=925845166
+deleted archived log
+archived log file name=/ARC/duck/1_20_923657165.dbf RECID=17 STAMP=925845248
+deleted archived log
+archived log file name=/ARC/duck/1_21_923657165.dbf RECID=18 STAMP=925845338
+deleted archived log
+archived log file name=/ARC/duck/1_22_923657165.dbf RECID=19 STAMP=925845384
+deleted archived log
+archived log file name=/ARC/duck/1_23_923657165.dbf RECID=20 STAMP=925845442
+deleted archived log
+archived log file name=/ARC/duck/1_24_923657165.dbf RECID=21 STAMP=925845766
+deleted archived log
+archived log file name=/ARC/duck/1_25_923657165.dbf RECID=22 STAMP=925845838
+deleted archived log
+archived log file name=/ARC/duck/1_26_923657165.dbf RECID=23 STAMP=925845904
+deleted archived log
+archived log file name=/ARC/duck/1_27_923657165.dbf RECID=24 STAMP=925845915
+deleted archived log
+archived log file name=/ARC/duck/1_28_923657165.dbf RECID=25 STAMP=925845929
+deleted archived log
+archived log file name=/ARC/duck/1_29_923657165.dbf RECID=26 STAMP=925845940
+deleted archived log
+archived log file name=/ARC/duck/1_30_923657165.dbf RECID=27 STAMP=925845971
+deleted archived log
+archived log file name=/ARC/duck/1_31_923657165.dbf RECID=28 STAMP=925846154
+deleted archived log
+archived log file name=/ARC/duck/1_32_923657165.dbf RECID=29 STAMP=925846244
+deleted archived log
+archived log file name=/ARC/duck/1_33_923657165.dbf RECID=30 STAMP=925846343
+deleted archived log
+archived log file name=/ARC/duck/1_34_923657165.dbf RECID=31 STAMP=925846413
+deleted archived log
+archived log file name=/ARC/duck/1_35_923657165.dbf RECID=32 STAMP=925846455
+deleted archived log
+archived log file name=/ARC/duck/1_36_923657165.dbf RECID=33 STAMP=925846513
+deleted archived log
+archived log file name=/ARC/duck/1_37_923657165.dbf RECID=34 STAMP=925846608
+deleted archived log
+archived log file name=/ARC/duck/1_38_923657165.dbf RECID=35 STAMP=925846698
+deleted archived log
+archived log file name=/ARC/duck/1_39_923657165.dbf RECID=36 STAMP=925846739
+deleted archived log
+archived log file name=/ARC/duck/1_40_923657165.dbf RECID=37 STAMP=925846792
+deleted archived log
+archived log file name=/ARC/duck/1_41_923657165.dbf RECID=38 STAMP=925846912
+Deleted 35 EXPIRED objects
+
+
+RMAN> LIST BACKUP SUMMARY;
+
+specification does not match any backup in the repository
+
+RMAN> CATALOG START WITH '/z02/bebek-11.2.0.4-rmanfull/' NOPROMPT;
+
+searching for all files that match the pattern /z02/bebek-11.2.0.4-rmanfull/
+
+List of Files Unknown to the Database
+=====================================
+File Name: /z02/bebek-11.2.0.4-rmanfull/ARCH_1538635403_DUCK_14_1_20191020
+File Name: /z02/bebek-11.2.0.4-rmanfull/ARCH_1538635403_DUCK_10_1_20191020
+File Name: /z02/bebek-11.2.0.4-rmanfull/SPF_1538635403_DUCK_1_1_20191020
+File Name: /z02/bebek-11.2.0.4-rmanfull/FULLDB_1538635403_DUCK_8_1_20191020
+File Name: /z02/bebek-11.2.0.4-rmanfull/ARCH_1538635403_DUCK_17_1_20191020
+File Name: /z02/bebek-11.2.0.4-rmanfull/FULLDB_1538635403_DUCK_4_1_20191020
+File Name: /z02/bebek-11.2.0.4-rmanfull/FULLDB_1538635403_DUCK_9_1_20191020
+File Name: /z02/bebek-11.2.0.4-rmanfull/ARCH_1538635403_DUCK_13_1_20191020
+File Name: /z02/bebek-11.2.0.4-rmanfull/ARCH_1538635403_DUCK_12_1_20191020
+File Name: /z02/bebek-11.2.0.4-rmanfull/FULLDB_1538635403_DUCK_6_1_20191020
+File Name: /z02/bebek-11.2.0.4-rmanfull/ARCH_1538635403_DUCK_16_1_20191020
+File Name: /z02/bebek-11.2.0.4-rmanfull/ARCH_1538635403_DUCK_15_1_20191020
+File Name: /z02/bebek-11.2.0.4-rmanfull/FULLDB_1538635403_DUCK_3_1_20191020
+File Name: /z02/bebek-11.2.0.4-rmanfull/FULLDB_1538635403_DUCK_5_1_20191020
+File Name: /z02/bebek-11.2.0.4-rmanfull/ARCH_1538635403_DUCK_11_1_20191020
+File Name: /z02/bebek-11.2.0.4-rmanfull/FULLDB_1538635403_DUCK_7_1_20191020
+File Name: /z02/bebek-11.2.0.4-rmanfull/initduck_20191020.ora
+File Name: /z02/bebek-11.2.0.4-rmanfull/CTRL_1538635403_DUCK_2_1_20191020
+cataloging files...
+cataloging done
+
+List of Cataloged Files
+=======================
+File Name: /z02/bebek-11.2.0.4-rmanfull/ARCH_1538635403_DUCK_14_1_20191020
+File Name: /z02/bebek-11.2.0.4-rmanfull/ARCH_1538635403_DUCK_10_1_20191020
+File Name: /z02/bebek-11.2.0.4-rmanfull/SPF_1538635403_DUCK_1_1_20191020
+File Name: /z02/bebek-11.2.0.4-rmanfull/FULLDB_1538635403_DUCK_8_1_20191020
+File Name: /z02/bebek-11.2.0.4-rmanfull/ARCH_1538635403_DUCK_17_1_20191020
+File Name: /z02/bebek-11.2.0.4-rmanfull/FULLDB_1538635403_DUCK_4_1_20191020
+File Name: /z02/bebek-11.2.0.4-rmanfull/FULLDB_1538635403_DUCK_9_1_20191020
+File Name: /z02/bebek-11.2.0.4-rmanfull/ARCH_1538635403_DUCK_13_1_20191020
+File Name: /z02/bebek-11.2.0.4-rmanfull/ARCH_1538635403_DUCK_12_1_20191020
+File Name: /z02/bebek-11.2.0.4-rmanfull/FULLDB_1538635403_DUCK_6_1_20191020
+File Name: /z02/bebek-11.2.0.4-rmanfull/ARCH_1538635403_DUCK_16_1_20191020
+File Name: /z02/bebek-11.2.0.4-rmanfull/ARCH_1538635403_DUCK_15_1_20191020
+File Name: /z02/bebek-11.2.0.4-rmanfull/FULLDB_1538635403_DUCK_3_1_20191020
+File Name: /z02/bebek-11.2.0.4-rmanfull/FULLDB_1538635403_DUCK_5_1_20191020
+File Name: /z02/bebek-11.2.0.4-rmanfull/ARCH_1538635403_DUCK_11_1_20191020
+File Name: /z02/bebek-11.2.0.4-rmanfull/FULLDB_1538635403_DUCK_7_1_20191020
+File Name: /z02/bebek-11.2.0.4-rmanfull/CTRL_1538635403_DUCK_2_1_20191020
+
+List of Files Which Were Not Cataloged
+=======================================
+File Name: /z02/bebek-11.2.0.4-rmanfull/initduck_20191020.ora
+  RMAN-07517: Reason: The file header is corrupted
+
+RMAN> LIST BACKUP SUMMARY;
+
+
+List of Backups
+===============
+Key     TY LV S Device Type Completion Time    #Pieces #Copies Compressed Tag
+------- -- -- - ----------- ------------------ ------- ------- ---------- ---
+2       B  A  A DISK        21-Oct-19 03:46:52 1       1       YES        ARCHIVELOG
+3       B  A  A DISK        21-Oct-19 03:46:52 1       1       YES        ARCHIVELOG
+4       B  F  A DISK        21-Oct-19 03:46:52 1       1       NO         SPFILE
+5       B  F  A DISK        21-Oct-19 03:46:52 1       1       YES        FULLBACKUP
+6       B  A  A DISK        21-Oct-19 03:46:52 1       1       YES        ARCHIVELOG
+7       B  F  A DISK        21-Oct-19 03:46:52 1       1       YES        FULLBACKUP
+8       B  F  A DISK        21-Oct-19 03:46:52 1       1       YES        FULLBACKUP
+9       B  A  A DISK        21-Oct-19 03:46:52 1       1       YES        ARCHIVELOG
+10      B  A  A DISK        21-Oct-19 03:46:52 1       1       YES        ARCHIVELOG
+11      B  F  A DISK        21-Oct-19 03:46:52 1       1       YES        FULLBACKUP
+12      B  A  A DISK        21-Oct-19 03:46:52 1       1       YES        ARCHIVELOG
+13      B  A  A DISK        21-Oct-19 03:46:52 1       1       YES        ARCHIVELOG
+14      B  F  A DISK        21-Oct-19 03:46:52 1       1       YES        FULLBACKUP
+15      B  F  A DISK        21-Oct-19 03:46:52 1       1       YES        FULLBACKUP
+16      B  A  A DISK        21-Oct-19 03:46:52 1       1       YES        ARCHIVELOG
+17      B  F  A DISK        21-Oct-19 03:46:52 1       1       YES        FULLBACKUP
+18      B  F  A DISK        21-Oct-19 03:46:52 1       1       YES        CONTROLFILE
+
+RMAN> RUN{
+2> RESTORE DATABASE;
+3> RECOVER DATABASE;}
+
+Starting restore at 21-Oct-19 03:47:40
+using channel ORA_DISK_1
+using channel ORA_DISK_2
+
+channel ORA_DISK_1: starting datafile backup set restore
+channel ORA_DISK_1: specifying datafile(s) to restore from backup set
+channel ORA_DISK_1: restoring datafile 00001 to /mp01/oradata-duck/o1_mf_system_cymx44wp_.dbf
+channel ORA_DISK_1: reading from backup piece /z02/bebek-11.2.0.4-rmanfull/FULLDB_1538635403_DUCK_3_1_20191020
+channel ORA_DISK_2: starting datafile backup set restore
+channel ORA_DISK_2: specifying datafile(s) to restore from backup set
+channel ORA_DISK_2: restoring datafile 00002 to /mp01/oradata-duck/o1_mf_sysaux_cymx44z6_.dbf
+channel ORA_DISK_2: restoring datafile 00007 to /mp01/oradata-duck/azizpw02.dbf
+channel ORA_DISK_2: reading from backup piece /z02/bebek-11.2.0.4-rmanfull/FULLDB_1538635403_DUCK_5_1_20191020
+channel ORA_DISK_2: piece handle=/z02/bebek-11.2.0.4-rmanfull/FULLDB_1538635403_DUCK_5_1_20191020 tag=FULLBACKUP
+channel ORA_DISK_2: restored backup piece 1
+channel ORA_DISK_2: restore complete, elapsed time: 00:00:25
+channel ORA_DISK_2: starting datafile backup set restore
+channel ORA_DISK_2: specifying datafile(s) to restore from backup set
+channel ORA_DISK_2: restoring datafile 00003 to /mp01/oradata-duck/o1_mf_undotbs1_cymx4503_.dbf
+channel ORA_DISK_2: restoring datafile 00008 to /mp01/oradata-duck/azizpw_ix01.dbf
+channel ORA_DISK_2: reading from backup piece /z02/bebek-11.2.0.4-rmanfull/FULLDB_1538635403_DUCK_4_1_20191020
+channel ORA_DISK_1: piece handle=/z02/bebek-11.2.0.4-rmanfull/FULLDB_1538635403_DUCK_3_1_20191020 tag=FULLBACKUP
+channel ORA_DISK_1: restored backup piece 1
+channel ORA_DISK_1: restore complete, elapsed time: 00:00:51
+channel ORA_DISK_1: starting datafile backup set restore
+channel ORA_DISK_1: specifying datafile(s) to restore from backup set
+channel ORA_DISK_1: restoring datafile 00004 to /mp01/oradata-duck/o1_mf_users_cymx450p_.dbf
+channel ORA_DISK_1: restoring datafile 00009 to /mp01/oradata-duck/ogg_data01.dbf
+channel ORA_DISK_1: reading from backup piece /z02/bebek-11.2.0.4-rmanfull/FULLDB_1538635403_DUCK_7_1_20191020
+channel ORA_DISK_1: piece handle=/z02/bebek-11.2.0.4-rmanfull/FULLDB_1538635403_DUCK_7_1_20191020 tag=FULLBACKUP
+channel ORA_DISK_1: restored backup piece 1
+channel ORA_DISK_1: restore complete, elapsed time: 00:00:07
+channel ORA_DISK_1: starting datafile backup set restore
+channel ORA_DISK_1: specifying datafile(s) to restore from backup set
+channel ORA_DISK_1: restoring datafile 00005 to /mp01/oradata-duck/o1_mf_example_cymx7ktv_.dbf
+channel ORA_DISK_1: restoring datafile 00006 to /mp01/oradata-duck/azizpw01.dbf
+channel ORA_DISK_1: reading from backup piece /z02/bebek-11.2.0.4-rmanfull/FULLDB_1538635403_DUCK_6_1_20191020
+channel ORA_DISK_2: piece handle=/z02/bebek-11.2.0.4-rmanfull/FULLDB_1538635403_DUCK_4_1_20191020 tag=FULLBACKUP
+channel ORA_DISK_2: restored backup piece 1
+channel ORA_DISK_2: restore complete, elapsed time: 00:00:33
+channel ORA_DISK_1: piece handle=/z02/bebek-11.2.0.4-rmanfull/FULLDB_1538635403_DUCK_6_1_20191020 tag=FULLBACKUP
+channel ORA_DISK_1: restored backup piece 1
+channel ORA_DISK_1: restore complete, elapsed time: 00:00:07
+Finished restore at 21-Oct-19 03:48:46
+
+Starting recover at 21-Oct-19 03:48:46
+using channel ORA_DISK_1
+using channel ORA_DISK_2
+
+starting media recovery
+
+channel ORA_DISK_1: starting archived log restore to default destination
+channel ORA_DISK_1: restoring archived log
+archived log thread=1 sequence=42
+channel ORA_DISK_1: restoring archived log
+archived log thread=1 sequence=43
+channel ORA_DISK_1: reading from backup piece /z02/bebek-11.2.0.4-rmanfull/ARCH_1538635403_DUCK_17_1_20191020
+channel ORA_DISK_1: piece handle=/z02/bebek-11.2.0.4-rmanfull/ARCH_1538635403_DUCK_17_1_20191020 tag=ARCHIVELOG
+channel ORA_DISK_1: restored backup piece 1
+channel ORA_DISK_1: restore complete, elapsed time: 00:00:03
+archived log file name=/z02/archivelogs/DUCK_1_42_923657165.arc thread=1 sequence=42
+archived log file name=/z02/archivelogs/DUCK_1_43_923657165.arc thread=1 sequence=43
+unable to find archived log
+archived log thread=1 sequence=44
+RMAN-00571: ===========================================================
+RMAN-00569: =============== ERROR MESSAGE STACK FOLLOWS ===============
+RMAN-00571: ===========================================================
+RMAN-03002: failure of recover command at 10/21/2019 03:48:52
+RMAN-06054: media recovery requesting unknown archived log for thread 1 with sequence 44 and starting SCN of 1354138
+
+RMAN> sql 'ALTER DATABASE OPEN RESETLOGS UPGRADE';
+
+sql statement: ALTER DATABASE OPEN RESETLOGS UPGRADE
+PSDRPC returns significant error 3113.
+RMAN-00571: ===========================================================
+RMAN-00569: =============== ERROR MESSAGE STACK FOLLOWS ===============
+RMAN-00571: ===========================================================
+RMAN-12005: error during channel cleanup
+ORA-03113: end-of-file on communication channel
+RMAN-00571: ===========================================================
+RMAN-00569: =============== ERROR MESSAGE STACK FOLLOWS ===============
+RMAN-00571: ===========================================================
+ORA-03114: not connected to ORACLE
+RMAN-00571: ===========================================================
+RMAN-00569: =============== ERROR MESSAGE STACK FOLLOWS ===============
+RMAN-00571: ===========================================================
+RMAN-12005: error during channel cleanup
+ORA-03113: end-of-file on communication channel
+[orekel@rhino ~]$ grep MemTotal /proc/meminfo
+MemTotal:        2899484 kB
+[orekel@rhino ~]$ grep MemTotal /proc/meminfo
+MemTotal:        2899484 kB
+[orekel@rhino ~]$ ps -ef|grep ckpt
+orekel     5191      1  0 03:42 ?        00:00:00 ora_ckpt_duck
+orekel     5521   3843  0 03:52 pts/1    00:00:00 grep --color=auto ckpt
+[orekel@rhino ~]$ rlwrap sqlplus / as sysdba
+
+SQL*Plus: Release 12.2.0.1.0 Production on Mon Oct 21 03:52:30 2019
+
+Copyright (c) 1982, 2016, Oracle.  All rights reserved.
+
+
+Connected to:
+Oracle Database 12c Enterprise Edition Release 12.2.0.1.0 - 64bit Production
+
+SQL> shu immediate;
+Database closed.
+Database dismounted.
+ORACLE instance shut down.
+SQL> exit
+Disconnected from Oracle Database 12c Enterprise Edition Release 12.2.0.1.0 - 64bit Production
+[orekel@rhino ~]$ cp /z02/bebek-11.2.0.4-rmanfull/initduck_20191020.ora /z02/bebek-11.2.0.4-rmanfull/initduck.ora
+[orekel@rhino ~]$ vi /z02/bebek-11.2.0.4-rmanfull/initduck.ora
+[orekel@rhino ~]$ cat /z02/bebek-11.2.0.4-rmanfull/initduck.ora
+duck.__oracle_base='/z02/app/orekel'#ORACLE_BASE set from environment
+*.audit_file_dest='/z02/app/orekel/admin/duck/adump'
+*.audit_trail='db'
+*.compatible='12.2.0.1.0'
+*.control_files='/mp01/controlfile-duck/o1_mf_cymx6v07_.ctl','/mp01/controlfile-duck/o1_mf_cymx6v1m_.ctl'
+*.db_block_size=8192
+*.db_create_file_dest='/mp01'
+*.db_domain='animal.net'
+*.db_name='duck'
+*.db_recovery_file_dest='/z02/app/orekel/fast_recovery_area'
+*.db_recovery_file_dest_size=4385144832
+*.diagnostic_dest='/z02/app/orekel'
+*.dispatchers='(PROTOCOL=TCP) (SERVICE=duckXDB)'
+*.enable_goldengate_replication=TRUE
+*.job_queue_processes=1000
+*.log_archive_dest_1='LOCATION=/z02/archivelogs'
+*.log_archive_format='DUCK_%t_%s_%r.arc'
+*.sga_max_size=1536m
+*.sga_target=1536m
+*.pga_aggregate_target=512m
+*.open_cursors=300
+*.processes=150
+*.recyclebin='OFF'
+*.remote_login_passwordfile='EXCLUSIVE'
+*.undo_retention=86400
+*.undo_tablespace='UNDOTBS1'
+[orekel@rhino ~]$ rlwrap sqlplus / as sysdba
+
+SQL*Plus: Release 12.2.0.1.0 Production on Mon Oct 21 03:57:50 2019
+
+Copyright (c) 1982, 2016, Oracle.  All rights reserved.
+
+Connected to an idle instance.
+
+SQL> STARTUP UPGRADE PFILE='/z02/bebek-11.2.0.4-rmanfull/initduck.ora';
+ORACLE instance started.
+
+Total System Global Area 1610612736 bytes
+Fixed Size                  8621232 bytes
+Variable Size             452985680 bytes
+Database Buffers         1140850688 bytes
+Redo Buffers                8155136 bytes
+Database mounted.
+Database opened.
+Disconnected from Oracle Database 12c Enterprise Edition Release 12.2.0.1.0 - 64bit Production
+[orekel@rhino ~]$ cd $ORACLE_HOME/bin; pwd;
+/z02/app/orekel/product/12.2.0.1/db_1/bin
+[orekel@rhino bin]$ ./dbupgrade
+
+Argument list for [/z02/app/orekel/product/12.2.0.1/db_1/rdbms/admin/catctl.pl]
+Run in                c = 0
+Do not run in         C = 0
+Input Directory       d = 0
+Echo OFF              e = 1
+Simulate              E = 0
+Forced cleanup        F = 0
+Log Id                i = 0
+Child Process         I = 0
+Log Dir               l = 0
+Priority List Name    L = 0
+Upgrade Mode active   M = 0
+SQL Process Count     n = 0
+SQL PDB Process Count N = 0
+Open Mode Normal      o = 0
+Start Phase           p = 0
+End Phase             P = 0
+Reverse Order         r = 0
+AutoUpgrade Resume    R = 0
+Script                s = 0
+Serial Run            S = 0
+RO User Tablespaces   T = 0
+Display Phases        y = 0
+Debug catcon.pm       z = 0
+Debug catctl.pl       Z = 0
+
+catctl.pl VERSION: [12.2.0.1.0]
+           STATUS: [production]
+            BUILD: [RDBMS_12.2.0.1.0_LINUX.X64_170125]
+
+
+/z02/app/orekel/product/12.2.0.1/db_1/rdbms/admin/orahome = [/z02/app/orekel/product/12.2.0.1/db_1]
+/z02/app/orekel/product/12.2.0.1/db_1/bin/orabasehome = [/z02/app/orekel/product/12.2.0.1/db_1]
+catctlGetOrabase = [/z02/app/orekel/product/12.2.0.1/db_1]
+
+Analyzing file /z02/app/orekel/product/12.2.0.1/db_1/rdbms/admin/catupgrd.sql
+
+Log file directory = [/tmp/cfgtoollogs/upgrade20191021040226]
+
+catcon: ALL catcon-related output will be written to [/tmp/cfgtoollogs/upgrade20191021040226/catupgrd_catcon_5883.lst]
+catcon: See [/tmp/cfgtoollogs/upgrade20191021040226/catupgrd*.log] files for output generated by scripts
+catcon: See [/tmp/cfgtoollogs/upgrade20191021040226/catupgrd_*.lst] files for spool files, if any
+
+Number of Cpus        = 2
+Database Name         = duck
+DataBase Version      = 11.2.0.4.0
+catcon: ALL catcon-related output will be written to [/z02/app/orekel/product/12.2.0.1/db_1/cfgtoollogs/duck/upgrade20191021040227/catupgrd_catcon_5883.lst]
+catcon: See [/z02/app/orekel/product/12.2.0.1/db_1/cfgtoollogs/duck/upgrade20191021040227/catupgrd*.log] files for output generated by scripts
+catcon: See [/z02/app/orekel/product/12.2.0.1/db_1/cfgtoollogs/duck/upgrade20191021040227/catupgrd_*.lst] files for spool files, if any
+
+Log file directory = [/z02/app/orekel/product/12.2.0.1/db_1/cfgtoollogs/duck/upgrade20191021040227]
+
+Parallel SQL Process Count            = 4
+Components in [duck]
+    Installed [APEX APS CATALOG CATJAVA CATPROC CONTEXT EM JAVAVM ORDIM OWM SDO XDB XML XOQ]
+Not Installed [DV MGW ODM OLS RAC WK]
+
+------------------------------------------------------
+Phases [0-115]         Start Time:[2019_10_21 04:02:28]
+------------------------------------------------------
+***********   Executing Change Scripts   ***********
+Serial   Phase #:0    [duck] Files:1    Time: 101s
+***************   Catalog Core SQL   ***************
+Serial   Phase #:1    [duck] Files:5    Time: 40s
+Restart  Phase #:2    [duck] Files:1    Time: 0s
+***********   Catalog Tables and Views   ***********
+Parallel Phase #:3    [duck] Files:19   Time: 14s
+Restart  Phase #:4    [duck] Files:1    Time: 0s
+*************   Catalog Final Scripts   ************
+Serial   Phase #:5    [duck] Files:6    Time: 14s
+*****************   Catproc Start   ****************
+Serial   Phase #:6    [duck] Files:1    Time: 12s
+*****************   Catproc Types   ****************
+Serial   Phase #:7    [duck] Files:2    Time: 11s
+Restart  Phase #:8    [duck] Files:1    Time: 1s
+****************   Catproc Tables   ****************
+Parallel Phase #:9    [duck] Files:69   Time: 26s
+Restart  Phase #:10   [duck] Files:1    Time: 0s
+*************   Catproc Package Specs   ************
+Serial   Phase #:11   [duck] Files:1    Time: 30s
+Restart  Phase #:12   [duck] Files:1    Time: 0s
+**************   Catproc Procedures   **************
+Parallel Phase #:13   [duck] Files:97   Time: 11s
+Restart  Phase #:14   [duck] Files:1    Time: 0s
+Parallel Phase #:15   [duck] Files:118  Time: 19s
+Restart  Phase #:16   [duck] Files:1    Time: 0s
+Serial   Phase #:17   [duck] Files:13   Time: 2s
+Restart  Phase #:18   [duck] Files:1    Time: 0s
+*****************   Catproc Views   ****************
+Parallel Phase #:19   [duck] Files:33   Time: 20s
+Restart  Phase #:20   [duck] Files:1    Time: 0s
+Serial   Phase #:21   [duck] Files:3    Time: 6s
+Restart  Phase #:22   [duck] Files:1    Time: 0s
+Parallel Phase #:23   [duck] Files:24   Time: 83s
+Restart  Phase #:24   [duck] Files:1    Time: 1s
+Parallel Phase #:25   [duck] Files:11   Time: 53s
+Restart  Phase #:26   [duck] Files:1    Time: 0s
+Serial   Phase #:27   [duck] Files:1    Time: 0s
+Serial   Phase #:28   [duck] Files:3    Time: 5s
+Serial   Phase #:29   [duck] Files:1    Time: 0s
+Restart  Phase #:30   [duck] Files:1    Time: 0s
+***************   Catproc CDB Views   **************
+Serial   Phase #:31   [duck] Files:1    Time: 0s
+Restart  Phase #:32   [duck] Files:1    Time: 0s
+Serial   Phase #:34   [duck] Files:1    Time: 0s
+*****************   Catproc PLBs   *****************
+Serial   Phase #:35   [duck] Files:283  Time: 28s
+Serial   Phase #:36   [duck] Files:1    Time: 0s
+Restart  Phase #:37   [duck] Files:1    Time: 0s
+Serial   Phase #:38   [duck] Files:1    Time: 4s
+Restart  Phase #:39   [duck] Files:1    Time: 0s
+***************   Catproc DataPump   ***************
+Serial   Phase #:40   [duck] Files:3    Time: 55s
+Restart  Phase #:41   [duck] Files:1    Time: 1s
+******************   Catproc SQL   *****************
+Parallel Phase #:42   [duck] Files:13   Time: 65s
+Restart  Phase #:43   [duck] Files:1    Time: 0s
+Parallel Phase #:44   [duck] Files:12   Time: 10s
+Restart  Phase #:45   [duck] Files:1    Time: 0s
+Parallel Phase #:46   [duck] Files:2    Time: 1s
+Restart  Phase #:47   [duck] Files:1    Time: 0s
+*************   Final Catproc scripts   ************
+Serial   Phase #:48   [duck] Files:1    Time: 5s
+Restart  Phase #:49   [duck] Files:1    Time: 0s
+**************   Final RDBMS scripts   *************
+Serial   Phase #:50   [duck] Files:1    Time: 24s
+************   Upgrade Component Start   ***********
+Serial   Phase #:51   [duck] Files:1    Time: 0s
+Restart  Phase #:52   [duck] Files:1    Time: 0s
+****************   Upgrading Java   ****************
+Serial   Phase #:53   [duck] Files:1    Time: 275s
+Restart  Phase #:54   [duck] Files:1    Time: 0s
+*****************   Upgrading XDK   ****************
+Serial   Phase #:55   [duck] Files:1    Time: 39s
+Restart  Phase #:56   [duck] Files:1    Time: 0s
+*********   Upgrading APS,OLS,DV,CONTEXT   *********
+Serial   Phase #:57   [duck] Files:1    Time: 84s
+*****************   Upgrading XDB   ****************
+Restart  Phase #:58   [duck] Files:1    Time: 0s
+Serial   Phase #:60   [duck] Files:3    Time: 32s
+Serial   Phase #:61   [duck] Files:3    Time: 6s
+Parallel Phase #:62   [duck] Files:9    Time: 3s
+Parallel Phase #:63   [duck] Files:24   Time: 4s
+Serial   Phase #:64   [duck] Files:4    Time: 6s
+Serial   Phase #:65   [duck] Files:1    Time: 0s
+Serial   Phase #:66   [duck] Files:30   Time: 2s
+Serial   Phase #:67   [duck] Files:1    Time: 0s
+Parallel Phase #:68   [duck] Files:6    Time: 2s
+Serial   Phase #:69   [duck] Files:2    Time: 19s
+Serial   Phase #:70   [duck] Files:3    Time: 70s
+Restart  Phase #:71   [duck] Files:1    Time: 0s
+*********   Upgrading CATJAVA,OWM,MGW,RAC   ********
+Serial   Phase #:72   [duck] Files:1    Time: 79s
+****************   Upgrading ORDIM   ***************
+Restart  Phase #:73   [duck] Files:1    Time: 1s
+Serial   Phase #:75   [duck] Files:1    Time: 0s
+Parallel Phase #:76   [duck] Files:2    Time: 56s
+Serial   Phase #:77   [duck] Files:1    Time: 54s
+Restart  Phase #:78   [duck] Files:1    Time: 0s
+Parallel Phase #:79   [duck] Files:2    Time: 11s
+Serial   Phase #:80   [duck] Files:2    Time: 1s
+*****************   Upgrading SDO   ****************
+Restart  Phase #:81   [duck] Files:1    Time: 0s
+Serial   Phase #:83   [duck] Files:1    Time: 86s
+Serial   Phase #:84   [duck] Files:1    Time: 2s
+Restart  Phase #:85   [duck] Files:1    Time: 0s
+Serial   Phase #:86   [duck] Files:1    Time: 28s
+Restart  Phase #:87   [duck] Files:1    Time: 1s
+Parallel Phase #:88   [duck] Files:3    Time: 85s
+Restart  Phase #:89   [duck] Files:1    Time: 1s
+Serial   Phase #:90   [duck] Files:1    Time: 5s
+Restart  Phase #:91   [duck] Files:1    Time: 0s
+Serial   Phase #:92   [duck] Files:1    Time: 2s
+Restart  Phase #:93   [duck] Files:1    Time: 0s
+Parallel Phase #:94   [duck] Files:4    Time: 75s
+Restart  Phase #:95   [duck] Files:1    Time: 1s
+Serial   Phase #:96   [duck] Files:1    Time: 0s
+Restart  Phase #:97   [duck] Files:1    Time: 0s
+Serial   Phase #:98   [duck] Files:2    Time: 34s
+Restart  Phase #:99   [duck] Files:1    Time: 0s
+Serial   Phase #:100  [duck] Files:1    Time: 1s
+Restart  Phase #:101  [duck] Files:1    Time: 0s
+***********   Upgrading Misc. ODM, OLAP   **********
+Serial   Phase #:102  [duck] Files:1    Time: 26s
+****************   Upgrading APEX   ****************
+Restart  Phase #:103  [duck] Files:1    Time: 0s
+Serial   Phase #:104  [duck] Files:1    Time: 551s
+Restart  Phase #:105  [duck] Files:1    Time: 1s
+***********   Final Component scripts    ***********
+Serial   Phase #:106  [duck] Files:1    Time: 0s
+*************   Final Upgrade scripts   ************
+Serial   Phase #:107  [duck] Files:1    Time: 99s
+**********   End PDB Application Upgrade   *********
+Serial   Phase #:108  [duck] Files:1    Time: 1s
+*******************   Migration   ******************
+Serial   Phase #:109  [duck] Files:1    Time: 68s
+Serial   Phase #:110  [duck] Files:1    Time: 0s
+Serial   Phase #:111  [duck] Files:1    Time: 58s
+*****************   Post Upgrade   *****************
+Serial   Phase #:112  [duck] Files:1    Time: 653s
+****************   Summary report   ****************
+Serial   Phase #:113  [duck] Files:1    Time: 2s
+Serial   Phase #:114  [duck] Files:1    Time: 0s
+Serial   Phase #:115  [duck] Files:1     Time: 21s
+
+------------------------------------------------------
+Phases [0-115]         End Time:[2019_10_21 04:55:36]
+------------------------------------------------------
+
+Grand Total Time: 3191s
+
+ LOG FILES: (/z02/app/orekel/product/12.2.0.1/db_1/cfgtoollogs/duck/upgrade20191021040227/catupgrd*.log)
+
+Upgrade Summary Report Located in:
+/z02/app/orekel/product/12.2.0.1/db_1/cfgtoollogs/duck/upgrade20191021040227/upg_summary.log
+
+Grand Total Upgrade Time:    [0d:0h:53m:11s]
+[orekel@rhino bin]$ cat /z02/app/orekel/product/12.2.0.1/db_1/cfgtoollogs/duck/upgrade20191021040227/upg_summary.log
+
+Oracle Database 12.2 Post-Upgrade Status Tool           10-21-2019 04:55:13
+
+Component                               Current         Version  Elapsed Time
+Name                                    Status          Number   HH:MM:SS
+
+Oracle Server                          UPGRADED      12.2.0.1.0  00:10:36
+JServer JAVA Virtual Machine           UPGRADED      12.2.0.1.0  00:04:33
+Oracle Workspace Manager               UPGRADED      12.2.0.1.0  00:00:56
+OLAP Analytic Workspace                UPGRADED      12.2.0.1.0  00:00:30
+OLAP Catalog                         OPTION OFF      11.2.0.4.0  00:00:00
+Oracle OLAP API                        UPGRADED      12.2.0.1.0  00:00:15
+Oracle XDK                             UPGRADED      12.2.0.1.0  00:00:38
+Oracle Text                            UPGRADED      12.2.0.1.0  00:00:48
+Oracle XML Database                    UPGRADED      12.2.0.1.0  00:02:21
+Oracle Database Java Packages          UPGRADED      12.2.0.1.0  00:00:20
+Oracle Multimedia                      UPGRADED      12.2.0.1.0  00:02:02
+Spatial                                UPGRADED      12.2.0.1.0  00:05:19
+Oracle Application Express             UPGRADED     5.0.4.00.12  00:09:08
+Final Actions                                                    00:02:45
+Post Upgrade                                                     00:10:48
+
+Total Upgrade Time: 00:51:33
+
+Database time zone version is 14. It is older than current release time
+zone version 26. Time zone upgrade is needed using the DBMS_DST package.
+
+Grand Total Upgrade Time:    [0d:0h:53m:11s]
+[orekel@rhino bin]$ cd $ORACLE_HOME/rdbms/admin; pwd;
+/z02/app/orekel/product/12.2.0.1/db_1/rdbms/admin
+[orekel@rhino admin]$ rlwrap sqlplus / as sysdba
+
+SQL*Plus: Release 12.2.0.1.0 Production on Mon Oct 21 05:23:07 2019
+
+Copyright (c) 1982, 2016, Oracle.  All rights reserved.
+
+Connected to an idle instance.
+
+SQL> STARTUP PFILE='/z02/bebek-11.2.0.4-rmanfull/initduck.ora';
+ORACLE instance started.
+
+Total System Global Area 1610612736 bytes
+Fixed Size                  8621232 bytes
+Variable Size             452985680 bytes
+Database Buffers         1140850688 bytes
+Redo Buffers                8155136 bytes
+Database mounted.
+Database opened.
+SQL> spool /home/orekel/utlu122s_20191021.log
+SQL> @utlu122s.sql
+SQL> spool off;
+05:27:19 SQL> spool /home/orekel/catuppst_20191021.log
+05:27:41 SQL> @catuppst.sql
+05:28:02 SQL> spool off
+05:28:19 SQL> set time off
+SQL> @utlrp.sql
+SQL> COLUMN owner FORMAT A30
+SQL> COLUMN table_name FORMAT A30
+SQL> SELECT DISTINCT owner, table_name FROM dba_tab_cols WHERE data_upgraded = 'NO' ORDER BY 1,2;
+SQL> SELECT DISTINCT owner, table_name FROM dba_tab_cols WHERE data_upgraded = 'NO' ORDER BY 1,2;
+
+OWNER                          TABLE_NAME
+------------------------------ ------------------------------
+GSMADMIN_INTERNAL              AQ$_CHANGE_LOG_QUEUE_TABLE_F
+IX                             AQ$_ORDERS_QUEUETABLE_F
+MDSYS                          ALL_SDO_GEOM_METADATA
+MDSYS                          ALL_SDO_GEOR_SYSDATA
+MDSYS                          ALL_SDO_INDEX_METADATA
+MDSYS                          USER_SDO_GEOR_SYSDATA
+MDSYS                          USER_SDO_INDEX_METADATA
+OE                             CUSTOMERS
+OE                             OC_CORPORATE_CUSTOMERS
+OE                             OC_CUSTOMERS
+OE                             OC_INVENTORIES
+OE                             OC_ORDERS
+OE                             OC_PRODUCT_INFORMATION
+OE                             WAREHOUSES
+SYS                            ALL_RULES
+SYS                            AQ$_ALERT_QT_F
+SYS                            AQ$_AQ_EVENT_TABLE_F
+SYS                            AQ$_AQ_PROP_TABLE_F
+SYS                            AQ$_KUPC$DATAPUMP_QUETAB_F
+SYS                            AQ$_ORA$PREPLUGIN_BACKUP_QTB_F
+SYS                            AQ$_SCHEDULER$_EVENT_QTAB_F
+SYS                            AQ$_SCHEDULER$_REMDB_JOBQTAB_F
+SYS                            AQ$_SCHEDULER_FILEWATCHER_QT_F
+SYS                            AQ$_SYS$SERVICE_METRICS_TAB_F
+SYS                            DBA_CHECKED_ROLES_PATH
+SYS                            DBA_UNUSED_OBJPRIVS_PATH
+SYS                            DBA_UNUSED_PRIVS
+SYS                            DBA_UNUSED_SYSPRIVS_PATH
+SYS                            DBA_UNUSED_USERPRIVS_PATH
+SYS                            DBA_USED_OBJPRIVS_PATH
+SYS                            DBA_USED_PRIVS
+SYS                            DBA_USED_SYSPRIVS_PATH
+SYS                            DBA_USED_USERPRIVS_PATH
+SYS                            KU$_10_1_AUDIT_VIEW
+SYS                            KU$_10_1_COMMENT_VIEW
+SYS                            KU$_10_1_DBLINK_VIEW
+SYS                            KU$_10_1_FHTABLE_VIEW
+SYS                            KU$_10_1_HISTGRM_MAX_VIEW
+SYS                            KU$_10_1_HISTGRM_MIN_VIEW
+SYS                            KU$_10_1_HTABLE_VIEW
+SYS                            KU$_10_1_IND_STATS_VIEW
+SYS                            KU$_10_1_IOTABLE_VIEW
+SYS                            KU$_10_1_OBJGRANT_VIEW
+SYS                            KU$_10_1_PFHTABLE_VIEW
+SYS                            KU$_10_1_PHTABLE_VIEW
+SYS                            KU$_10_1_PIND_STATS_VIEW
+SYS                            KU$_10_1_PIOTABLE_VIEW
+SYS                            KU$_10_1_PROXY_VIEW
+SYS                            KU$_10_1_PTAB_COL_STATS_VIEW
+SYS                            KU$_10_1_PTAB_STATS_VIEW
+SYS                            KU$_10_1_SPIND_STATS_VIEW
+SYS                            KU$_10_1_SYSGRANT_VIEW
+SYS                            KU$_10_1_TABLE_DATA_VIEW
+SYS                            KU$_10_1_TABLE_OBJNUM_VIEW
+SYS                            KU$_10_1_TAB_COL_STATS_VIEW
+SYS                            KU$_10_1_TAB_ONLY_STATS_VIEW
+SYS                            KU$_10_1_TAB_STATS_VIEW
+SYS                            KU$_10_2_INDEX_VIEW
+SYS                            KU$_10_2_IND_STATS_VIEW
+SYS                            KU$_10_2_ROGRANT_VIEW
+SYS                            KU$_10_2_STRMCOLTYPE_VIEW
+SYS                            KU$_10_2_STRMCOL_VIEW
+SYS                            KU$_10_2_STRMSUBCOLTYPE_VIEW
+SYS                            KU$_10_2_STRMTABLE_VIEW
+SYS                            KU$_10_2_TABLE_DATA_VIEW
+SYS                            KU$_10_2_TAB_COL_VIEW
+SYS                            KU$_10_2_TAB_STATS_VIEW
+SYS                            KU$_10_2_TRIGGER_VIEW
+SYS                            KU$_11_2_AUDIT_VIEW
+SYS                            KU$_11_2_DEPTBL_OBJNUM_VIEW
+SYS                            KU$_11_2_IND_STATS_VIEW
+SYS                            KU$_11_2_NTABLE_OBJNUM_VIEW
+SYS                            KU$_11_2_PSW_HIST_VIEW
+SYS                            KU$_11_2_ROGRANT_VIEW
+SYS                            KU$_11_2_SYSGRANT_VIEW
+SYS                            KU$_11_2_TABLE_OBJNUM_VIEW
+SYS                            KU$_11_2_TAB_STATS_VIEW
+SYS                            KU$_11_2_TRIGGER_VIEW
+SYS                            KU$_11_2_VIEW_VIEW
+SYS                            KU$_11_2_XDB_NTBL_OBJNUM_VIEW
+SYS                            KU$_12AUDIT_POLICY_ENABLE_VIEW
+SYS                            KU$_12_1_SYSGRANT_VIEW
+SYS                            KU$_12_1_TRIGGER_VIEW
+SYS                            KU$_2ND_TABLE_OBJNUM_VIEW
+SYS                            KU$_ALL_INDEX_VIEW
+SYS                            KU$_ALTER_FUNC_VIEW
+SYS                            KU$_ALTER_PKGBDY_VIEW
+SYS                            KU$_ALTER_PKGSPC_VIEW
+SYS                            KU$_ALTER_PROC_VIEW
+SYS                            KU$_ANALYTIC_VIEW
+SYS                            KU$_ASSOC_VIEW
+SYS                            KU$_ATTRIBUTE_DIMENSION_VIEW
+SYS                            KU$_ATTR_DIM_ATTR_VIEW
+SYS                            KU$_ATTR_DIM_JOIN_PATH_VIEW
+SYS                            KU$_ATTR_DIM_LVL_KEY_VIEW
+SYS                            KU$_ATTR_DIM_LVL_ORDBY_VIEW
+SYS                            KU$_ATTR_DIM_LVL_VIEW
+SYS                            KU$_AUDIT_CONTEXT_VIEW
+SYS                            KU$_AUDIT_DEFAULT_VIEW
+SYS                            KU$_AUDIT_OBJ_BASE_VIEW
+SYS                            KU$_AUDIT_OBJ_VIEW
+SYS                            KU$_AUDIT_POLICY_ENABLE_VIEW
+SYS                            KU$_AUDIT_POLICY_VIEW
+SYS                            KU$_AUDIT_VIEW
+SYS                            KU$_BASE_PROC_OBJNUM_VIEW
+SYS                            KU$_BASE_PROC_VIEW
+SYS                            KU$_CLSTCOL_VIEW
+SYS                            KU$_CLSTJOIN_VIEW
+SYS                            KU$_CLST_VIEW
+SYS                            KU$_CLST_ZONEMAP_VIEW
+SYS                            KU$_CLUSTER_VIEW
+SYS                            KU$_CODE_BASE_GRANT_VIEW
+SYS                            KU$_COLLECTION_VIEW
+SYS                            KU$_COLTYPE_VIEW
+SYS                            KU$_COL_STATS_VIEW
+SYS                            KU$_COMMENT_VIEW
+SYS                            KU$_CONSTRAINT0_VIEW
+SYS                            KU$_CONSTRAINT1_VIEW
+SYS                            KU$_CONSTRAINT2_VIEW
+SYS                            KU$_CONSTRAINT_COL_VIEW
+SYS                            KU$_CONSTRAINT_VIEW
+SYS                            KU$_CONTEXT_VIEW
+SYS                            KU$_CREDENTIAL_VIEW
+SYS                            KU$_CUBE_TAB_VIEW
+SYS                            KU$_DBLINK_VIEW
+SYS                            KU$_DEFROLE_LIST_VIEW
+SYS                            KU$_DEFROLE_VIEW
+SYS                            KU$_DEPTABLE_OBJNUM_VIEW
+SYS                            KU$_DIMENSION_VIEW
+SYS                            KU$_DIRECTORY_VIEW
+SYS                            KU$_DOMIDX_2NDTAB_VIEW
+SYS                            KU$_DOMIDX_OBJNUM_VIEW
+SYS                            KU$_DOMIDX_PLSQL_VIEW
+SYS                            KU$_END_PLUGTS_BLK_VIEW
+SYS                            KU$_EQNTABLE_BYTES_ALLOC_VIEW
+SYS                            KU$_EQNTABLE_DATA_VIEW
+SYS                            KU$_EXP_PKG_BODY_VIEW
+SYS                            KU$_EXP_TYPE_BODY_VIEW
+SYS                            KU$_EXP_XMLSCHEMA_VIEW
+SYS                            KU$_FGA_POLICY_VIEW
+SYS                            KU$_FIND_SGC_COLS_VIEW
+SYS                            KU$_FIND_SGC_VIEW
+SYS                            KU$_FIND_SGI_COLS_VIEW
+SYS                            KU$_FULL_PKG_VIEW
+SYS                            KU$_FULL_TYPE_VIEW
+SYS                            KU$_FUNC_VIEW
+SYS                            KU$_HIERARCHY_VIEW
+SYS                            KU$_HIER_HIER_ATTR_VIEW
+SYS                            KU$_HIER_LVL_VIEW
+SYS                            KU$_HISTGRM_VIEW
+SYS                            KU$_HNTP_VIEW
+SYS                            KU$_HNT_VIEW
+SYS                            KU$_HTABLE_BYTES_ALLOC_VIEW
+SYS                            KU$_HTABLE_DATA_VIEW
+SYS                            KU$_HTPART_BYTES_ALLOC_VIEW
+SYS                            KU$_HTPART_DATA_VIEW
+SYS                            KU$_HTSPART_BYTES_ALLOC_VIEW
+SYS                            KU$_HTSPART_DATA_VIEW
+SYS                            KU$_IDCOL_SEQ_VIEW
+SYS                            KU$_IDENTITY_COLOBJ_VIEW
+SYS                            KU$_IDENTITY_COL_VIEW
+SYS                            KU$_INC_TYPE_VIEW
+SYS                            KU$_INDARRAYTYPE_VIEW
+SYS                            KU$_INDEXOP_VIEW
+SYS                            KU$_INDEXTYPE_VIEW
+SYS                            KU$_INDEX_OBJNUM_VIEW
+SYS                            KU$_INDEX_PARTITION_VIEW
+SYS                            KU$_INDEX_SUBPARTITION_VIEW
+SYS                            KU$_INDEX_VIEW
+SYS                            KU$_IND_COL_VIEW
+SYS                            KU$_IND_COMPART_VIEW
+SYS                            KU$_IND_PARTOBJ_VIEW
+SYS                            KU$_IND_PART_COL_VIEW
+SYS                            KU$_IND_PART_VIEW
+SYS                            KU$_IND_STATS_VIEW
+SYS                            KU$_IND_SUBPART_COL_VIEW
+SYS                            KU$_IND_SUBPART_VIEW
+SYS                            KU$_INSTANCE_CALLOUT_VIEW
+SYS                            KU$_IONT_VIEW
+SYS                            KU$_IOTABLE_BYTES_ALLOC_VIEW
+SYS                            KU$_IOTABLE_DATA_VIEW
+SYS                            KU$_IOTPART_BYTES_ALLOC_VIEW
+SYS                            KU$_IOTPART_DATA_VIEW
+SYS                            KU$_IOT_PARTOBJ_VIEW
+SYS                            KU$_JAVA_CLASS_VIEW
+SYS                            KU$_JAVA_OBJNUM_VIEW
+SYS                            KU$_JAVA_RESOURCE_VIEW
+SYS                            KU$_JAVA_SOURCE_VIEW
+SYS                            KU$_JIJOIN_TABLE_VIEW
+SYS                            KU$_JIJOIN_VIEW
+SYS                            KU$_JOB_VIEW
+SYS                            KU$_LIBRARY_VIEW
+SYS                            KU$_LOBCOMPPART_VIEW
+SYS                            KU$_LOBFRAGINDEX_VIEW
+SYS                            KU$_LOBFRAG_VIEW
+SYS                            KU$_LOBINDEX_VIEW
+SYS                            KU$_LOB_VIEW
+SYS                            KU$_MAP_TABLE_VIEW
+SYS                            KU$_METHOD_VIEW
+SYS                            KU$_MONITOR_VIEW
+SYS                            KU$_MV_DEPTBL_OBJNUM_VIEW
+SYS                            KU$_M_VIEW_FH_VIEW
+SYS                            KU$_M_VIEW_H_VIEW
+SYS                            KU$_M_VIEW_IOT_VIEW
+SYS                            KU$_M_VIEW_LOG_FH_VIEW
+SYS                            KU$_M_VIEW_LOG_H_VIEW
+SYS                            KU$_M_VIEW_LOG_PFH_VIEW
+SYS                            KU$_M_VIEW_LOG_PH_VIEW
+SYS                            KU$_M_VIEW_PFH_VIEW
+SYS                            KU$_M_VIEW_PH_VIEW
+SYS                            KU$_M_VIEW_PIOT_VIEW
+SYS                            KU$_M_VIEW_VIEW
+SYS                            KU$_M_ZONEMAP_FH_VIEW
+SYS                            KU$_M_ZONEMAP_H_VIEW
+SYS                            KU$_M_ZONEMAP_IOT_VIEW
+SYS                            KU$_M_ZONEMAP_PFH_VIEW
+SYS                            KU$_M_ZONEMAP_PH_VIEW
+SYS                            KU$_M_ZONEMAP_PIOT_VIEW
+SYS                            KU$_M_ZONEMAP_VIEW
+SYS                            KU$_NIOTABLE_DATA_VIEW
+SYS                            KU$_NTABLE_BYTES_ALLOC_VIEW
+SYS                            KU$_NTABLE_DATA_VIEW
+SYS                            KU$_NTABLE_OBJNUM_VIEW
+SYS                            KU$_NTPART_PARENT_VIEW
+SYS                            KU$_NTPART_VIEW
+SYS                            KU$_NT_PARENT_VIEW
+SYS                            KU$_OBJGRANT_VIEW
+SYS                            KU$_OBJPKG_VIEW
+SYS                            KU$_OIDINDEX_VIEW
+SYS                            KU$_ON_USER_GRANT_VIEW
+SYS                            KU$_OPANCILLARY_VIEW
+SYS                            KU$_OPBINDING_VIEW
+SYS                            KU$_OPERATOR_VIEW
+SYS                            KU$_OPQTYPE_VIEW
+SYS                            KU$_OPTION_OBJNUM_VIEW
+SYS                            KU$_OUTLINE_VIEW
+SYS                            KU$_OV_TABLE_VIEW
+SYS                            KU$_P2T_CON1A_VIEW
+SYS                            KU$_P2T_CON1B_VIEW
+SYS                            KU$_P2T_CONSTRAINT1_VIEW
+SYS                            KU$_P2T_CONSTRAINT2_VIEW
+SYS                            KU$_PARTLOB_VIEW
+SYS                            KU$_PIND_STATS_VIEW
+SYS                            KU$_PIOTLOBFRAG_VIEW
+SYS                            KU$_PIOT_PART_VIEW
+SYS                            KU$_PKGBDY_VIEW
+SYS                            KU$_PKG_OBJNUM_VIEW
+SYS                            KU$_PKG_VIEW
+SYS                            KU$_PKREF_CONSTRAINT_VIEW
+SYS                            KU$_PLUGTS_BEGIN_VIEW
+SYS                            KU$_PLUGTS_BLK_VIEW
+SYS                            KU$_PLUGTS_CHECKPL_VIEW
+SYS                            KU$_PLUGTS_EARLY_TBLSP_VIEW
+SYS                            KU$_PLUGTS_TABLESPACE_VIEW
+SYS                            KU$_PLUGTS_TSNAME_FULL_VIEW
+SYS                            KU$_PLUGTS_TSNAME_INDEXP_VIEW
+SYS                            KU$_PLUGTS_TSNAME_INDEX_VIEW
+SYS                            KU$_PLUGTS_TSNAME_TABLE_VIEW
+SYS                            KU$_PLUGTS_TSNAME_VIEW
+SYS                            KU$_POST_DATA_TABLE_VIEW
+SYS                            KU$_POST_TABLE_VIEW
+SYS                            KU$_PRE_TABLE_VIEW
+SYS                            KU$_PROCACT_INSTANCE_VIEW
+SYS                            KU$_PROCACT_SCHEMA_VIEW
+SYS                            KU$_PROCDEPOBJ_AUDIT_VIEW
+SYS                            KU$_PROCDEPOBJ_GRANT_VIEW
+SYS                            KU$_PROCDEPOBJ_VIEW
+SYS                            KU$_PROCOBJACT_VIEW
+SYS                            KU$_PROCOBJ_AUDIT_VIEW
+SYS                            KU$_PROCOBJ_GRANT_VIEW
+SYS                            KU$_PROCOBJ_OBJNUM_VIEW
+SYS                            KU$_PROCOBJ_VIEW
+SYS                            KU$_PROC_AUDIT_VIEW
+SYS                            KU$_PROC_GRANT_VIEW
+SYS                            KU$_PROC_VIEW
+SYS                            KU$_PROFILE_VIEW
+SYS                            KU$_PROXY_ROLE_LIST_VIEW
+SYS                            KU$_PROXY_VIEW
+SYS                            KU$_PSW_HIST_LIST_VIEW
+SYS                            KU$_PSW_HIST_VIEW
+SYS                            KU$_PTAB_STATS_VIEW
+SYS                            KU$_PWDVFC_VIEW
+SYS                            KU$_QTAB_STORAGE_VIEW
+SYS                            KU$_QTRANS_VIEW
+SYS                            KU$_QUEUES_VIEW
+SYS                            KU$_QUEUE_TABLE_VIEW
+SYS                            KU$_RADM_MC_VIEW
+SYS                            KU$_RADM_POLICY_VIEW
+SYS                            KU$_REFGROUP_VIEW
+SYS                            KU$_REF_CONSTRAINT_VIEW
+SYS                            KU$_RLS_CONTEXT_VIEW
+SYS                            KU$_RLS_GROUP_VIEW
+SYS                            KU$_RLS_POLICY_OBJNUM_VIEW
+SYS                            KU$_RLS_POLICY_VIEW
+SYS                            KU$_RMGR_CONSUMER_VIEW
+SYS                            KU$_RMGR_INIT_CONSUMER_VIEW
+SYS                            KU$_RMGR_PLAN_DIRECT_VIEW
+SYS                            KU$_RMGR_PLAN_VIEW
+SYS                            KU$_ROGRANT_VIEW
+SYS                            KU$_ROLE_VIEW
+SYS                            KU$_ROLLBACK_VIEW
+SYS                            KU$_SCHEMAOBJNUM_VIEW
+SYS                            KU$_SCHEMA_CALLOUT_VIEW
+SYS                            KU$_SEQUENCE_VIEW
+SYS                            KU$_SIMPLE_COL_VIEW
+SYS                            KU$_SIMPLE_PKREF_COL_VIEW
+SYS                            KU$_SIMPLE_SETID_COL_VIEW
+SYS                            KU$_SIMPLE_TYPE_VIEW
+SYS                            KU$_SP2T_CON1A_VIEW
+SYS                            KU$_SP2T_CONSTRAINT1_VIEW
+SYS                            KU$_SPIND_STATS_VIEW
+SYS                            KU$_STRMCOLTYPE_VIEW
+SYS                            KU$_STRMCOL_VIEW
+SYS                            KU$_STRMSUBCOLTYPE_VIEW
+SYS                            KU$_STRMTABLE_VIEW
+SYS                            KU$_SUBCOLTYPE_VIEW
+SYS                            KU$_SUBLOBFRAGINDEX_VIEW
+SYS                            KU$_SUBLOBFRAG_VIEW
+SYS                            KU$_SWITCH_COMPILER_VIEW
+SYS                            KU$_SYNONYM_VIEW
+SYS                            KU$_SYSGRANT_VIEW
+SYS                            KU$_TABCLST_VIEW
+SYS                            KU$_TABCLUSTER_COL_VIEW
+SYS                            KU$_TABCLUSTER_VIEW
+SYS                            KU$_TABLESPACE_VIEW
+SYS                            KU$_TABLE_DATA_VIEW
+SYS                            KU$_TABLE_OBJNUM_VIEW
+SYS                            KU$_TAB_COL_VIEW
+SYS                            KU$_TAB_COMPART_VIEW
+SYS                            KU$_TAB_ONLY_STATS_VIEW
+SYS                            KU$_TAB_PARTOBJ_VIEW
+SYS                            KU$_TAB_PART_COL_VIEW
+SYS                            KU$_TAB_STATS_VIEW
+SYS                            KU$_TAB_SUBPART_COL_VIEW
+SYS                            KU$_TAB_TSUBPART_VIEW
+SYS                            KU$_TBS_ILM_POLICY_VIEW
+SYS                            KU$_TEMP_SUBPARTDATA_VIEW
+SYS                            KU$_TEMP_SUBPARTLOB_VIEW
+SYS                            KU$_TLOB_COMPPART_VIEW
+SYS                            KU$_TRIGGERCOL_VIEW
+SYS                            KU$_TRIGGER_VIEW
+SYS                            KU$_TRLINK_VIEW
+SYS                            KU$_TSQUOTA_VIEW
+SYS                            KU$_TTSP_IDX_TABLESPACE_VIEW
+SYS                            KU$_TTSP_INDPARTVIEW
+SYS                            KU$_TTSP_INDSUBPARTVIEW
+SYS                            KU$_TTS_TABPARTVIEW
+SYS                            KU$_TTS_TABSUBPARTVIEW
+SYS                            KU$_TTS_TABVIEW
+SYS                            KU$_TTS_TAB_TABLESPACE_VIEW
+SYS                            KU$_TYPE_ATTR_VIEW
+SYS                            KU$_TYPE_BODY_VIEW
+SYS                            KU$_TYPE_VIEW
+SYS                            KU$_USER_EDITIONING_VIEW
+SYS                            KU$_USER_PREF_STATS_VIEW
+SYS                            KU$_VIEW_OBJNUM_VIEW
+SYS                            KU$_VIEW_VIEW
+SYS                            KU$_XDB_NTABLE_OBJNUM_VIEW
+SYS                            KU$_XMLSCHEMA_ELMT_VIEW
+SYS                            KU$_XMLSCHEMA_VIEW
+SYS                            KU$_XSACE_VIEW
+SYS                            KU$_XSACL_VIEW
+SYS                            KU$_XSGRANT_VIEW
+SYS                            KU$_XSNSPACE_VIEW
+SYS                            KU$_XSPOLICY_VIEW
+SYS                            KU$_XSRLS_POLICY_VIEW
+SYS                            KU$_XSSCLASS_VIEW
+SYS                            KU$_ZM_VIEW_FH_VIEW
+SYS                            KU$_ZM_VIEW_H_VIEW
+SYS                            KU$_ZM_VIEW_IOT_VIEW
+SYS                            KU$_ZM_VIEW_PFH_VIEW
+SYS                            KU$_ZM_VIEW_PH_VIEW
+SYS                            KU$_ZM_VIEW_PIOT_VIEW
+SYS                            KU$_ZM_VIEW_VIEW
+SYS                            UMF_SCHEMA_XMLTYPE
+SYS                            USER_RULES
+SYS                            _user_stat_varray
+WMSYS                          AQ$_WM$EVENT_QUEUE_TABLE_F
+
+378 rows selected.
+
+Elapsed: 00:00:02.78
+SQL> set serveroutput on;
+SQL> @utluptabdata.sql
+
+SQL> COL COMP_NAME FOR A50;
+SQL> SELECT COMP_ID,COMP_NAME,VERSION,STATUS FROM DBA_REGISTRY ORDER BY 1;

@@ -1,0 +1,1111 @@
+####################################################
+### Restore DB and Rename Pluggable DB by AzizPW ###
+### Technical Consultant ###########################
+### PT Mitra Integrasi Informatika #################
+### Tue, 21 April 2020 #############################
+####################################################
+
+#### Source ####
+################
+
+### Backup from Source
+######################
+[oracle@rock ~]$ rlwrap sqlplus '/ as sysdba'
+
+SQL*Plus: Release 19.0.0.0.0 - Production on Tue Apr 21 15:03:25 2020
+Version 19.3.0.0.0
+
+Copyright (c) 1982, 2019, Oracle.  All rights reserved.
+
+
+Connected to:
+Oracle Database 19c Enterprise Edition Release 19.0.0.0.0 - Production
+Version 19.3.0.0.0
+
+SQL> show pdbs
+
+    CON_ID CON_NAME                       OPEN MODE  RESTRICTED
+---------- ------------------------------ ---------- ----------
+         2 PDB$SEED                       READ ONLY  NO
+         3 PDEV1                          MOUNTED
+SQL> alter pluggable database pdev1 open;
+
+Pluggable database altered.
+
+Elapsed: 00:00:26.04
+SQL> show pdbs;
+
+    CON_ID CON_NAME                       OPEN MODE  RESTRICTED
+---------- ------------------------------ ---------- ----------
+         2 PDB$SEED                       READ ONLY  NO
+         3 PDEV1                          READ WRITE NO
+SQL> select instance_name,status from v$instance;
+
+INSTANCE_NAME    STATUS
+---------------- ------------
+CDEV             OPEN
+
+Elapsed: 00:00:00.00
+SQL> create pfile='/ARC/backup/initCDEV_20200421.ora' from spfile;
+
+File created.
+
+Elapsed: 00:00:00.19
+SQL> select name from v$tempfile union all select name from v$datafile union all select member from v$logfile union all select name from v$controlfile;
+
+NAME
+-----------------------------------
+/DATA/CDEV/temp01.dbf
+/DATA/CDEV/pdbseed/temp01.dbf
+/DATA/CDEV/pdev1/temp01.dbf
+/DATA/CDEV/system01.dbf
+/DATA/CDEV/pdbseed/system01.dbf
+/DATA/CDEV/sysaux01.dbf
+/DATA/CDEV/pdbseed/sysaux01.dbf
+/DATA/CDEV/undotbs01.dbf
+/DATA/CDEV/pdbseed/undotbs01.dbf
+/DATA/CDEV/users01.dbf
+/DATA/CDEV/pdev1/system01.dbf
+/DATA/CDEV/pdev1/sysaux01.dbf
+/DATA/CDEV/pdev1/undotbs01.dbf
+/DATA/CDEV/pdev1/users01.dbf
+/DATA/CDEV/redo11-256M.dbf
+/DATA/CDEV/redo12-256M.dbf
+/DATA/CDEV/redo13-256M.dbf
+/DATA/CDEV/control01.ctl
+/ARC/CDEV/control02.ctl
+
+19 rows selected.
+
+Elapsed: 00:00:01.30
+SQL> exit
+Disconnected from Oracle Database 19c Enterprise Edition Release 19.0.0.0.0 - Production
+Version 19.3.0.0.0
+[oracle@rock ~]$ cat ~/scripts/RMAN-Fullbackup.sh
+#!/bin/bash
+source /home/oracle/.bash_profile; export NLS_DATE_FORMAT='DD-Mon-RR HH24:MI:SS';
+$ORACLE_HOME/bin/rman target=/ log=/ARC/backup/RMAN-Fullbackup_`date +%Y%m%d`.log << EOF
+run{
+  CONFIGURE DEVICE TYPE DISK PARALLELISM 4;
+  CROSSCHECK BACKUP;
+  DELETE NOPROMPT EXPIRED BACKUP;
+  CROSSCHECK ARCHIVELOG ALL;
+  DELETE NOPROMPT EXPIRED ARCHIVELOG ALL;
+  BACKUP AS COMPRESSED BACKUPSET SPFILE TAG 'SPFile' FORMAT '/ARC/backup/SPF_%I%d%T_%s_%p.bkp';
+  SQL 'ALTER SYSTEM ARCHIVE LOG CURRENT';
+  BACKUP AS COMPRESSED BACKUPSET DATABASE TAG 'FULLDB' FORMAT '/ARC/backup/DB_%I%d%T_%s_%p.bkp';
+  BACKUP AS COMPRESSED BACKUPSET ARCHIVELOG ALL DELETE ALL INPUT TAG 'ARCHIVELOGS' FORMAT '/ARC/backup/ARC_%I%d%T_%s_%p.bkp';
+  BACKUP AS COMPRESSED BACKUPSET CURRENT CONTROLFILE TAG 'PRIMCTRL' FORMAT '/ARC/backup/CTRL_%I%d%T_%s_%p.bkp';
+  BACKUP AS COMPRESSED BACKUPSET CURRENT CONTROLFILE FOR STANDBY TAG 'STBYCTRL' FORMAT '/ARC/backup/STBY_%I%d%T_%s_%p.bkp';
+  CONFIGURE DEVICE TYPE DISK CLEAR;}
+EOF
+[oracle@rock ~]$ nohup ~/scripts/RMAN-Fullbackup.sh >> /ARC/backup/nohupRMAN-Fullbackup_`date +%Y%m%d`.log 2>&1 &
+[1] 6598
+[oracle@rock ~]$ tail -100f /ARC/backup/RMAN-Fullbackup_`date +%Y%m%d`.log
+
+Recovery Manager: Release 19.0.0.0.0 - Production on Tue Apr 21 15:12:18 2020
+Version 19.3.0.0.0
+
+Copyright (c) 1982, 2019, Oracle and/or its affiliates.  All rights reserved.
+
+connected to target database: CDEV (DBID=2835840349)
+
+RMAN> 2> 3> 4> 5> 6> 7> 8> 9> 10> 11> 12> 13>
+using target database control file instead of recovery catalog
+new RMAN configuration parameters:
+CONFIGURE DEVICE TYPE DISK PARALLELISM 4 BACKUP TYPE TO BACKUPSET;
+new RMAN configuration parameters are successfully stored
+
+allocated channel: ORA_DISK_1
+channel ORA_DISK_1: SID=1443 device type=DISK
+allocated channel: ORA_DISK_2
+channel ORA_DISK_2: SID=27 device type=DISK
+allocated channel: ORA_DISK_3
+channel ORA_DISK_3: SID=496 device type=DISK
+allocated channel: ORA_DISK_4
+channel ORA_DISK_4: SID=971 device type=DISK
+crosschecked backup piece: found to be 'AVAILABLE'
+backup piece handle=/ARC/CDEV/autobackup/2020_04_16/o1_mf_s_1037900089_h9jf6c53_.bkp RECID=1 STAMP=1037900091
+Crosschecked 1 objects
+
+
+using channel ORA_DISK_1
+using channel ORA_DISK_2
+using channel ORA_DISK_3
+using channel ORA_DISK_4
+specification does not match any backup in the repository
+
+released channel: ORA_DISK_1
+released channel: ORA_DISK_2
+released channel: ORA_DISK_3
+released channel: ORA_DISK_4
+allocated channel: ORA_DISK_1
+channel ORA_DISK_1: SID=1443 device type=DISK
+allocated channel: ORA_DISK_2
+channel ORA_DISK_2: SID=27 device type=DISK
+allocated channel: ORA_DISK_3
+channel ORA_DISK_3: SID=496 device type=DISK
+allocated channel: ORA_DISK_4
+channel ORA_DISK_4: SID=971 device type=DISK
+validation succeeded for archived log
+archived log file name=/ARC/CDEV/archivelog/2020_04_21/o1_mf_1_28_h9x9cq7s_.arc RECID=2 STAMP=1038322200
+Crosschecked 1 objects
+
+validation succeeded for archived log
+archived log file name=/ARC/CDEV/archivelog/2020_04_16/o1_mf_1_27_h9jx6om3_.arc RECID=1 STAMP=1037916517
+Crosschecked 1 objects
+
+
+released channel: ORA_DISK_1
+released channel: ORA_DISK_2
+released channel: ORA_DISK_3
+released channel: ORA_DISK_4
+allocated channel: ORA_DISK_1
+channel ORA_DISK_1: SID=1443 device type=DISK
+allocated channel: ORA_DISK_2
+channel ORA_DISK_2: SID=27 device type=DISK
+allocated channel: ORA_DISK_3
+channel ORA_DISK_3: SID=496 device type=DISK
+allocated channel: ORA_DISK_4
+channel ORA_DISK_4: SID=971 device type=DISK
+specification does not match any archived log in the repository
+
+Starting backup at 21-Apr-20 15:12:27
+using channel ORA_DISK_1
+using channel ORA_DISK_2
+using channel ORA_DISK_3
+using channel ORA_DISK_4
+channel ORA_DISK_1: starting compressed full datafile backup set
+channel ORA_DISK_1: specifying datafile(s) in backup set
+including current SPFILE in backup set
+channel ORA_DISK_1: starting piece 1 at 21-Apr-20 15:12:27
+channel ORA_DISK_1: finished piece 1 at 21-Apr-20 15:12:29
+piece handle=/ARC/backup/SPF_2835840349CDEV20200421_2_1.bkp tag=SPFILE comment=NONE
+channel ORA_DISK_1: backup set complete, elapsed time: 00:00:02
+Finished backup at 21-Apr-20 15:12:29
+
+Starting Control File and SPFILE Autobackup at 21-Apr-20 15:12:29
+piece handle=/ARC/CDEV/autobackup/2020_04_21/o1_mf_s_1038323549_h9xbqhw2_.bkp comment=NONE
+Finished Control File and SPFILE Autobackup at 21-Apr-20 15:12:36
+
+sql statement: ALTER SYSTEM ARCHIVE LOG CURRENT
+
+Starting backup at 21-Apr-20 15:12:38
+using channel ORA_DISK_1
+using channel ORA_DISK_2
+using channel ORA_DISK_3
+using channel ORA_DISK_4
+channel ORA_DISK_1: starting compressed full datafile backup set
+channel ORA_DISK_1: specifying datafile(s) in backup set
+input datafile file number=00001 name=/DATA/CDEV/system01.dbf
+channel ORA_DISK_1: starting piece 1 at 21-Apr-20 15:12:39
+channel ORA_DISK_2: starting compressed full datafile backup set
+channel ORA_DISK_2: specifying datafile(s) in backup set
+input datafile file number=00005 name=/DATA/CDEV/undotbs01.dbf
+channel ORA_DISK_2: starting piece 1 at 21-Apr-20 15:12:39
+channel ORA_DISK_3: starting compressed full datafile backup set
+channel ORA_DISK_3: specifying datafile(s) in backup set
+input datafile file number=00003 name=/DATA/CDEV/sysaux01.dbf
+channel ORA_DISK_3: starting piece 1 at 21-Apr-20 15:12:39
+channel ORA_DISK_4: starting compressed full datafile backup set
+channel ORA_DISK_4: specifying datafile(s) in backup set
+input datafile file number=00006 name=/DATA/CDEV/pdbseed/undotbs01.dbf
+channel ORA_DISK_4: starting piece 1 at 21-Apr-20 15:12:40
+channel ORA_DISK_2: finished piece 1 at 21-Apr-20 15:18:07
+piece handle=/ARC/backup/DB_2835840349CDEV20200421_5_1.bkp tag=FULLDB comment=NONE
+channel ORA_DISK_2: backup set complete, elapsed time: 00:05:29
+channel ORA_DISK_2: starting compressed full datafile backup set
+channel ORA_DISK_2: specifying datafile(s) in backup set
+input datafile file number=00010 name=/DATA/CDEV/pdev1/undotbs01.dbf
+channel ORA_DISK_2: starting piece 1 at 21-Apr-20 15:18:09
+channel ORA_DISK_4: finished piece 1 at 21-Apr-20 15:19:32
+piece handle=/ARC/backup/DB_2835840349CDEV20200421_7_1.bkp tag=FULLDB comment=NONE
+channel ORA_DISK_4: backup set complete, elapsed time: 00:06:53
+channel ORA_DISK_4: starting compressed full datafile backup set
+channel ORA_DISK_4: specifying datafile(s) in backup set
+input datafile file number=00009 name=/DATA/CDEV/pdev1/sysaux01.dbf
+channel ORA_DISK_4: starting piece 1 at 21-Apr-20 15:19:36
+channel ORA_DISK_2: finished piece 1 at 21-Apr-20 15:21:15
+piece handle=/ARC/backup/DB_2835840349CDEV20200421_8_1.bkp tag=FULLDB comment=NONE
+channel ORA_DISK_2: backup set complete, elapsed time: 00:03:07
+channel ORA_DISK_2: starting compressed full datafile backup set
+channel ORA_DISK_2: specifying datafile(s) in backup set
+input datafile file number=00004 name=/DATA/CDEV/pdbseed/sysaux01.dbf
+channel ORA_DISK_2: starting piece 1 at 21-Apr-20 15:21:29
+channel ORA_DISK_3: finished piece 1 at 21-Apr-20 15:21:29
+piece handle=/ARC/backup/DB_2835840349CDEV20200421_6_1.bkp tag=FULLDB comment=NONE
+channel ORA_DISK_3: backup set complete, elapsed time: 00:08:50
+channel ORA_DISK_3: starting compressed full datafile backup set
+channel ORA_DISK_3: specifying datafile(s) in backup set
+input datafile file number=00002 name=/DATA/CDEV/pdbseed/system01.dbf
+channel ORA_DISK_3: starting piece 1 at 21-Apr-20 15:21:31
+channel ORA_DISK_4: finished piece 1 at 21-Apr-20 15:22:07
+piece handle=/ARC/backup/DB_2835840349CDEV20200421_9_1.bkp tag=FULLDB comment=NONE
+channel ORA_DISK_4: backup set complete, elapsed time: 00:02:31
+channel ORA_DISK_4: starting compressed full datafile backup set
+channel ORA_DISK_4: specifying datafile(s) in backup set
+input datafile file number=00008 name=/DATA/CDEV/pdev1/system01.dbf
+channel ORA_DISK_4: starting piece 1 at 21-Apr-20 15:22:08
+channel ORA_DISK_2: finished piece 1 at 21-Apr-20 15:22:55
+piece handle=/ARC/backup/DB_2835840349CDEV20200421_10_1.bkp tag=FULLDB comment=NONE
+channel ORA_DISK_2: backup set complete, elapsed time: 00:01:26
+channel ORA_DISK_2: starting compressed full datafile backup set
+channel ORA_DISK_2: specifying datafile(s) in backup set
+input datafile file number=00007 name=/DATA/CDEV/users01.dbf
+channel ORA_DISK_2: starting piece 1 at 21-Apr-20 15:22:57
+channel ORA_DISK_3: finished piece 1 at 21-Apr-20 15:22:58
+piece handle=/ARC/backup/DB_2835840349CDEV20200421_11_1.bkp tag=FULLDB comment=NONE
+channel ORA_DISK_3: backup set complete, elapsed time: 00:01:27
+channel ORA_DISK_3: starting compressed full datafile backup set
+channel ORA_DISK_3: specifying datafile(s) in backup set
+input datafile file number=00011 name=/DATA/CDEV/pdev1/users01.dbf
+channel ORA_DISK_3: starting piece 1 at 21-Apr-20 15:22:58
+channel ORA_DISK_2: finished piece 1 at 21-Apr-20 15:23:00
+piece handle=/ARC/backup/DB_2835840349CDEV20200421_13_1.bkp tag=FULLDB comment=NONE
+channel ORA_DISK_2: backup set complete, elapsed time: 00:00:03
+channel ORA_DISK_1: finished piece 1 at 21-Apr-20 15:23:02
+piece handle=/ARC/backup/DB_2835840349CDEV20200421_4_1.bkp tag=FULLDB comment=NONE
+channel ORA_DISK_1: backup set complete, elapsed time: 00:10:23
+channel ORA_DISK_3: finished piece 1 at 21-Apr-20 15:23:02
+piece handle=/ARC/backup/DB_2835840349CDEV20200421_14_1.bkp tag=FULLDB comment=NONE
+channel ORA_DISK_3: backup set complete, elapsed time: 00:00:04
+channel ORA_DISK_4: finished piece 1 at 21-Apr-20 15:23:06
+piece handle=/ARC/backup/DB_2835840349CDEV20200421_12_1.bkp tag=FULLDB comment=NONE
+channel ORA_DISK_4: backup set complete, elapsed time: 00:00:58
+Finished backup at 21-Apr-20 15:23:06
+
+Starting backup at 21-Apr-20 15:23:11
+current log archived
+using channel ORA_DISK_1
+using channel ORA_DISK_2
+using channel ORA_DISK_3
+using channel ORA_DISK_4
+channel ORA_DISK_1: starting compressed archived log backup set
+channel ORA_DISK_1: specifying archived log(s) in backup set
+input archived log thread=1 sequence=27 RECID=1 STAMP=1037916517
+channel ORA_DISK_1: starting piece 1 at 21-Apr-20 15:23:12
+channel ORA_DISK_2: starting compressed archived log backup set
+channel ORA_DISK_2: specifying archived log(s) in backup set
+input archived log thread=1 sequence=28 RECID=2 STAMP=1038322200
+channel ORA_DISK_2: starting piece 1 at 21-Apr-20 15:23:12
+channel ORA_DISK_3: starting compressed archived log backup set
+channel ORA_DISK_3: specifying archived log(s) in backup set
+input archived log thread=1 sequence=29 RECID=3 STAMP=1038323558
+channel ORA_DISK_3: starting piece 1 at 21-Apr-20 15:23:12
+channel ORA_DISK_4: starting compressed archived log backup set
+channel ORA_DISK_4: specifying archived log(s) in backup set
+input archived log thread=1 sequence=30 RECID=4 STAMP=1038324192
+channel ORA_DISK_4: starting piece 1 at 21-Apr-20 15:23:12
+channel ORA_DISK_4: finished piece 1 at 21-Apr-20 15:23:13
+piece handle=/ARC/backup/ARC_2835840349CDEV20200421_18_1.bkp tag=ARCHIVELOGS comment=NONE
+channel ORA_DISK_4: backup set complete, elapsed time: 00:00:01
+channel ORA_DISK_4: deleting archived log(s)
+archived log file name=/ARC/CDEV/archivelog/2020_04_21/o1_mf_1_30_h9xcchqp_.arc RECID=4 STAMP=1038324192
+channel ORA_DISK_2: finished piece 1 at 21-Apr-20 15:23:19
+piece handle=/ARC/backup/ARC_2835840349CDEV20200421_16_1.bkp tag=ARCHIVELOGS comment=NONE
+channel ORA_DISK_2: backup set complete, elapsed time: 00:00:07
+channel ORA_DISK_2: deleting archived log(s)
+archived log file name=/ARC/CDEV/archivelog/2020_04_21/o1_mf_1_28_h9x9cq7s_.arc RECID=2 STAMP=1038322200
+channel ORA_DISK_3: finished piece 1 at 21-Apr-20 15:23:19
+piece handle=/ARC/backup/ARC_2835840349CDEV20200421_17_1.bkp tag=ARCHIVELOGS comment=NONE
+channel ORA_DISK_3: backup set complete, elapsed time: 00:00:07
+channel ORA_DISK_2: deleting archived log(s)
+archived log file name=/ARC/CDEV/archivelog/2020_04_21/o1_mf_1_29_h9xbqod3_.arc RECID=3 STAMP=1038323558
+channel ORA_DISK_1: finished piece 1 at 21-Apr-20 15:23:25
+piece handle=/ARC/backup/ARC_2835840349CDEV20200421_15_1.bkp tag=ARCHIVELOGS comment=NONE
+channel ORA_DISK_1: backup set complete, elapsed time: 00:00:13
+channel ORA_DISK_1: deleting archived log(s)
+archived log file name=/ARC/CDEV/archivelog/2020_04_16/o1_mf_1_27_h9jx6om3_.arc RECID=1 STAMP=1037916517
+Finished backup at 21-Apr-20 15:23:25
+
+Starting backup at 21-Apr-20 15:23:26
+using channel ORA_DISK_1
+using channel ORA_DISK_2
+using channel ORA_DISK_3
+using channel ORA_DISK_4
+channel ORA_DISK_1: starting compressed full datafile backup set
+channel ORA_DISK_1: specifying datafile(s) in backup set
+including current control file in backup set
+channel ORA_DISK_1: starting piece 1 at 21-Apr-20 15:23:29
+channel ORA_DISK_1: finished piece 1 at 21-Apr-20 15:23:30
+piece handle=/ARC/backup/CTRL_2835840349CDEV20200421_19_1.bkp tag=PRIMCTRL comment=NONE
+channel ORA_DISK_1: backup set complete, elapsed time: 00:00:01
+Finished backup at 21-Apr-20 15:23:30
+
+Starting backup at 21-Apr-20 15:23:30
+using channel ORA_DISK_1
+using channel ORA_DISK_2
+using channel ORA_DISK_3
+using channel ORA_DISK_4
+channel ORA_DISK_1: starting compressed full datafile backup set
+channel ORA_DISK_1: specifying datafile(s) in backup set
+including standby control file in backup set
+channel ORA_DISK_1: starting piece 1 at 21-Apr-20 15:23:31
+channel ORA_DISK_1: finished piece 1 at 21-Apr-20 15:23:32
+piece handle=/ARC/backup/STBY_2835840349CDEV20200421_20_1.bkp tag=STBYCTRL comment=NONE
+channel ORA_DISK_1: backup set complete, elapsed time: 00:00:01
+Finished backup at 21-Apr-20 15:23:32
+
+Starting Control File and SPFILE Autobackup at 21-Apr-20 15:23:32
+piece handle=/ARC/CDEV/autobackup/2020_04_21/o1_mf_s_1038324212_h9xcd4o7_.bkp comment=NONE
+Finished Control File and SPFILE Autobackup at 21-Apr-20 15:23:33
+
+old RMAN configuration parameters:
+CONFIGURE DEVICE TYPE DISK PARALLELISM 4 BACKUP TYPE TO BACKUPSET;
+RMAN configuration parameters are successfully reset to default value
+released channel: ORA_DISK_1
+released channel: ORA_DISK_2
+released channel: ORA_DISK_3
+released channel: ORA_DISK_4
+
+RMAN>
+
+Recovery Manager complete.
+^C[1]+  Done                    nohup ~/scripts/RMAN-Fullbackup.sh >> /ARC/backup/nohupRMAN-Fullbackup_`date +%Y%m%d`.log 2>&1
+
+[oracle@rock ~]$
+
+### Transfer backup from source to target
+#########################################
+[oracle@rock ~]$ rsync -vrah /ARC/backup/* oracle@punk.com:/ARC/backup
+
+#### Target ####
+################
+
+### Edit pfile and DB environment
+#################################
+[oracle@punk ~]$ vi /ARC/backup/initCPROD.ora
+[oracle@punk ~]$ cat /ARC/backup/initCPROD.ora
+*.oracle_base='/a01/app/oracle'#ORACLE_BASE set from environment
+*.__oracle_base='/a01/app/oracle'#ORACLE_BASE set from environment
+*.audit_file_dest='/a01/app/oracle/admin/CPROD/adump'
+*.audit_trail='NONE'
+*.compatible='19.0.0'
+*.control_files='/DATABASE/CPROD/control01.ctl'
+*.db_block_size=2048
+*.db_create_file_dest='/DATABASE/CPROD'
+*.db_domain='punk.com'
+*.db_name='CDEV'
+*.db_unique_name='CPROD'
+*.db_recovery_file_dest='/ARC'
+*.db_recovery_file_dest_size=14g
+*.diagnostic_dest='/a01/app/oracle'
+*.dispatchers='(PROTOCOL=TCP) (SERVICE=CPRODXDB)'
+*.enable_pluggable_database=true
+*.log_archive_format='CPROD_%t_%s_%r.arc'
+*.nls_language='AMERICAN'
+*.nls_territory='AMERICA'
+*.open_cursors=900
+*.pga_aggregate_target=1g
+*.processes=1250
+*.remote_login_passwordfile='EXCLUSIVE'
+*.sga_target=2g
+*.undo_tablespace='UNDOTBS1'
+[oracle@punk ~]$ vi ~/.bash_profile
+[oracle@punk ~]$ . ~/.bash_profile
+[oracle@punk ~]$ env|grep ORA
+ORACLE_SID=CPROD
+ORACLE_BASE=/a01/app/oracle
+ORACLE_HOSTNAME=punk.com
+ORA_INVENTORY=/a01/app/oraInventory
+ORACLE_HOME=/a01/app/oracle/product/19.3.0.0/dbh_1
+[oracle@punk ~]$
+
+### Create neccessary directories
+#################################
+[oracle@punk ~]$ mkdir -p /a01/app/oracle/admin/CPROD/adump
+[oracle@punk ~]$ mkdir -p /DATABASE/CPROD/pdev1
+[oracle@punk ~]$ mkdir -p /DATABASE/CPROD/pprod1
+[oracle@punk ~]$ mkdir -p /DATABASE/CPROD/pdbseed
+
+### Restore controlfile
+#######################
+[oracle@punk ~]$ rlwrap rman target=/
+
+Recovery Manager: Release 19.0.0.0.0 - Production on Tue Apr 21 16:44:38 2020
+Version 19.3.0.0.0
+
+Copyright (c) 1982, 2019, Oracle and/or its affiliates.  All rights reserved.
+
+connected to target database (not started)
+
+RMAN> startup nomount pfile='/ARC/backup/initCPROD.ora';
+
+Oracle instance started
+
+Total System Global Area    2147480152 bytes
+
+Fixed Size                     9138776 bytes
+Variable Size                486539264 bytes
+Database Buffers            1644167168 bytes
+Redo Buffers                   7634944 bytes
+
+RMAN> set dbid 2835840349
+
+executing command: SET DBID
+
+RMAN> restore primary controlfile from '/ARC/backup/CTRL_2835840349CDEV20200421_19_1.bkp';
+
+Starting restore at 21-Apr-20 22:07:58
+using target database control file instead of recovery catalog
+allocated channel: ORA_DISK_1
+channel ORA_DISK_1: SID=476 device type=DISK
+
+channel ORA_DISK_1: restoring control file
+channel ORA_DISK_1: restore complete, elapsed time: 00:00:07
+output file name=/DATABASE/CPROD/control01.ctl
+Finished restore at 21-Apr-20 22:08:06
+
+RMAN> alter database mount;
+
+released channel: ORA_DISK_1
+Statement processed
+
+RMAN> configure device type disk parallelism 4;
+
+old RMAN configuration parameters:
+CONFIGURE DEVICE TYPE DISK PARALLELISM 4 BACKUP TYPE TO BACKUPSET;
+new RMAN configuration parameters:
+CONFIGURE DEVICE TYPE DISK PARALLELISM 4 BACKUP TYPE TO BACKUPSET;
+new RMAN configuration parameters are successfully stored
+
+RMAN> crosscheck backup;
+
+Starting implicit crosscheck backup at 21-Apr-20 16:53:30
+allocated channel: ORA_DISK_1
+channel ORA_DISK_1: SID=486 device type=DISK
+allocated channel: ORA_DISK_2
+channel ORA_DISK_2: SID=961 device type=DISK
+allocated channel: ORA_DISK_3
+channel ORA_DISK_3: SID=1438 device type=DISK
+allocated channel: ORA_DISK_4
+channel ORA_DISK_4: SID=15 device type=DISK
+Crosschecked 5 objects
+Crosschecked 5 objects
+Crosschecked 4 objects
+Crosschecked 4 objects
+Finished implicit crosscheck backup at 21-Apr-20 16:53:54
+
+Starting implicit crosscheck copy at 21-Apr-20 16:53:54
+using channel ORA_DISK_1
+using channel ORA_DISK_2
+using channel ORA_DISK_3
+using channel ORA_DISK_4
+Finished implicit crosscheck copy at 21-Apr-20 16:53:55
+
+searching for all files in the recovery area
+cataloging files...
+no files cataloged
+
+using channel ORA_DISK_1
+using channel ORA_DISK_2
+using channel ORA_DISK_3
+using channel ORA_DISK_4
+crosschecked backup piece: found to be 'AVAILABLE'
+backup piece handle=/ARC/CDEV/autobackup/2020_04_16/o1_mf_s_1037900089_h9jf6c53_.bkp RECID=1 STAMP=1037900091
+crosschecked backup piece: found to be 'AVAILABLE'
+backup piece handle=/ARC/backup/SPF_2835840349CDEV20200421_2_1.bkp RECID=2 STAMP=1038323548
+crosschecked backup piece: found to be 'AVAILABLE'
+backup piece handle=/ARC/CDEV/autobackup/2020_04_21/o1_mf_s_1038323549_h9xbqhw2_.bkp RECID=3 STAMP=1038323551
+crosschecked backup piece: found to be 'AVAILABLE'
+backup piece handle=/ARC/backup/DB_2835840349CDEV20200421_5_1.bkp RECID=4 STAMP=1038323560
+crosschecked backup piece: found to be 'AVAILABLE'
+backup piece handle=/ARC/backup/DB_2835840349CDEV20200421_7_1.bkp RECID=5 STAMP=1038323561
+crosschecked backup piece: found to be 'AVAILABLE'
+backup piece handle=/ARC/backup/DB_2835840349CDEV20200421_6_1.bkp RECID=6 STAMP=1038323560
+crosschecked backup piece: found to be 'AVAILABLE'
+backup piece handle=/ARC/backup/DB_2835840349CDEV20200421_8_1.bkp RECID=7 STAMP=1038323897
+crosschecked backup piece: found to be 'AVAILABLE'
+backup piece handle=/ARC/backup/DB_2835840349CDEV20200421_9_1.bkp RECID=8 STAMP=1038323995
+crosschecked backup piece: found to be 'AVAILABLE'
+backup piece handle=/ARC/backup/DB_2835840349CDEV20200421_11_1.bkp RECID=9 STAMP=1038324091
+crosschecked backup piece: found to be 'AVAILABLE'
+backup piece handle=/ARC/backup/DB_2835840349CDEV20200421_10_1.bkp RECID=10 STAMP=1038324089
+crosschecked backup piece: found to be 'AVAILABLE'
+backup piece handle=/ARC/backup/DB_2835840349CDEV20200421_13_1.bkp RECID=11 STAMP=1038324178
+crosschecked backup piece: found to be 'AVAILABLE'
+backup piece handle=/ARC/backup/DB_2835840349CDEV20200421_14_1.bkp RECID=12 STAMP=1038324179
+crosschecked backup piece: found to be 'AVAILABLE'
+backup piece handle=/ARC/backup/DB_2835840349CDEV20200421_4_1.bkp RECID=13 STAMP=1038323560
+crosschecked backup piece: found to be 'AVAILABLE'
+backup piece handle=/ARC/backup/DB_2835840349CDEV20200421_12_1.bkp RECID=14 STAMP=1038324130
+crosschecked backup piece: found to be 'AVAILABLE'
+backup piece handle=/ARC/backup/ARC_2835840349CDEV20200421_18_1.bkp RECID=15 STAMP=1038324192
+Crosschecked 4 objects
+
+crosschecked backup piece: found to be 'AVAILABLE'
+backup piece handle=/ARC/backup/ARC_2835840349CDEV20200421_17_1.bkp RECID=16 STAMP=1038324192
+Crosschecked 4 objects
+
+crosschecked backup piece: found to be 'AVAILABLE'
+backup piece handle=/ARC/backup/ARC_2835840349CDEV20200421_16_1.bkp RECID=17 STAMP=1038324192
+Crosschecked 5 objects
+
+crosschecked backup piece: found to be 'AVAILABLE'
+backup piece handle=/ARC/backup/ARC_2835840349CDEV20200421_15_1.bkp RECID=18 STAMP=1038324192
+Crosschecked 5 objects
+
+
+RMAN> crosscheck archivelog all;
+
+released channel: ORA_DISK_1
+released channel: ORA_DISK_2
+released channel: ORA_DISK_3
+released channel: ORA_DISK_4
+allocated channel: ORA_DISK_1
+channel ORA_DISK_1: SID=486 device type=DISK
+allocated channel: ORA_DISK_2
+channel ORA_DISK_2: SID=961 device type=DISK
+allocated channel: ORA_DISK_3
+channel ORA_DISK_3: SID=1438 device type=DISK
+allocated channel: ORA_DISK_4
+channel ORA_DISK_4: SID=15 device type=DISK
+specification does not match any archived log in the repository
+
+RMAN> delete expired backup;
+
+using channel ORA_DISK_1
+using channel ORA_DISK_2
+using channel ORA_DISK_3
+using channel ORA_DISK_4
+specification does not match any backup in the repository
+
+RMAN> delete expired archivelog all;
+
+released channel: ORA_DISK_1
+released channel: ORA_DISK_2
+released channel: ORA_DISK_3
+released channel: ORA_DISK_4
+allocated channel: ORA_DISK_1
+channel ORA_DISK_1: SID=486 device type=DISK
+allocated channel: ORA_DISK_2
+channel ORA_DISK_2: SID=961 device type=DISK
+allocated channel: ORA_DISK_3
+channel ORA_DISK_3: SID=1438 device type=DISK
+allocated channel: ORA_DISK_4
+channel ORA_DISK_4: SID=15 device type=DISK
+specification does not match any archived log in the repository
+
+RMAN> list backup summary;
+
+
+List of Backups
+===============
+Key     TY LV S Device Type Completion Time    #Pieces #Copies Compressed Tag
+------- -- -- - ----------- ------------------ ------- ------- ---------- ---
+1       B  F  A DISK        16-Apr-20 17:34:51 1       1       NO         TAG20200416T173449
+2       B  F  A DISK        21-Apr-20 15:12:27 1       1       YES        SPFILE
+3       B  F  A DISK        21-Apr-20 15:12:33 1       1       NO         TAG20200421T151229
+4       B  F  A DISK        21-Apr-20 15:17:56 1       1       YES        FULLDB
+5       B  F  A DISK        21-Apr-20 15:19:20 1       1       YES        FULLDB
+6       B  F  A DISK        21-Apr-20 15:21:07 1       1       YES        FULLDB
+7       B  F  A DISK        21-Apr-20 15:21:12 1       1       YES        FULLDB
+8       B  F  A DISK        21-Apr-20 15:22:03 1       1       YES        FULLDB
+9       B  F  A DISK        21-Apr-20 15:22:51 1       1       YES        FULLDB
+10      B  F  A DISK        21-Apr-20 15:22:51 1       1       YES        FULLDB
+11      B  F  A DISK        21-Apr-20 15:22:59 1       1       YES        FULLDB
+12      B  F  A DISK        21-Apr-20 15:22:59 1       1       YES        FULLDB
+13      B  F  A DISK        21-Apr-20 15:23:00 1       1       YES        FULLDB
+14      B  F  A DISK        21-Apr-20 15:23:04 1       1       YES        FULLDB
+15      B  A  A DISK        21-Apr-20 15:23:13 1       1       YES        ARCHIVELOGS
+16      B  A  A DISK        21-Apr-20 15:23:13 1       1       YES        ARCHIVELOGS
+17      B  A  A DISK        21-Apr-20 15:23:17 1       1       YES        ARCHIVELOGS
+18      B  A  A DISK        21-Apr-20 15:23:24 1       1       YES        ARCHIVELOGS
+
+RMAN> list backup tag 'SPFILE';
+
+
+List of Backup Sets
+===================
+
+
+BS Key  Type LV Size       Device Type Elapsed Time Completion Time
+------- ---- -- ---------- ----------- ------------ ------------------
+2       Full    96.00K     DISK        00:00:00     21-Apr-20 15:12:27
+        BP Key: 2   Status: AVAILABLE  Compressed: YES  Tag: SPFILE
+        Piece Name: /ARC/backup/SPF_2835840349CDEV20200421_2_1.bkp
+  SPFILE Included: Modification time: 21-Apr-20 15:12:26
+  SPFILE db_unique_name: CDEV
+
+RMAN>
+
+### Restore database
+####################
+RMAN> run{
+  set newname for database to '/DATABASE/CPROD/%U';
+  set newname for tempfile 1 to '/DATABASE/CPROD/%U';
+  SQL "ALTER DATABASE RENAME FILE ''/DATA/CDEV/redo11-256M.dbf'' TO ''/DATABASE/CPROD/redo11-256M.dbf''";
+  SQL "ALTER DATABASE RENAME FILE ''/DATA/CDEV/redo12-256M.dbf'' TO ''/DATABASE/CPROD/redo12-256M.dbf''";
+  SQL "ALTER DATABASE RENAME FILE ''/DATA/CDEV/redo13-256M.dbf'' TO ''/DATABASE/CPROD/redo13-256M.dbf''";
+  restore database;
+  switch datafile all;
+  switch tempfile all;}
+
+executing command: SET NEWNAME
+
+executing command: SET NEWNAME
+
+sql statement: ALTER DATABASE RENAME FILE ''/DATA/CDEV/redo11-256M.dbf'' TO ''/DATABASE/CPROD/redo11-256M.dbf''
+
+sql statement: ALTER DATABASE RENAME FILE ''/DATA/CDEV/redo12-256M.dbf'' TO ''/DATABASE/CPROD/redo12-256M.dbf''
+
+sql statement: ALTER DATABASE RENAME FILE ''/DATA/CDEV/redo13-256M.dbf'' TO ''/DATABASE/CPROD/redo13-256M.dbf''
+
+Starting restore at 21-Apr-20 22:09:20
+Starting implicit crosscheck backup at 21-Apr-20 22:09:20
+allocated channel: ORA_DISK_1
+channel ORA_DISK_1: SID=13 device type=DISK
+allocated channel: ORA_DISK_2
+channel ORA_DISK_2: SID=487 device type=DISK
+allocated channel: ORA_DISK_3
+channel ORA_DISK_3: SID=962 device type=DISK
+allocated channel: ORA_DISK_4
+channel ORA_DISK_4: SID=1437 device type=DISK
+Crosschecked 4 objects
+Crosschecked 4 objects
+Crosschecked 5 objects
+Crosschecked 5 objects
+Finished implicit crosscheck backup at 21-Apr-20 22:09:23
+
+Starting implicit crosscheck copy at 21-Apr-20 22:09:23
+using channel ORA_DISK_1
+using channel ORA_DISK_2
+using channel ORA_DISK_3
+using channel ORA_DISK_4
+Finished implicit crosscheck copy at 21-Apr-20 22:09:23
+
+searching for all files in the recovery area
+cataloging files...
+cataloging done
+
+List of Cataloged Files
+=======================
+File Name: /ARC/CPROD/autobackup/2020_04_21/o1_mf_n_1038333051_h9xn0dt4_.bkp
+
+using channel ORA_DISK_1
+using channel ORA_DISK_2
+using channel ORA_DISK_3
+using channel ORA_DISK_4
+
+channel ORA_DISK_1: starting datafile backup set restore
+channel ORA_DISK_1: specifying datafile(s) to restore from backup set
+channel ORA_DISK_1: restoring datafile 00005 to /DATABASE/CPROD/data_D-CDEV_TS-UNDOTBS1_FNO-5
+channel ORA_DISK_1: reading from backup piece /ARC/backup/DB_2835840349CDEV20200421_5_1.bkp
+channel ORA_DISK_2: starting datafile backup set restore
+channel ORA_DISK_2: specifying datafile(s) to restore from backup set
+channel ORA_DISK_2: restoring datafile 00006 to /DATABASE/CPROD/data_D-CDEV_TS-UNDOTBS1_FNO-6
+channel ORA_DISK_2: reading from backup piece /ARC/backup/DB_2835840349CDEV20200421_7_1.bkp
+channel ORA_DISK_3: starting datafile backup set restore
+channel ORA_DISK_3: specifying datafile(s) to restore from backup set
+channel ORA_DISK_3: restoring datafile 00003 to /DATABASE/CPROD/data_D-CDEV_TS-SYSAUX_FNO-3
+channel ORA_DISK_3: reading from backup piece /ARC/backup/DB_2835840349CDEV20200421_6_1.bkp
+channel ORA_DISK_4: starting datafile backup set restore
+channel ORA_DISK_4: specifying datafile(s) to restore from backup set
+channel ORA_DISK_4: restoring datafile 00010 to /DATABASE/CPROD/data_D-CDEV_TS-UNDOTBS1_FNO-10
+channel ORA_DISK_4: reading from backup piece /ARC/backup/DB_2835840349CDEV20200421_8_1.bkp
+channel ORA_DISK_4: piece handle=/ARC/backup/DB_2835840349CDEV20200421_8_1.bkp tag=FULLDB
+channel ORA_DISK_4: restored backup piece 1
+channel ORA_DISK_4: restore complete, elapsed time: 00:02:07
+channel ORA_DISK_4: starting datafile backup set restore
+channel ORA_DISK_4: specifying datafile(s) to restore from backup set
+channel ORA_DISK_4: restoring datafile 00009 to /DATABASE/CPROD/data_D-CDEV_TS-SYSAUX_FNO-9
+channel ORA_DISK_4: reading from backup piece /ARC/backup/DB_2835840349CDEV20200421_9_1.bkp
+channel ORA_DISK_3: piece handle=/ARC/backup/DB_2835840349CDEV20200421_6_1.bkp tag=FULLDB
+channel ORA_DISK_3: restored backup piece 1
+channel ORA_DISK_3: restore complete, elapsed time: 00:03:05
+channel ORA_DISK_3: starting datafile backup set restore
+channel ORA_DISK_3: specifying datafile(s) to restore from backup set
+channel ORA_DISK_3: restoring datafile 00002 to /DATABASE/CPROD/data_D-CDEV_TS-SYSTEM_FNO-2
+channel ORA_DISK_3: reading from backup piece /ARC/backup/DB_2835840349CDEV20200421_11_1.bkp
+channel ORA_DISK_1: piece handle=/ARC/backup/DB_2835840349CDEV20200421_5_1.bkp tag=FULLDB
+channel ORA_DISK_1: restored backup piece 1
+channel ORA_DISK_1: restore complete, elapsed time: 00:03:09
+channel ORA_DISK_1: starting datafile backup set restore
+channel ORA_DISK_1: specifying datafile(s) to restore from backup set
+channel ORA_DISK_1: restoring datafile 00004 to /DATABASE/CPROD/data_D-CDEV_TS-SYSAUX_FNO-4
+channel ORA_DISK_1: reading from backup piece /ARC/backup/DB_2835840349CDEV20200421_10_1.bkp
+channel ORA_DISK_2: piece handle=/ARC/backup/DB_2835840349CDEV20200421_7_1.bkp tag=FULLDB
+channel ORA_DISK_2: restored backup piece 1
+channel ORA_DISK_2: restore complete, elapsed time: 00:03:09
+channel ORA_DISK_2: starting datafile backup set restore
+channel ORA_DISK_2: specifying datafile(s) to restore from backup set
+channel ORA_DISK_2: restoring datafile 00007 to /DATABASE/CPROD/data_D-CDEV_TS-USERS_FNO-7
+channel ORA_DISK_2: reading from backup piece /ARC/backup/DB_2835840349CDEV20200421_13_1.bkp
+channel ORA_DISK_4: piece handle=/ARC/backup/DB_2835840349CDEV20200421_9_1.bkp tag=FULLDB
+channel ORA_DISK_4: restored backup piece 1
+channel ORA_DISK_4: restore complete, elapsed time: 00:01:02
+channel ORA_DISK_4: starting datafile backup set restore
+channel ORA_DISK_4: specifying datafile(s) to restore from backup set
+channel ORA_DISK_4: restoring datafile 00001 to /DATABASE/CPROD/data_D-CDEV_TS-SYSTEM_FNO-1
+channel ORA_DISK_4: reading from backup piece /ARC/backup/DB_2835840349CDEV20200421_4_1.bkp
+channel ORA_DISK_2: piece handle=/ARC/backup/DB_2835840349CDEV20200421_13_1.bkp tag=FULLDB
+channel ORA_DISK_2: restored backup piece 1
+channel ORA_DISK_2: restore complete, elapsed time: 00:00:04
+channel ORA_DISK_2: starting datafile backup set restore
+channel ORA_DISK_2: specifying datafile(s) to restore from backup set
+channel ORA_DISK_2: restoring datafile 00011 to /DATABASE/CPROD/data_D-CDEV_TS-USERS_FNO-11
+channel ORA_DISK_2: reading from backup piece /ARC/backup/DB_2835840349CDEV20200421_14_1.bkp
+channel ORA_DISK_1: piece handle=/ARC/backup/DB_2835840349CDEV20200421_10_1.bkp tag=FULLDB
+channel ORA_DISK_1: restored backup piece 1
+channel ORA_DISK_1: restore complete, elapsed time: 00:00:30
+channel ORA_DISK_1: starting datafile backup set restore
+channel ORA_DISK_1: specifying datafile(s) to restore from backup set
+channel ORA_DISK_1: restoring datafile 00008 to /DATABASE/CPROD/data_D-CDEV_TS-SYSTEM_FNO-8
+channel ORA_DISK_1: reading from backup piece /ARC/backup/DB_2835840349CDEV20200421_12_1.bkp
+channel ORA_DISK_2: piece handle=/ARC/backup/DB_2835840349CDEV20200421_14_1.bkp tag=FULLDB
+channel ORA_DISK_2: restored backup piece 1
+channel ORA_DISK_2: restore complete, elapsed time: 00:00:26
+channel ORA_DISK_3: piece handle=/ARC/backup/DB_2835840349CDEV20200421_11_1.bkp tag=FULLDB
+channel ORA_DISK_3: restored backup piece 1
+channel ORA_DISK_3: restore complete, elapsed time: 00:00:34
+channel ORA_DISK_1: piece handle=/ARC/backup/DB_2835840349CDEV20200421_12_1.bkp tag=FULLDB
+channel ORA_DISK_1: restored backup piece 1
+channel ORA_DISK_1: restore complete, elapsed time: 00:00:15
+channel ORA_DISK_4: piece handle=/ARC/backup/DB_2835840349CDEV20200421_4_1.bkp tag=FULLDB
+channel ORA_DISK_4: restored backup piece 1
+channel ORA_DISK_4: restore complete, elapsed time: 00:00:44
+Finished restore at 21-Apr-20 22:13:19
+
+datafile 1 switched to datafile copy
+input datafile copy RECID=12 STAMP=1038348800 file name=/DATABASE/CPROD/data_D-CDEV_TS-SYSTEM_FNO-1
+datafile 2 switched to datafile copy
+input datafile copy RECID=13 STAMP=1038348800 file name=/DATABASE/CPROD/data_D-CDEV_TS-SYSTEM_FNO-2
+datafile 3 switched to datafile copy
+input datafile copy RECID=14 STAMP=1038348800 file name=/DATABASE/CPROD/data_D-CDEV_TS-SYSAUX_FNO-3
+datafile 4 switched to datafile copy
+input datafile copy RECID=15 STAMP=1038348800 file name=/DATABASE/CPROD/data_D-CDEV_TS-SYSAUX_FNO-4
+datafile 5 switched to datafile copy
+input datafile copy RECID=16 STAMP=1038348800 file name=/DATABASE/CPROD/data_D-CDEV_TS-UNDOTBS1_FNO-5
+datafile 6 switched to datafile copy
+input datafile copy RECID=17 STAMP=1038348800 file name=/DATABASE/CPROD/data_D-CDEV_TS-UNDOTBS1_FNO-6
+datafile 7 switched to datafile copy
+input datafile copy RECID=18 STAMP=1038348800 file name=/DATABASE/CPROD/data_D-CDEV_TS-USERS_FNO-7
+datafile 8 switched to datafile copy
+input datafile copy RECID=19 STAMP=1038348800 file name=/DATABASE/CPROD/data_D-CDEV_TS-SYSTEM_FNO-8
+datafile 9 switched to datafile copy
+input datafile copy RECID=20 STAMP=1038348800 file name=/DATABASE/CPROD/data_D-CDEV_TS-SYSAUX_FNO-9
+datafile 10 switched to datafile copy
+input datafile copy RECID=21 STAMP=1038348800 file name=/DATABASE/CPROD/data_D-CDEV_TS-UNDOTBS1_FNO-10
+datafile 11 switched to datafile copy
+input datafile copy RECID=22 STAMP=1038348800 file name=/DATABASE/CPROD/data_D-CDEV_TS-USERS_FNO-11
+
+renamed tempfile 1 to /DATABASE/CPROD/data_D-CDEV_TS-TEMP_FNO-1 in control file
+renamed tempfile 2 to /DATABASE/CPROD/data_D-CDEV_TS-TEMP_FNO-2 in control file
+renamed tempfile 3 to /DATABASE/CPROD/data_D-CDEV_TS-TEMP_FNO-3 in control file
+
+RMAN> exit
+
+
+Recovery Manager complete.
+[oracle@punk ~]$
+
+### Identify sequence# and recover database
+###########################################
+[oracle@punk ~]$ rlwrap sqlplus '/ as sysdba'
+
+SQL*Plus: Release 19.0.0.0.0 - Production on Tue Apr 21 17:47:19 2020
+Version 19.3.0.0.0
+
+Copyright (c) 1982, 2019, Oracle.  All rights reserved.
+
+
+Connected to:
+Oracle Database 19c Enterprise Edition Release 19.0.0.0.0 - Production
+Version 19.3.0.0.0
+
+SQL> COL NAME FOR A65;
+SQL> SELECT NAME, THREAD#, SEQUENCE# FROM V$ARCHIVED_LOG ORDER BY 3;
+
+NAME                                                                 THREAD#  SEQUENCE#
+----------------------------------------------------------------- ---------- ----------
+                                                                           1         27
+                                                                           1         28
+                                                                           1         29
+                                                                           1         30
+
+Elapsed: 00:00:00.21
+SQL> exit
+Disconnected from Oracle Database 19c Enterprise Edition Release 19.0.0.0.0 - Production
+Version 19.3.0.0.0
+[oracle@punk ~]$ rlwrap rman target=/
+
+Recovery Manager: Release 19.0.0.0.0 - Production on Tue Apr 21 17:48:02 2020
+Version 19.3.0.0.0
+
+Copyright (c) 1982, 2019, Oracle and/or its affiliates.  All rights reserved.
+
+connected to target database: CDEV (DBID=2835840349, not open)
+
+RMAN> run{
+  set until sequence 31 thread 1;
+  recover database;}
+
+executing command: SET until clause
+
+Starting recover at 21-Apr-20 22:20:40
+using channel ORA_DISK_1
+using channel ORA_DISK_2
+using channel ORA_DISK_3
+using channel ORA_DISK_4
+
+starting media recovery
+
+channel ORA_DISK_1: starting archived log restore to default destination
+channel ORA_DISK_1: restoring archived log
+archived log thread=1 sequence=30
+channel ORA_DISK_1: reading from backup piece /ARC/backup/ARC_2835840349CDEV20200421_18_1.bkp
+channel ORA_DISK_1: piece handle=/ARC/backup/ARC_2835840349CDEV20200421_18_1.bkp tag=ARCHIVELOGS
+channel ORA_DISK_1: restored backup piece 1
+channel ORA_DISK_1: restore complete, elapsed time: 00:00:01
+archived log file name=/ARC/CPROD/archivelog/2020_04_21/o1_mf_1_30_h9y3tck6_.arc thread=1 sequence=30
+channel default: deleting archived log(s)
+archived log file name=/ARC/CPROD/archivelog/2020_04_21/o1_mf_1_30_h9y3tck6_.arc RECID=5 STAMP=1038349243
+media recovery complete, elapsed time: 00:00:03
+Finished recover at 21-Apr-20 22:20:47
+
+RMAN>
+
+### Open the database
+#####################
+RMAN> alter database open resetlogs;
+
+Statement processed
+
+RMAN> exit
+
+
+Recovery Manager complete.
+[oracle@punk ~]$
+
+### Create spfile and restart database
+######################################
+[oracle@punk ~]$ rlwrap sqlplus '/ as sysdba'
+
+SQL*Plus: Release 19.0.0.0.0 - Production on Tue Apr 21 17:50:59 2020
+Version 19.3.0.0.0
+
+Copyright (c) 1982, 2019, Oracle.  All rights reserved.
+
+
+Connected to:
+Oracle Database 19c Enterprise Edition Release 19.0.0.0.0 - Production
+Version 19.3.0.0.0
+
+SQL> sho parameter pfile;
+
+NAME                                 TYPE        VALUE
+------------------------------------ ----------- ------------------------------
+spfile                               string
+SQL> create spfile from pfile='/ARC/backup/initCPROD.ora';
+
+File created.
+
+Elapsed: 00:00:01.00
+SQL> shu immediate;
+Database closed.
+Database dismounted.
+ORACLE instance shut down.
+SQL> startup;
+ORACLE instance started.
+
+Total System Global Area 2147480152 bytes
+Fixed Size                  9138776 bytes
+Variable Size             486539264 bytes
+Database Buffers         1644167168 bytes
+Redo Buffers                7634944 bytes
+Database mounted.
+Database opened.
+SQL> sho parameter pfile;
+
+NAME                                 TYPE        VALUE
+------------------------------------ ----------- ------------------------------
+spfile                               string      /a01/app/oracle/product/19.3.0
+                                                 .0/dbh_1/dbs/spfileCPROD.ora
+SQL> COL HOST_NAME FOR A30;
+SQL> COL DB_ROLE FOR A15;
+SQL> COL OS FOR A30;
+SQL> COL INSTANCE_NAME FOR A10;
+SQL> COL DBNAME FOR A10;
+SQL> COL LOG_MODE FOR A15;
+SQL> COL OPEN_MODE FOR A15;
+SQL> COL PLATFORM_NAME FOR A25;
+SQL> COL FORCE_LOGGING FOR A3;
+SQL> SELECT NAME,DB_UNIQUE_NAME,DBID,CREATED,LOG_MODE,OPEN_MODE,DATABASE_ROLE,PLATFORM_NAME,FORCE_LOGGING FROM V$DATABASE;
+
+NAME                                                                        DB_UNIQUE_NAME                       DBID CREATED   LOG_MODE        OPEN_MODE       DATABASE_ROLE    PLATFORM_NAME             FOR
+--------------------------------------------------------------------------- ------------------------------ ---------- --------- --------------- --------------- ---------------- ------------------------- ---
+CDEV                                                                        CPROD                          2835840349 16-APR-20 ARCHIVELOG      READ WRITE      PRIMARY          Linux x86 64-bit          NO
+
+Elapsed: 00:00:00.02
+SQL> SELECT INSTANCE_NUMBER,INSTANCE_NAME,STATUS,HOST_NAME,STARTUP_TIME,VERSION FROM GV$INSTANCE ORDER BY 1;
+
+INSTANCE_NUMBER INSTANCE_N STATUS       HOST_NAME                      STARTUP_T VERSION
+--------------- ---------- ------------ ------------------------------ --------- -----------------
+              1 CPROD      OPEN         punk.com                       21-APR-20 19.0.0.0.0
+
+Elapsed: 00:00:00.07
+SQL> show pdbs;
+
+    CON_ID CON_NAME                       OPEN MODE  RESTRICTED
+---------- ------------------------------ ---------- ----------
+         2 PDB$SEED                       READ ONLY  NO
+         3 PDEV1                          MOUNTED
+SQL> alter pluggable database pdev1 open;
+
+Pluggable database altered.
+
+Elapsed: 00:01:03.95
+SQL>
+
+### Identify the database files
+###############################
+SQL> col name for a75;
+SQL> select name from v$tempfile union all select name from v$datafile union all select member from v$logfile union all select name from v$controlfile;
+
+NAME
+---------------------------------------------------------------------------
+/DATABASE/CPROD/data_D-CDEV_TS-TEMP_FNO-1
+/DATABASE/CPROD/data_D-CDEV_TS-TEMP_FNO-2
+/DATABASE/CPROD/data_D-CDEV_TS-TEMP_FNO-3
+/DATABASE/CPROD/data_D-CDEV_TS-SYSTEM_FNO-1
+/DATABASE/CPROD/data_D-CDEV_TS-SYSTEM_FNO-2
+/DATABASE/CPROD/data_D-CDEV_TS-SYSAUX_FNO-3
+/DATABASE/CPROD/data_D-CDEV_TS-SYSAUX_FNO-4
+/DATABASE/CPROD/data_D-CDEV_TS-UNDOTBS1_FNO-5
+/DATABASE/CPROD/data_D-CDEV_TS-UNDOTBS1_FNO-6
+/DATABASE/CPROD/data_D-CDEV_TS-USERS_FNO-7
+/DATABASE/CPROD/data_D-CDEV_TS-SYSTEM_FNO-8
+/DATABASE/CPROD/data_D-CDEV_TS-SYSAUX_FNO-9
+/DATABASE/CPROD/data_D-CDEV_TS-UNDOTBS1_FNO-10
+/DATABASE/CPROD/data_D-CDEV_TS-USERS_FNO-11
+/DATABASE/CPROD/redo11-256M.dbf
+/DATABASE/CPROD/redo12-256M.dbf
+/DATABASE/CPROD/redo13-256M.dbf
+/DATABASE/CPROD/control01.ctl
+
+18 rows selected.
+
+Elapsed: 00:00:00.46
+SQL>
+
+### Rename pluggable database
+#############################
+SQL> show pdbs;
+
+    CON_ID CON_NAME                       OPEN MODE  RESTRICTED
+---------- ------------------------------ ---------- ----------
+         2 PDB$SEED                       READ ONLY  NO
+         3 PDEV1                          READ WRITE NO
+SQL> select name, con_id, dbid,con_uid,guid from v$containers order by con_id;
+
+NAME                                                                            CON_ID       DBID    CON_UID GUID
+--------------------------------------------------------------------------- ---------- ---------- ---------- --------------------------------
+CDB$ROOT                                                                             1 2835840349          1 A3656A8E3A916DC9E053823AA8C0D591
+PDB$SEED                                                                             2 2797488922 2797488922 A3656A8E3A926DC9E053823AA8C0D591
+PDEV1                                                                                3 1577701758 1577701758 A366DBBFD737A891E053823AA8C06FC1
+
+Elapsed: 00:00:00.01
+SQL> col NAME for a25;
+SQL> col NETWORK_NAME for a25;
+SQL> col PDB for a25;
+SQL> select service_id,name,network_name,creation_date,pdb,con_id from cdb_services;
+
+SERVICE_ID NAME                      NETWORK_NAME              CREATION_ PDB                           CON_ID
+---------- ------------------------- ------------------------- --------- ------------------------- ----------
+         8 PDEV1                     PDEV1                     16-APR-20 PDEV1                              3
+         1 SYS$BACKGROUND                                      16-APR-20 CDB$ROOT                           1
+         2 SYS$USERS                                           16-APR-20 CDB$ROOT                           1
+         3 CDEVXDB                   CDEVXDB                   16-APR-20 CDB$ROOT                           1
+         4 CDEV.punk.com             CDEV.punk.com             16-APR-20 CDB$ROOT                           1
+         5 CPRODXDB                  CPRODXDB                  21-APR-20 CDB$ROOT                           1
+         6 CPROD.punk.com            CPROD.punk.com            21-APR-20 CDB$ROOT                           1
+
+7 rows selected.
+
+Elapsed: 00:00:00.07
+SQL> alter pluggable database pdev1 close;
+
+Pluggable database altered.
+
+Elapsed: 00:00:04.78
+SQL> alter pluggable database pdev1 open restricted;
+
+Pluggable database altered.
+
+Elapsed: 00:00:04.86
+SQL> show pdbs;
+
+    CON_ID CON_NAME                       OPEN MODE  RESTRICTED
+---------- ------------------------------ ---------- ----------
+         2 PDB$SEED                       READ ONLY  NO
+         3 PDEV1                          READ WRITE YES
+SQL> alter session set container=PDEV1;
+
+Session altered.
+
+Elapsed: 00:00:00.08
+SQL> show con_name;
+
+CON_NAME
+------------------------------
+PDEV1
+SQL> alter pluggable database rename global_name to PPROD1;
+
+Pluggable database altered.
+
+Elapsed: 00:00:05.16
+SQL> alter pluggable database close immediate;
+
+Pluggable database altered.
+
+Elapsed: 00:00:01.15
+SQL> alter pluggable database open;
+
+Pluggable database altered.
+
+Elapsed: 00:00:04.56
+SQL> alter session set container=CDB$ROOT;
+
+Session altered.
+
+Elapsed: 00:00:00.06
+SQL> show con_name;
+
+CON_NAME
+------------------------------
+CDB$ROOT
+SQL> show pdbs;
+
+    CON_ID CON_NAME                       OPEN MODE  RESTRICTED
+---------- ------------------------------ ---------- ----------
+         2 PDB$SEED                       READ ONLY  NO
+         3 PPROD1                         READ WRITE NO
+SQL> col name for a50;
+SQL> select name, con_id, dbid,con_uid,guid from v$containers order by con_id;
+
+NAME                                                   CON_ID       DBID    CON_UID GUID
+-------------------------------------------------- ---------- ---------- ---------- --------------------------------
+CDB$ROOT                                                    1 2835840349          1 A3656A8E3A916DC9E053823AA8C0D591
+PDB$SEED                                                    2 2797488922 2797488922 A3656A8E3A926DC9E053823AA8C0D591
+PPROD1                                                      3 1577701758 1577701758 A366DBBFD737A891E053823AA8C06FC1
+
+Elapsed: 00:00:00.01
+SQL> COL NAME FOR A25;
+SQL> COL NETWORK_NAME FOR A25;
+SQL> COL PDB FOR A25;
+SQL> SELECT SERVICE_ID,NAME,NETWORK_NAME,CREATION_DATE,PDB,CON_ID FROM CDB_SERVICES;
+
+SERVICE_ID NAME                      NETWORK_NAME              CREATION_ PDB                           CON_ID
+---------- ------------------------- ------------------------- --------- ------------------------- ----------
+         1 SYS$BACKGROUND                                      16-APR-20 CDB$ROOT                           1
+         2 SYS$USERS                                           16-APR-20 CDB$ROOT                           1
+         3 CDEVXDB                   CDEVXDB                   16-APR-20 CDB$ROOT                           1
+         4 CDEV.punk.com             CDEV.punk.com             16-APR-20 CDB$ROOT                           1
+         5 CPRODXDB                  CPRODXDB                  21-APR-20 CDB$ROOT                           1
+         6 CPROD.punk.com            CPROD.punk.com            21-APR-20 CDB$ROOT                           1
+         1 PPROD1                    PPROD1                    21-APR-20 PPROD1                             3
+
+7 rows selected.
+
+Elapsed: 00:00:00.14
+SQL>

@@ -1,0 +1,93 @@
+[orekel@rhino ~]$ env|grep ORA
+ORACLE_UNQNAME=BADAK
+ORACLE_SID=BADAK
+ORACLE_BASE=/z02/app/orekel
+ORACLE_HOSTNAME=rhino.animal.net
+ORACLE_HOME=/z02/app/orekel/product/12.2.0.1/db_1
+
+
+### Pastikan di /etc/oratab sudah ada $ORACLE_SID:$ORACLE_HOME:Y
+################################################################
+[orekel@rhino ~]$ vi /etc/oratab
+[orekel@rhino ~]$ cat /etc/oratab
+#
+
+
+
+# This file is used by ORACLE utilities.  It is created by root.sh
+# and updated by either Database Configuration Assistant while creating
+# a database or ASM Configuration Assistant while creating ASM instance.
+
+# A colon, ':', is used as the field terminator.  A new line terminates
+# the entry.  Lines beginning with a pound sign, '#', are comments.
+#
+# Entries are of the form:
+#   $ORACLE_SID:$ORACLE_HOME:<N|Y>:
+#
+# The first and second fields are the system identifier and home
+# directory of the database respectively.  The third field indicates
+# to the dbstart utility that the database should , "Y", or should not,
+# "N", be brought up at system boot time.
+#
+# Multiple entries with the same $ORACLE_SID are not allowed.
+#
+#
+BADAK:/z02/app/orekel/product/12.2.0.1/db_1:Y
+[orekel@rhino ~]$ mkdir -p mii/scripts
+[orekel@rhino ~]$ cd mii/scripts/
+
+### Buat sh script dan chmod +x
+###############################
+[orekel@rhino scripts]$ vi autostartDB.sh
+[orekel@rhino scripts]$ cat autostartDB.sh
+#!/bin/bash
+sleep 45s
+source /home/orekel/.bash_profile;
+$ORACLE_HOME/bin/dbstart $ORACLE_HOME
+[orekel@rhino scripts]$ chmod +x autostartDB.sh
+
+### Buat crontab di root dengan menjalankan command user orekel
+###############################################################
+[orekel@rhino scripts]$ su
+Password:
+[root@rhino scripts]# crontab -e
+crontab: installing new crontab
+[root@rhino scripts]# crontab -l
+@reboot su - orekel -c /home/orekel/mii/scripts/autostartDB.sh
+
+### Test reboot
+###############
+[root@rhino scripts]# reboot
+
+Remote side unexpectedly closed network connection
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+Session stopped
+    - Press <return> to exit tab
+    - Press R to restart session
+    - Press S to save terminal output to file
+     ┌────────────────────────────────────────────────────────────────────┐
+     │                        • MobaXterm 12.3 •                          │
+     │            (SSH client, X-server and networking tools)             │
+     │                                                                    │
+     │ ➤ SSH session to orekel@192.168.58.132                             │
+     │   • SSH compression : ✔                                            │
+     │   • SSH-browser     : ✔                                            │
+     │   • X11-forwarding  : ✔  (remote display is forwarded through SSH) │
+     │   • DISPLAY         : ✔  (automatically set on remote server)      │
+     │                                                                    │
+     │ ➤ For more info, ctrl+click on help or visit our website           │
+     └────────────────────────────────────────────────────────────────────┘
+
+Last login: Fri Dec 20 20:51:36 2019
+
+### Habis atartup OS, langsung start DB & Listener secara otomatis
+##################################################################
+[orekel@rhino ~]$ ps -ef|grep tnsl
+orekel     3211      1  1 20:52 ?        00:00:00 /z02/app/orekel/product/12.2.0.1/db_1/bin/tnslsnr LISTENER -inherit
+orekel     3744   3051  0 20:53 pts/0    00:00:00 grep --color=auto tnsl
+[orekel@rhino ~]$ ps -ef|grep ckpt
+orekel     3347      1  1 20:52 ?        00:00:00 ora_ckpt_BADAK
+orekel     3746   3051  0 20:53 pts/0    00:00:00 grep --color=auto ckpt
+[orekel@rhino ~]$
