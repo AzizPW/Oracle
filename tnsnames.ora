@@ -16,24 +16,35 @@ LISTENER_JKT =
 TNS_RVSOA =
   (DESCRIPTION =
     (ADDRESS_LIST =
-	  (ADDRESS = (PROTOCOL = TCP)(HOST = RVSOADBA18LPOC-vip)(PORT = 1521))
-	  (ADDRESS = (PROTOCOL = TCP)(HOST = RVSOADBB18LPOC-vip)(PORT = 1521))
+      (ADDRESS = (PROTOCOL = TCP)(HOST = RVSOADBA18LPOC-vip)(PORT = 1521))
+      (ADDRESS = (PROTOCOL = TCP)(HOST = RVSOADBB18LPOC-vip)(PORT = 1521))
     )
     (CONNECT_DATA =
       (SERVICE_NAME = DBEAI)
       (SERVER = DEDICATED)
-	  (UR = A)
+      (UR = A)
     )
   )
 TNS_DVSOA =
   (DESCRIPTION =
     (ADDRESS_LIST =
-	  (ADDRESS = (PROTOCOL = TCP)(HOST = dvsoadba18lpoc-vip)(PORT = 1521))
-	  (ADDRESS = (PROTOCOL = TCP)(HOST = dvsoadbb18lpoc-vip)(PORT = 1521))
+      (ADDRESS = (PROTOCOL = TCP)(HOST = dvsoadba18lpoc-vip)(PORT = 1521))
+      (ADDRESS = (PROTOCOL = TCP)(HOST = dvsoadbb18lpoc-vip)(PORT = 1521))
     )
     (CONNECT_DATA =
       (SERVICE_NAME = DBEAI)
       (SERVER = DEDICATED)
-	  (UR = A)
+      (UR = A)
+    )
+  )
+TNS_DBEAI =
+  (DESCRIPTION =
+    (ADDRESS_LIST =
+      (ADDRESS = (PROTOCOL = TCP)(HOST = RVSOADBALPOC)(PORT = 1521))
+    )
+    (CONNECT_DATA =
+      (SID = DBEAI)
+      (SERVER = DEDICATED)
+      (UR = A)
     )
   )

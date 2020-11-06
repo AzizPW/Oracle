@@ -26,6 +26,8 @@ delete archivelog from sequence 1000;
 delete archivelog until sequence 1500;
 delete archivelog from sequence 1000 until sequence 1500;
 
+delete archivelog all completed before 'sysdate-4';
+
 Note : Also, you can use noprompt statement for do not yes-no question.
 delete noprompt archivelog until time 'SYSDATE-10';
 
@@ -40,6 +42,8 @@ LIST COPY OF ARCHIVELOG UNTIL TIME 'TRUNC(SYSDATE-9)';
 DELETE NOPROMPT COPY OF ARCHIVELOG UNTIL TIME 'TRUNC(SYSDATE-9)';
 
 CONFIGURE ARCHIVELOG DELETION POLICY TO APPLIED ON ALL STANDBY;
+CONFIGURE ARCHIVELOG DELETION POLICY TO APPLIED ON STANDBY;
+CONFIGURE ARCHIVELOG DELETION POLICY TO SHIPPED TO STANDBY;
 
 ### Delete Archivelog Script
 ############################

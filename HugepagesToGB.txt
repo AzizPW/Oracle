@@ -1,0 +1,2 @@
+Hugepages to GB:
+no of hugepages *2048 /(1024*1024)
