@@ -1,0 +1,298 @@
+[root@rhino ~]# groupadd attunity
+[root@rhino ~]# useradd -g attunity -G oper attunity
+[root@rhino ~]# passwd attunity
+Changing password for user attunity.
+New password: attunity.789
+BAD PASSWORD: The password contains the user name in some form
+Retype new password: attunity.789
+passwd: all authentication tokens updated successfully.
+[root@rhino ~]# su - attunity
+[attunity@rhino ~]$ id
+uid=1001(attunity) gid=1004(attunity) groups=1004(attunity),1003(oper) context=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023
+[attunity@rhino ~]$ pwd
+/home/attunity
+[attunity@rhino ~]$ su -
+Password:
+Last login: Sat Dec 12 17:56:30 WIB 2020 on pts/0
+[root@rhino ~]# ls -lh /home/attunity/Downloads/
+total 232M
+-rw-r--r--. 1 attunity attunity  87M Dec 12 17:49 areplicate-6.4.0-448.x86_64.tar.gz
+-rw-r--r--. 1 attunity attunity  38M Dec 12 17:49 AttunityEndpointServer-6.4.0-448.tar.gz
+-rw-r--r--. 1 attunity attunity 969K Dec 12 17:49 AttunityReplicate_6.4.0.288_r4z.zip
+-rw-r--r--. 1 attunity attunity 107M Dec 12 17:49 AttunityReplicate_6.4.0.448_X64.zip
+[root@rhino ~]# cd /home/attunity/Downloads/
+[root@rhino Downloads]# ls -lh
+total 232M
+-rw-r--r--. 1 attunity attunity  87M Dec 12 17:49 areplicate-6.4.0-448.x86_64.tar.gz
+-rw-r--r--. 1 attunity attunity  38M Dec 12 17:49 AttunityEndpointServer-6.4.0-448.tar.gz
+-rw-r--r--. 1 attunity attunity 969K Dec 12 17:49 AttunityReplicate_6.4.0.288_r4z.zip
+-rw-r--r--. 1 attunity attunity 107M Dec 12 17:49 AttunityReplicate_6.4.0.448_X64.zip
+[root@rhino Downloads]# tar -xvzf areplicate-6.4.0-448.x86_64.tar.gz
+areplicate-6.4.0-448.x86_64.rpm
+[root@rhino Downloads]# ls -lh
+total 319M
+-rw-r--r--. 1 root     root      88M Aug 18  2019 areplicate-6.4.0-448.x86_64.rpm
+-rw-r--r--. 1 attunity attunity  87M Dec 12 17:49 areplicate-6.4.0-448.x86_64.tar.gz
+-rw-r--r--. 1 attunity attunity  38M Dec 12 17:49 AttunityEndpointServer-6.4.0-448.tar.gz
+-rw-r--r--. 1 attunity attunity 969K Dec 12 17:49 AttunityReplicate_6.4.0.288_r4z.zip
+-rw-r--r--. 1 attunity attunity 107M Dec 12 17:49 AttunityReplicate_6.4.0.448_X64.zip
+[root@rhino Downloads]# yum install -y areplicate-6.4.0-448.x86_64.rpm
+Loaded plugins: fastestmirror, langpacks
+Repodata is over 2 weeks old. Install yum-cron? Or run: yum makecache fast
+Examining areplicate-6.4.0-448.x86_64.rpm: areplicate-6.4.0-448.x86_64
+Marking areplicate-6.4.0-448.x86_64.rpm to be installed
+Resolving Dependencies
+--> Running transaction check
+---> Package areplicate.x86_64 0:6.4.0-448 will be installed
+--> Finished Dependency Resolution
+http://mirror.vodien.com/centos/7.3.1611/os/x86_64/repodata/repomd.xml: [Errno 14] curl#6 - "Could not resolve host: mirror.vodien.com; Unknown error"
+Trying other mirror.
+http://mirror.poliwangi.ac.id/centos/7.3.1611/os/x86_64/repodata/repomd.xml: [Errno 14] curl#6 - "Could not resolve host: mirror.poliwangi.ac.id; Unknown error"
+Trying other mirror.
+http://centos.mirror.angkasa.id/centos/7.3.1611/os/x86_64/repodata/repomd.xml: [Errno 14] curl#6 - "Could not resolve host: centos.mirror.angkasa.id; Unknown error"
+Trying other mirror.
+http://kartolo.sby.datautama.net.id/Centos/7.3.1611/os/x86_64/repodata/repomd.xml: [Errno 14] curl#6 - "Could not resolve host: kartolo.sby.datautama.net.id; Unknown error"
+Trying other mirror.
+http://mirror.nes.co.id/centos/7.3.1611/os/x86_64/repodata/repomd.xml: [Errno 14] curl#6 - "Could not resolve host: mirror.nes.co.id; Unknown error"
+Trying other mirror.
+http://mirror.dionipe.net/Centos/7.3.1611/os/x86_64/repodata/repomd.xml: [Errno 14] curl#6 - "Could not resolve host: mirror.dionipe.net; Unknown error"
+Trying other mirror.
+http://mirror.smartmedia.net.id/centos/7.3.1611/os/x86_64/repodata/repomd.xml: [Errno 14] curl#6 - "Could not resolve host: mirror.smartmedia.net.id; Unknown error"
+Trying other mirror.
+http://kodeterbuka.beritagar.id/centos/7.3.1611/os/x86_64/repodata/repomd.xml: [Errno 14] curl#6 - "Could not resolve host: kodeterbuka.beritagar.id; Unknown error"
+Trying other mirror.
+http://mirror.axarva.id/centos/7.3.1611/os/x86_64/repodata/repomd.xml: [Errno 14] curl#6 - "Could not resolve host: mirror.axarva.id; Unknown error"
+Trying other mirror.
+http://repo.apiknet.co.id/centos/7.3.1611/os/x86_64/repodata/repomd.xml: [Errno 14] curl#6 - "Could not resolve host: repo.apiknet.co.id; Unknown error"
+Trying other mirror.
+http://singo.ub.ac.id/centos/7.3.1611/extras/x86_64/repodata/repomd.xml: [Errno 14] curl#6 - "Could not resolve host: singo.ub.ac.id; Unknown error"
+Trying other mirror.
+http://mirror.poliwangi.ac.id/centos/7.3.1611/extras/x86_64/repodata/repomd.xml: [Errno 14] curl#6 - "Could not resolve host: mirror.poliwangi.ac.id; Unknown error"
+Trying other mirror.
+http://centos.mirror.angkasa.id/centos/7.3.1611/extras/x86_64/repodata/repomd.xml: [Errno 14] curl#6 - "Could not resolve host: centos.mirror.angkasa.id; Unknown error"
+Trying other mirror.
+http://kartolo.sby.datautama.net.id/Centos/7.3.1611/extras/x86_64/repodata/repomd.xml: [Errno 14] curl#6 - "Could not resolve host: kartolo.sby.datautama.net.id; Unknown error"
+Trying other mirror.
+http://mirror.nes.co.id/centos/7.3.1611/extras/x86_64/repodata/repomd.xml: [Errno 14] curl#6 - "Could not resolve host: mirror.nes.co.id; Unknown error"
+Trying other mirror.
+http://mirror.dionipe.net/Centos/7.3.1611/extras/x86_64/repodata/repomd.xml: [Errno 14] curl#6 - "Could not resolve host: mirror.dionipe.net; Unknown error"
+Trying other mirror.
+http://mirror.smartmedia.net.id/centos/7.3.1611/extras/x86_64/repodata/repomd.xml: [Errno 14] curl#6 - "Could not resolve host: mirror.smartmedia.net.id; Unknown error"
+Trying other mirror.
+http://kodeterbuka.beritagar.id/centos/7.3.1611/extras/x86_64/repodata/repomd.xml: [Errno 14] curl#6 - "Could not resolve host: kodeterbuka.beritagar.id; Unknown error"
+Trying other mirror.
+http://mirror.axarva.id/centos/7.3.1611/extras/x86_64/repodata/repomd.xml: [Errno 14] curl#6 - "Could not resolve host: mirror.axarva.id; Unknown error"
+Trying other mirror.
+http://repo.apiknet.co.id/centos/7.3.1611/extras/x86_64/repodata/repomd.xml: [Errno 14] curl#6 - "Could not resolve host: repo.apiknet.co.id; Unknown error"
+Trying other mirror.
+http://mirror.vodien.com/centos/7.3.1611/updates/x86_64/repodata/repomd.xml: [Errno 14] curl#6 - "Could not resolve host: mirror.vodien.com; Unknown error"
+Trying other mirror.
+http://mirror.poliwangi.ac.id/centos/7.3.1611/updates/x86_64/repodata/repomd.xml: [Errno 14] curl#6 - "Could not resolve host: mirror.poliwangi.ac.id; Unknown error"
+Trying other mirror.
+http://centos.mirror.angkasa.id/centos/7.3.1611/updates/x86_64/repodata/repomd.xml: [Errno 14] curl#6 - "Could not resolve host: centos.mirror.angkasa.id; Unknown error"
+Trying other mirror.
+http://kartolo.sby.datautama.net.id/Centos/7.3.1611/updates/x86_64/repodata/repomd.xml: [Errno 14] curl#6 - "Could not resolve host: kartolo.sby.datautama.net.id; Unknown error"
+Trying other mirror.
+http://mirror.nes.co.id/centos/7.3.1611/updates/x86_64/repodata/repomd.xml: [Errno 14] curl#6 - "Could not resolve host: mirror.nes.co.id; Unknown error"
+Trying other mirror.
+http://mirror.dionipe.net/Centos/7.3.1611/updates/x86_64/repodata/repomd.xml: [Errno 14] curl#6 - "Could not resolve host: mirror.dionipe.net; Unknown error"
+Trying other mirror.
+http://mirror.smartmedia.net.id/centos/7.3.1611/updates/x86_64/repodata/repomd.xml: [Errno 14] curl#6 - "Could not resolve host: mirror.smartmedia.net.id; Unknown error"
+Trying other mirror.
+http://kodeterbuka.beritagar.id/centos/7.3.1611/updates/x86_64/repodata/repomd.xml: [Errno 14] curl#6 - "Could not resolve host: kodeterbuka.beritagar.id; Unknown error"
+Trying other mirror.
+http://mirror.axarva.id/centos/7.3.1611/updates/x86_64/repodata/repomd.xml: [Errno 14] curl#6 - "Could not resolve host: mirror.axarva.id; Unknown error"
+Trying other mirror.
+http://repo.apiknet.co.id/centos/7.3.1611/updates/x86_64/repodata/repomd.xml: [Errno 14] curl#6 - "Could not resolve host: repo.apiknet.co.id; Unknown error"
+Trying other mirror.
+
+Dependencies Resolved
+
+=======================================================================================================================================================================================================================================
+ Package                                             Arch                                            Version                                               Repository                                                             Size
+=======================================================================================================================================================================================================================================
+Installing:
+ areplicate                                          x86_64                                          6.4.0-448                                             /areplicate-6.4.0-448.x86_64                                          210 M
+
+Transaction Summary
+=======================================================================================================================================================================================================================================
+Install  1 Package
+
+Total size: 210 M
+Installed size: 210 M
+Downloading packages:
+Running transaction check
+Running transaction test
+Transaction test succeeded
+Running transaction
+Warning: RPMDB altered outside of yum.
+** Found 3 pre-existing rpmdb problem(s), 'yum check' output follows:
+ipa-client-4.4.0-12.el7.centos.x86_64 has installed conflicts freeipa-client: ipa-client-4.4.0-12.el7.centos.x86_64
+ipa-client-common-4.4.0-12.el7.centos.noarch has installed conflicts freeipa-client-common: ipa-client-common-4.4.0-12.el7.centos.noarch
+ipa-common-4.4.0-12.el7.centos.noarch has installed conflicts freeipa-common: ipa-common-4.4.0-12.el7.centos.noarch
+  Installing : areplicate-6.4.0-448.x86_64                                                                                                                                                                                         1/1
+  Verifying  : areplicate-6.4.0-448.x86_64                                                                                                                                                                                         1/1
+
+Installed:
+  areplicate.x86_64 0:6.4.0-448
+
+Complete!
+[root@rhino Downloads]# rpm -qa|grep -i arep
+areplicate-6.4.0-448.x86_64
+[root@rhino Downloads]# ls -lh /opt/attunity/replicate/bin/
+total 4.0M
+lrwxrwxrwx. 1 attunity attunity   22 Dec 12 18:05 areplicate -> /etc/init.d/areplicate
+-rwxrwxr-x. 1 attunity attunity 2.1K Aug 18  2019 arep_login.sh
+-rwxrwxr-x. 1 attunity attunity  12K Aug 18  2019 arep.sh
+-rwxrwxr-x. 1 attunity attunity 1.5K Aug 18  2019 fix_permissions
+-rwxrwxr-x. 1 attunity attunity 3.8M Aug 18  2019 irpcd
+-rwxrwxr-x. 1 attunity attunity  52K Aug 18  2019 makeconv
+-rwxrwxr-x. 1 attunity attunity 7.1K Aug 18  2019 nav_util
+-rwxrwxr-x. 1 attunity attunity  12K Aug 18  2019 repctl
+-rwxrwxr-x. 1 attunity attunity  539 Aug 18  2019 repctl.cfg
+-rwxrwxr-x. 1 attunity attunity  290 Aug 18  2019 repctl.sh
+-rw-r--r--. 1 attunity attunity   36 Dec 12 18:05 site_arep_login.sh
+-rwxrwxr-x. 1 attunity attunity  56K Aug 18  2019 uconv
+[root@rhino Downloads]# ls -lh /opt/attunity/replicate/lib
+total 107M
+-rwxrwxr-x. 1 attunity attunity 291K Aug 18  2019 acodbc3u.so
+-rwxrwxr-x. 1 attunity attunity 8.3M Aug 18  2019 at_base.so
+-rwxrwxr-x. 1 attunity attunity 1.3M Aug 18  2019 atctl_utils.so
+-rwxrwxr-x. 1 attunity attunity  18M Aug 18  2019 aws_sdk_native_wrapper.so
+-rwxrwxr-x. 1 attunity attunity 1.4M Aug 18  2019 common.so
+-rwxrwxr-x. 1 attunity attunity 182K Aug 18  2019 libarepais.so
+-rwxrwxr-x. 1 attunity attunity  11M Aug 18  2019 libarepbase.so
+-rwxrwxr-x. 1 attunity attunity 193K Aug 18  2019 libarepcloud.so
+-rwxrwxr-x. 1 attunity attunity 486K Aug 18  2019 libarepcustom.so
+-rwxrwxr-x. 1 attunity attunity 149K Aug 18  2019 libarepdb2i.so
+-rwxrwxr-x. 1 attunity attunity 284K Aug 18  2019 libarepdb2luw.so
+-rwxrwxr-x. 1 attunity attunity 299K Aug 18  2019 libarepdb2z.so
+-rwxrwxr-x. 1 attunity attunity 101K Aug 18  2019 libarepfilechannel.so
+-rwxrwxr-x. 1 attunity attunity 881K Aug 18  2019 libarepfile.so
+-rwxrwxr-x. 1 attunity attunity  97K Aug 18  2019 libarepgreenplum.so
+-rwxrwxr-x. 1 attunity attunity 1.1M Aug 18  2019 libarephadoop.so
+-rwxrwxr-x. 1 attunity attunity 301K Aug 18  2019 libarepims.so
+-rwxrwxr-x. 1 attunity attunity  20K Aug 18  2019 libareplogstream.so
+-rwxrwxr-x. 1 attunity attunity 224K Aug 18  2019 libarepmysql.so
+-rwxrwxr-x. 1 attunity attunity  12K Aug 18  2019 libarepnulltarget.so
+-rwxrwxr-x. 1 attunity attunity 327K Aug 18  2019 libarepodbc.so
+-rwxrwxr-x. 1 attunity attunity 1.1M Aug 18  2019 libareporacle.so
+-rwxrwxr-x. 1 attunity attunity 194K Aug 18  2019 libareppostgres.so
+-rwxrwxr-x. 1 attunity attunity 9.8K Aug 18  2019 libareppubutil.so
+-rwxrwxr-x. 1 attunity attunity 1.7M Aug 18  2019 libarepqueue.so
+-rwxrwxr-x. 1 attunity attunity 259K Aug 18  2019 libarepsapdb.so
+-rwxrwxr-x. 1 attunity attunity 214K Aug 18  2019 libarepsaphana.so
+-rwxrwxr-x. 1 attunity attunity 180K Aug 18  2019 libarepsap.so
+-rwxrwxr-x. 1 attunity attunity 740K Aug 18  2019 libarepsqlserver.so
+-rwxrwxr-x. 1 attunity attunity 129K Aug 18  2019 libarepsybase.so
+-rwxrwxr-x. 1 attunity attunity 513K Aug 18  2019 libarepteradata.so
+-rwxrwxr-x. 1 attunity attunity  81K Aug 18  2019 libarepvectorwise.so
+-rwxrwxr-x. 1 attunity attunity  17K Aug 18  2019 libcom_err.so.3
+-rwxrwxr-x. 1 attunity attunity 2.4M Aug 18  2019 libcrypto.so.1.1
+-rwxrwxr-x. 1 attunity attunity 434K Aug 18  2019 libgssapi_krb5.so.2
+-rwxrwxr-x. 1 attunity attunity  26M Aug 18  2019 libicudata.so.58
+-rwxrwxr-x. 1 attunity attunity 3.2M Aug 18  2019 libicui18n.so.58
+-rwxrwxr-x. 1 attunity attunity 236K Aug 18  2019 libicutu.so.58
+-rwxrwxr-x. 1 attunity attunity 2.1M Aug 18  2019 libicuuc.so.58
+-rwxrwxr-x. 1 attunity attunity 321K Aug 18  2019 libk5crypto.so.3
+-rwxrwxr-x. 1 attunity attunity 1.3M Aug 18  2019 libkrb5.so.3
+-rwxrwxr-x. 1 attunity attunity  71K Aug 18  2019 libkrb5support.so.0
+-rwxrwxr-x. 1 attunity attunity 3.1M Aug 18  2019 libmariadb.so.2
+-rwxrwxr-x. 1 attunity attunity 1.9M Aug 18  2019 libmsodbcsql_5-11.0.so.2270.0
+-rwxrwxr-x. 1 attunity attunity 1.7M Aug 18  2019 libmsodbcsql_6-11.0.so.2270.0
+-rwxrwxr-x. 1 attunity attunity 3.3M Aug 18  2019 libnavshr.so
+-rwxrwxr-x. 1 attunity attunity 4.5M Aug 18  2019 libnvbaseshr.so
+-rwxrwxr-x. 1 attunity attunity 480K Aug 18  2019 libodbcinst.so
+-rwxrwxr-x. 1 attunity attunity 1.8M Aug 18  2019 libodbc.so.2
+-rwxrwxr-x. 1 attunity attunity 504K Aug 18  2019 libssl.so.1.1
+-rwxrwxr-x. 1 attunity attunity 184K Aug 18  2019 msodbcsqlr11.rll
+-rwxrwxr-x. 1 attunity attunity 201K Aug 18  2019 nvdb_disam.so
+-rwxrwxr-x. 1 attunity attunity 5.3M Aug 18  2019 repui_plugin.so
+[root@rhino Downloads]# su - attunity
+Last login: Sat Dec 12 18:05:56 WIB 2020
+[attunity@rhino ~]$ cat .bash_profile
+# .bash_profile
+
+# Get the aliases and functions
+if [ -f ~/.bashrc ]; then
+        . ~/.bashrc
+fi
+
+# User specific environment and startup programs
+
+PATH=$PATH:$HOME/.local/bin:$HOME/bin
+
+export PATH
+[attunity@rhino ~]$ vi .bash_profile
+[attunity@rhino ~]$ cat .bash_profile
+# .bash_profile
+
+# Get the aliases and functions
+if [ -f ~/.bashrc ]; then
+        . ~/.bashrc
+fi
+
+# User specific environment and startup programs
+export HISTTIMEFORMAT="%Y-%m-%d %T ~ "
+export TMP=/tmp
+export TMPDIR=$TMP
+export ORACLE_BASE=/z02/app/orekel
+export ORACLE_HOME=$ORACLE_BASE/product/12.2.0.1/db_1
+export PATH=$ORACLE_HOME/bin:/opt/attunity/replicate/bin:/usr/sbin:/usr/local/bin:$PATH
+export LD_LIBRARY_PATH=$ORACLE_HOME/lib:/opt/attunity/replicate/lib:/lib:/usr/lib
+PATH=$PATH:$HOME/.local/bin:$HOME/bin
+
+export PATH
+[attunity@rhino ~]$ ls -ld /opt/attunity/replicate/bin
+drwxrwxr-x. 2 attunity attunity 216 Dec 12 18:05 /opt/attunity/replicate/bin
+[attunity@rhino ~]$ ls -ld /opt/attunity/replicate/lib
+drwxrwxr-x. 2 attunity attunity 4096 Dec 12 18:05 /opt/attunity/replicate/lib
+[attunity@rhino ~]$ exit
+logout
+[root@rhino Downloads]# su - attunity
+Last login: Sat Dec 12 18:35:13 WIB 2020 on pts/0
+[attunity@rhino ~]$ ps -ef|grep /opt/att
+attunity   7276      1  0 18:05 ?        00:00:00 /opt/attunity/replicate/bin/repctl -d /opt/attunity/replicate/data service start port=3550 rest_port=3552
+attunity   7277   7276  0 18:05 ?        00:00:02 /opt/attunity/replicate/bin/repctl -d /opt/attunity/replicate/data service start port=3550 rest_port=3552
+attunity   8113   8042  0 18:43 pts/0    00:00:00 grep --color=auto /opt/att
+[attunity@rhino ~]$ areplicate status
+running: /opt/attunity/replicate/bin/repctl -d /opt/attunity/replicate/data service start port=3550 rest_port=3552
+[attunity@rhino ~]$ su -
+Password:
+Last login: Sat Dec 12 17:59:53 WIB 2020 on pts/0
+[root@rhino ~]# firewall-cmd --zone=public --add-port=3552/tcp --permanent
+success
+[root@rhino ~]# firewall-cmd --zone=public --add-port=3550/tcp --permanent
+success
+[root@rhino ~]# firewall-cmd --reload
+success
+[root@rhino ~]# iptables-save | grep 3550
+-A IN_public_allow -p tcp -m tcp --dport 3550 -m conntrack --ctstate NEW -j ACCEPT
+[root@rhino ~]# iptables-save | grep 3552
+-A IN_public_allow -p tcp -m tcp --dport 3552 -m conntrack --ctstate NEW -j ACCEPT
+[root@rhino ~]# exit
+logout
+[attunity@rhino ~]$ repctl SETSERVERPASSWORD welcome1
+[SETSERVERPASSWORD command] Succeeded
+[attunity@rhino ~]$ areplicate stop
+[attunity@rhino ~]$ ps -ef|grep /opt/attunity
+attunity   9323   8042  0 19:34 pts/0    00:00:00 grep --color=auto /opt/attunity
+[attunity@rhino ~]$ areplicate start
+[attunity@rhino ~]$ areplicate status
+running: /opt/attunity/replicate/bin/repctl -d /opt/attunity/replicate/data service start port=3550 rest_port=3552
+[attunity@rhino ~]$ ps -ef|grep /opt/attunity
+attunity   9362      1  0 19:34 pts/0    00:00:00 /opt/attunity/replicate/bin/repctl -d /opt/attunity/replicate/data service start port=3550 rest_port=3552
+attunity   9363   9362  5 19:34 ?        00:00:00 /opt/attunity/replicate/bin/repctl -d /opt/attunity/replicate/data service start port=3550 rest_port=3552
+attunity   9401   8042  0 19:34 pts/0    00:00:00 grep --color=auto /opt/attunity
+[attunity@rhino ~]$
+
+Open browser:
+https://rhino.animal.net:3552/attunityreplicate
+admin/welcome1
+
+[attunity@rhino ~]$ areplicate status
+running: /opt/attunity/replicate/bin/repctl -d /opt/attunity/replicate/data service start port=3550 rest_port=3552
+[attunity@rhino ~]$ areplicate stop
+[attunity@rhino ~]$ areplicate status
+not running: /opt/attunity/replicate/bin/repctl -d /opt/attunity/replicate/data service start port=3550 rest_port=3552
+[attunity@rhino ~]$
