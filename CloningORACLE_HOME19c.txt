@@ -1,0 +1,336 @@
+############################################################
+### Clone $ORACLE_HOME Database 19c on OEL 7.9 by AzizPW ###
+### Technical Consulting Manager ###########################
+### PT Mitra Integrasi Informatika #########################
+### Tue, 02 Mar 2021 #######################################
+############################################################
+
+Reference:
+https://docs.oracle.com/en/database/oracle/oracle-database/19/ssdbi/cloning-an-oracle-home.html#GUID-494E59C3-C381-4A35-8ABE-F6E5DBF29032
+
+bakso.food.net is OEL7.9 contains Oracle DB 19c patch 19.10.0.0.210119
+rhino.animal.net is CentOS 7.3.1611 contains Oracle DB 12.2.0.1.0
+
+Oracle DB software 19c will be cloned onto rhino.animal.net
+
+### Check Oracle DB Software is running or not
+##############################################
+[oracle@bakso ~]$ ps -ef|grep tnsl; ps -ef|grep lgwr;
+oracle   12932     1  0 20:22 ?        00:00:00 /z01/app/oracle/product/19.0.0/dbhome_1/bin/tnslsnr LISTENER -inherit
+oracle   13778 10996  0 20:27 pts/0    00:00:00 grep --color=auto tnsl
+oracle   13095     1  0 20:22 ?        00:00:00 ora_lgwr_cpempek
+oracle   13780 10996  0 20:27 pts/0    00:00:00 grep --color=auto lgwr
+[oracle@bakso ~]$
+
+### Shutdown Oracle DB Software
+###############################
+[oracle@bakso ~]$ dbshut $ORACLE_HOME
+Processing Database instance "cpempek": log file /z01/app/oracle/product/19.0.0/dbhome_1/rdbms/log/shutdown.log
+[oracle@bakso ~]$ ps -ef|grep tnsl; ps -ef|grep lgwr;
+oracle   13971 10996  0 20:28 pts/0    00:00:00 grep --color=auto tnsl
+oracle   13973 10996  0 20:28 pts/0    00:00:00 grep --color=auto lgwr
+[oracle@bakso ~]$ cd $ORACLE_HOME/..
+[oracle@bakso 19.0.0]$ pwd
+/z01/app/oracle/product/19.0.0
+[oracle@bakso 19.0.0]$ ls -lh
+total 4.0K
+drwxrwxr-x. 73 oracle oinstall 4.0K Feb  5 09:54 dbhome_1
+[oracle@bakso 19.0.0]$ du -sh dbhome_1/
+9.0G    dbhome_1/
+[oracle@bakso 19.0.0]$
+
+### Check DB software patch version
+###################################
+[oracle@bakso 19.0.0]$ $ORACLE_HOME/OPatch/opatch version
+OPatch Version: 12.2.0.1.23
+
+OPatch succeeded.
+[oracle@bakso 19.0.0]$ $ORACLE_HOME/OPatch/opatch lspatches
+32218454;Database Release Update : 19.10.0.0.210119 (32218454)
+29585399;OCW RELEASE UPDATE 19.3.0.0.0 (29585399)
+
+OPatch succeeded.
+[oracle@bakso 19.0.0]$
+
+### Backup Oracle DB software without ORACLE_BASE
+#################################################
+[oracle@bakso 19.0.0]$ zip -r9 /data01/dbhome19.10_20210302.zip dbhome_1/
+  adding: dbhome_1/ (stored 0%)
+  adding: dbhome_1/drdaas/ (stored 0%)
+  .
+  .
+  .
+  adding: dbhome_1/jdk/THIRDPARTYLICENSEREADME.txt (deflated 26%)
+  adding: dbhome_1/jdk/THIRDPARTYLICENSEREADME-JAVAFX.txt (deflated 26%)
+  adding: dbhome_1/jdk/LICENSE (stored 0%)
+[oracle@bakso 19.0.0]$  ls -lh /data01/d*zip
+-rw-r--r--. 1 oracle oinstall 4.0G Mar  2 20:55 /data01/dbhome19.10_20210302.zip
+[oracle@bakso 19.0.0]$
+
+### Start DB if necessary
+#########################
+[oracle@bakso 19.0.0]$ dbstart $ORACLE_HOME
+Processing Database instance "cpempek": log file /z01/app/oracle/product/19.0.0/dbhome_1/rdbms/log/startup.log
+[oracle@bakso 19.0.0]$ ps -ef|grep tnsl; ps -ef|grep lgwr;
+oracle   16004     1  0 20:56 ?        00:00:00 /z01/app/oracle/product/19.0.0/dbhome_1/bin/tnslsnr LISTENER -inherit
+oracle   17042 10996  0 21:04 pts/0    00:00:00 grep --color=auto tnsl
+oracle   16198     1  0 20:57 ?        00:00:00 ora_lgwr_cpempek
+oracle   17044 10996  0 21:04 pts/0    00:00:00 grep --color=auto lgwr
+[oracle@bakso 19.0.0]$ rlwrap sqlplus system/oracle789@bakso.food.net:1521/padaan.food.net
+
+SQL*Plus: Release 19.0.0.0.0 - Production on Tue Mar 2 21:04:58 2021
+Version 19.10.0.0.0
+
+Copyright (c) 1982, 2020, Oracle.  All rights reserved.
+
+Last Successful login time: Tue Feb 23 2021 13:55:31 +07:00
+
+Connected to:
+Oracle Database 19c Enterprise Edition Release 19.0.0.0.0 - Production
+Version 19.10.0.0.0
+
+SQL> SELECT CON_ID,NAME,OPEN_MODE FROM V$CONTAINERS ORDER BY 1;
+
+    CON_ID NAME                                                                                                                             OPEN_MODE
+---------- -------------------------------------------------------------------------------------------------------------------------------- ----------
+         4 PADAAN                                                                                                                           READ WRITE
+
+Elapsed: 00:00:00.20
+SQL> exit
+Disconnected from Oracle Database 19c Enterprise Edition Release 19.0.0.0.0 - Production
+Version 19.10.0.0.0
+[oracle@bakso 19.0.0]$
+
+### Copy dbhome19.10_20210302.zip
+#################################
+by scp, rsync, or filezilla
+
+### Checking environment on target server
+#########################################
+[orekel@rhino ~]$ hostnamectl
+   Static hostname: rhino.animal.net
+         Icon name: computer-vm
+           Chassis: vm
+        Machine ID: 1d4f84c0fd974e538aaa6595adeff15e
+           Boot ID: e65e7a0f2d78485a86c52210e8fc8b75
+    Virtualization: vmware
+  Operating System: CentOS Linux 7 (Core)
+       CPE OS Name: cpe:/o:centos:centos:7
+            Kernel: Linux 3.10.0-514.el7.x86_64
+      Architecture: x86-64
+[orekel@rhino ~]$ env|grep ORA
+ORACLE_UNQNAME=BADAK
+ORACLE_SID=BADAK
+ORACLE_BASE=/z02/app/orekel
+ORACLE_HOSTNAME=rhino.animal.net
+ORACLE_HOME=/z02/app/orekel/product/12.2.0.1/db_1
+[orekel@rhino ~]$ $ORACLE_HOME/OPatch/opatch lspatches
+There are no Interim patches installed in this Oracle Home "/z02/app/orekel/product/12.2.0.1/db_1".
+
+OPatch succeeded.
+[orekel@rhino ~]$ $ORACLE_HOME/OPatch/opatch lsinv
+Oracle Interim Patch Installer version 12.2.0.1.6
+Copyright (c) 2021, Oracle Corporation.  All rights reserved.
+
+
+Oracle Home       : /z02/app/orekel/product/12.2.0.1/db_1
+Central Inventory : /z02/app/oraInventory
+   from           : /z02/app/orekel/product/12.2.0.1/db_1/oraInst.loc
+OPatch version    : 12.2.0.1.6
+OUI version       : 12.2.0.1.4
+Log file location : /z02/app/orekel/product/12.2.0.1/db_1/cfgtoollogs/opatch/opatch2021-03-03_04-23-28AM_1.log
+
+Lsinventory Output file location : /z02/app/orekel/product/12.2.0.1/db_1/cfgtoollogs/opatch/lsinv/lsinventory2021-03-03_04-23-28AM.txt
+
+--------------------------------------------------------------------------------
+Local Machine Information::
+Hostname: rhino.animal.net
+ARU platform id: 226
+ARU platform description:: Linux x86-64
+
+Installed Top-level Products (1):
+
+Oracle Database 12c                                                  12.2.0.1.0
+There are 1 products installed in this Oracle Home.
+
+
+There are no Interim patches installed in this Oracle Home.
+
+
+--------------------------------------------------------------------------------
+
+OPatch succeeded.
+[orekel@rhino ~]$ cat /etc/redhat-release
+CentOS Linux release 7.3.1611 (Core)
+[orekel@rhino ~]$ df -h
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/sda1        27G  5.3G   22G  20% /
+devtmpfs        1.4G     0  1.4G   0% /dev
+tmpfs           2.0G  1.1G  1.0G  51% /dev/shm
+tmpfs           1.4G  9.1M  1.4G   1% /run
+tmpfs           1.4G     0  1.4G   0% /sys/fs/cgroup
+/dev/sdc1        15G  8.3G  5.7G  60% /z02
+/dev/sdb1       7.8G  2.7G  4.7G  37% /z01
+tmpfs           284M     0  284M   0% /run/user/1001
+tmpfs           284M     0  284M   0% /run/user/0
+tmpfs           284M  8.0K  284M   1% /run/user/1000
+[orekel@rhino ~]$ id
+uid=1000(orekel) gid=1002(oinstall) groups=1002(oinstall),1001(dba),1003(oper) context=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023
+[orekel@rhino ~]$ ls -lh Downloads/*zip
+-rw-r--r--. 1 orekel oinstall 4.0G Mar  3 04:29 Downloads/dbhome19.10_20210302.zip
+[orekel@rhino ~]$
+
+### Extract dbhome19.10_20210302.zip
+####################################
+[orekel@rhino ~]$ mkdir -p /z03/app/oracle/product/19.0.0
+[orekel@rhino ~]$ cd /z03/app/oracle/product/19.0.0
+[orekel@rhino 19.0.0]$ unzip ~/Downloads/dbhome19.10_20210302.zip
+  .
+  .
+  .
+  inflating: dbhome_1/jdk/COPYRIGHT
+  inflating: dbhome_1/jdk/THIRDPARTYLICENSEREADME.txt
+  inflating: dbhome_1/jdk/THIRDPARTYLICENSEREADME-JAVAFX.txt
+ extracting: dbhome_1/jdk/LICENSE
+[orekel@rhino 19.0.0]$ ls -lh
+total 4.0K
+drwxrwxr-x. 73 orekel oinstall 4.0K Feb  5 09:54 dbhome_1
+[orekel@rhino 19.0.0]$
+
+### Delete unnecessary files from the unzipped Oracle home directory
+####################################################################
+[orekel@rhino 19.0.0]$ cd dbhome_1/network/admin/; pwd; ls -lh
+/z03/app/oracle/product/19.0.0/dbhome_1/network/admin
+total 12K
+-rw-r-----. 1 orekel oinstall  342 Feb  4 20:29 listener.ora
+drwxr-xr-x. 2 orekel oinstall   64 Apr 17  2019 samples
+-rw-r--r--. 1 orekel oinstall 1.5K Feb 14  2018 shrept.lst
+-rw-r-----. 1 orekel oinstall  715 Feb 23 11:35 tnsnames.ora
+[orekel@rhino admin]$ rm -fr listener.ora tnsnames.ora
+[orekel@rhino admin]$ cd ../../
+[orekel@rhino dbhome_1]$ cd dbs
+[orekel@rhino dbs]$ pwd
+/z03/app/oracle/product/19.0.0/dbhome_1/dbs
+[orekel@rhino dbs]$ ls -lh
+total 18M
+-rw-rw----. 1 orekel oinstall 1.6K Mar  2 20:27 hc_cpempek.dat
+-rw-rw----. 1 orekel oinstall 1.6K Feb 23 13:43 hc_lemper.dat
+-rw-r--r--. 1 orekel oinstall 3.1K May 14  2015 init.ora
+-rw-r-----. 1 orekel oinstall   24 Feb  4 20:38 lkCPEMPEK
+-rw-r-----. 1 orekel oinstall   24 Feb 23 11:07 lkLEMPER
+-rw-r-----. 1 orekel oinstall 2.0K Feb  4 20:41 orapwcpempek
+-rw-r-----. 1 orekel oinstall 2.0K Feb 23 11:10 orapwlemper
+-rw-r-----. 1 orekel oinstall  18M Feb 23 12:49 snapcf_cpempek.f
+-rw-r-----. 1 orekel oinstall 3.5K Mar  2 20:22 spfilecpempek.ora
+[orekel@rhino dbs]$ rm -fr hc* lk* orapw* snapcf_cpempek.f spfilecpempek.ora; ls -lh;
+total 4.0K
+-rw-r--r--. 1 orekel oinstall 3.1K May 14  2015 init.ora
+[orekel@rhino dbs]$
+
+### Configure environment
+#########################
+[orekel@rhino dbs]$ export ORACLE_HOME=/z03/app/oracle/product/19.0.0/dbhome_1
+[orekel@rhino dbs]$ export ORACLE_BASE=/z03/app/oracle
+[orekel@rhino dbs]$ env|grep ORA
+ORACLE_UNQNAME=BADAK
+ORACLE_SID=BADAK
+ORACLE_BASE=/z03/app/oracle
+ORACLE_HOSTNAME=rhino.animal.net
+ORACLE_HOME=/z03/app/oracle/product/19.0.0/dbhome_1
+[orekel@rhino dbs]$
+
+### Postclone
+#############
+[orekel@rhino dbs]$ $ORACLE_HOME/perl/bin/perl $ORACLE_HOME/clone/bin/clone.pl ORACLE_BASE="/z03/app/oracle" ORACLE_HOME="/z03/app/oracle/product/19.0.0/dbhome_1" OSDBA_GROUP=dba OSOPER_GROUP=oper OSBACKUPDBA_GROUP=dba OSDGDBA_GROUP=dba OSKMDBA_GROUP=dba OSRACDBA_GROUP=dba -defaultHomeName
+
+
+[INFO] [INS-32183] Use of clone.pl is deprecated in this release. Clone operation is equivalent to performing a Software Only installation from the image.
+You must use /z03/app/oracle/product/19.0.0/dbhome_1/runInstaller script available to perform the Software Only install. For more details on image based installation, refer to help documentation.
+
+Starting Oracle Universal Installer...
+
+You can find the log of this install session at:
+ /z02/app/oraInventory/logs/cloneActions2021-03-03_05-00-09AM.log
+..................................................   5% Done.
+..................................................   10% Done.
+..................................................   15% Done.
+..................................................   20% Done.
+..................................................   25% Done.
+..................................................   30% Done.
+..................................................   35% Done.
+..................................................   40% Done.
+..................................................   45% Done.
+..................................................   50% Done.
+..................................................   55% Done.
+..................................................   60% Done.
+..................................................   65% Done.
+..................................................   70% Done.
+..................................................   75% Done.
+..................................................   80% Done.
+..................................................   85% Done.
+..........
+Copy files in progress.
+
+Copy files successful.
+
+Link binaries in progress.
+..........
+Link binaries successful.
+
+Setup files in progress.
+..........
+Setup files successful.
+
+Setup Inventory in progress.
+
+Setup Inventory successful.
+..........
+Finish Setup successful.
+The cloning of OraHome1 was successful.
+Please check '/z02/app/oraInventory/logs/cloneActions2021-03-03_05-00-09AM.log' for more details.
+
+Setup Oracle Base in progress.
+
+Setup Oracle Base successful.
+..................................................   95% Done.
+
+As a root user, execute the following script(s):
+        1. /z03/app/oracle/product/19.0.0/dbhome_1/root.sh
+
+
+
+..................................................   100% Done.
+[orekel@rhino dbs]$
+
+### Run root script
+###################
+[root@rhino ~]# cd /z03/app/oracle/product/19.0.0/dbhome_1/
+[root@rhino dbhome_1]# ./root.sh
+Check /z03/app/oracle/product/19.0.0/dbhome_1/install/root_rhino.animal.net_2021-03-03_05-05-32-438457415.log for the output of root script
+[root@rhino dbhome_1]#
+
+### Check DB software patch version
+###################################
+[orekel@rhino dbs]$ $ORACLE_HOME/OPatch/opatch version
+OPatch Version: 12.2.0.1.23
+
+OPatch succeeded.
+[orekel@rhino dbs]$ $ORACLE_HOME/OPatch/opatch lspatches
+32218454;Database Release Update : 19.10.0.0.210119 (32218454)
+29585399;OCW RELEASE UPDATE 19.3.0.0.0 (29585399)
+
+OPatch succeeded.
+[orekel@rhino dbs]$ rlwrap $ORACLE_HOME/bin/sqlplus /nolog
+
+SQL*Plus: Release 19.0.0.0.0 - Production on Wed Mar 3 05:07:09 2021
+Version 19.10.0.0.0
+
+Copyright (c) 1982, 2020, Oracle.  All rights reserved.
+
+SQL> exit
+[orekel@rhino dbs]$ rm -fr ~/Downloads/dbhome19.10_20210302.zip
+[orekel@rhino dbs]$
+
+### Continue to create listener
+###############################
+[orekel@rhino dbs]$ $ORACLE_HOME/bin/netca

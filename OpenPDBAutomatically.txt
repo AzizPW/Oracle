@@ -1,0 +1,157 @@
+##############################################################
+### Oracle 19c Open PDB Automatically on OEL 7.9 by AzizPW ###
+### Technical Consulting Manager #############################
+### PT Mitra Integrasi Informatika ###########################
+### Tue, 02 Mar 2021 #########################################
+##############################################################
+
+Reference:
+https://oracle-base.com/articles/12c/multitenant-startup-and-shutdown-cdb-and-pdb-12cr1
+
+### Start Oracle DB & Listener
+##############################
+[oracle@bakso ~]$ dbstart $ORACLE_HOME
+Processing Database instance "cpempek": log file /z01/app/oracle/product/19.0.0/dbhome_1/rdbms/log/startup.log
+[oracle@bakso ~]$
+
+### Open PDBs
+#############
+[oracle@bakso ~]$ rlwrap sqlplus '/ as sysdba'
+
+SQL*Plus: Release 19.0.0.0.0 - Production on Tue Mar 2 20:09:36 2021
+Version 19.10.0.0.0
+
+Copyright (c) 1982, 2020, Oracle.  All rights reserved.
+
+
+Connected to:
+Oracle Database 19c Enterprise Edition Release 19.0.0.0.0 - Production
+Version 19.10.0.0.0
+
+SQL> select name,open_mode from v$pdbs;
+
+NAME                                                                                                                             OPEN_MODE
+-------------------------------------------------------------------------------------------------------------------------------- ----------
+PDB$SEED                                                                                                                         READ ONLY
+PLENJER                                                                                                                          MOUNTED
+PADAAN                                                                                                                           MOUNTED
+
+Elapsed: 00:00:00.00
+SQL> alter pluggable database all open;
+
+Pluggable database altered.
+
+Elapsed: 00:00:30.06
+SQL> select name,open_mode from v$pdbs;
+
+NAME                                                                                                                             OPEN_MODE
+-------------------------------------------------------------------------------------------------------------------------------- ----------
+PDB$SEED                                                                                                                         READ ONLY
+PLENJER                                                                                                                          READ WRITE
+PADAAN                                                                                                                           READ WRITE
+
+Elapsed: 00:00:00.00
+SQL>
+
+### Save State
+##############
+SQL> select con_name, state from dba_pdb_saved_states;
+
+no rows selected
+
+Elapsed: 00:00:00.16
+SQL> alter pluggable database all save state;
+
+Pluggable database altered.
+
+Elapsed: 00:00:00.39
+SQL> select con_name, state from dba_pdb_saved_states;
+
+CON_NAME                                                                                                                         STATE
+-------------------------------------------------------------------------------------------------------------------------------- --------------
+PLENJER                                                                                                                          OPEN
+PADAAN                                                                                                                           OPEN
+
+Elapsed: 00:00:00.09
+SQL> exit
+Disconnected from Oracle Database 19c Enterprise Edition Release 19.0.0.0.0 - Production
+Version 19.10.0.0.0
+[oracle@bakso ~]$
+
+### Restart Oracle DB
+#####################
+[oracle@bakso ~]$ dbshut $ORACLE_HOME
+Processing Database instance "cpempek": log file /z01/app/oracle/product/19.0.0/dbhome_1/rdbms/log/shutdown.log
+[oracle@bakso ~]$ ps -ef|grep tnsl; ps -ef|grep lgwr;
+oracle   12916 10996  0 20:22 pts/0    00:00:00 grep --color=auto lgwr
+[oracle@bakso ~]$ dbstart $ORACLE_HOME
+Processing Database instance "cpempek": log file /z01/app/oracle/product/19.0.0/dbhome_1/rdbms/log/startup.log
+[oracle@bakso ~]$ ps -ef|grep tnsl; ps -ef|grep lgwr;
+oracle   12932     1  0 20:22 ?        00:00:00 /z01/app/oracle/product/19.0.0/dbhome_1/bin/tnslsnr LISTENER -inherit
+oracle   13530 10996  0 20:23 pts/0    00:00:00 grep --color=auto tnsl
+oracle   13095     1  0 20:22 ?        00:00:00 ora_lgwr_cpempek
+oracle   13532 10996  0 20:23 pts/0    00:00:00 grep --color=auto lgwr
+[oracle@bakso ~]$ lsnrctl status LISTENER
+
+LSNRCTL for Linux: Version 19.0.0.0.0 - Production on 02-MAR-2021 20:23:28
+
+Copyright (c) 1991, 2020, Oracle.  All rights reserved.
+
+Connecting to (DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=bakso.food.net)(PORT=1521)))
+STATUS of the LISTENER
+------------------------
+Alias                     LISTENER
+Version                   TNSLSNR for Linux: Version 19.0.0.0.0 - Production
+Start Date                02-MAR-2021 20:22:07
+Uptime                    0 days 0 hr. 1 min. 20 sec
+Trace Level               off
+Security                  ON: Local OS Authentication
+SNMP                      OFF
+Listener Parameter File   /z01/app/oracle/product/19.0.0/dbhome_1/network/admin/listener.ora
+Listener Log File         /z01/app/oracle/diag/tnslsnr/bakso/listener/alert/log.xml
+Listening Endpoints Summary...
+  (DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=bakso.food.net)(PORT=1521)))
+  (DESCRIPTION=(ADDRESS=(PROTOCOL=ipc)(KEY=EXTPROC1521)))
+  (DESCRIPTION=(ADDRESS=(PROTOCOL=tcps)(HOST=bakso.food.net)(PORT=5500))(Security=(my_wallet_directory=/z01/app/oracle/admin/cpempek/xdb_wallet))(Presentation=HTTP)(Session=RAW))
+Services Summary...
+Service "86b637b62fdf7a65e053f706e80a27ca.food.net" has 1 instance(s).
+  Instance "cpempek", status READY, has 1 handler(s) for this service...
+Service "ba844edcf7233d1be0530338a8c0d602.food.net" has 1 instance(s).
+  Instance "cpempek", status READY, has 1 handler(s) for this service...
+Service "bbfa19632dad155ee0530338a8c06b99.food.net" has 1 instance(s).
+  Instance "cpempek", status READY, has 1 handler(s) for this service...
+Service "cpempek.food.net" has 1 instance(s).
+  Instance "cpempek", status READY, has 1 handler(s) for this service...
+Service "cpempekXDB.food.net" has 1 instance(s).
+  Instance "cpempek", status READY, has 1 handler(s) for this service...
+Service "padaan.food.net" has 1 instance(s).
+  Instance "cpempek", status READY, has 1 handler(s) for this service...
+Service "plenjer.food.net" has 1 instance(s).
+  Instance "cpempek", status READY, has 1 handler(s) for this service...
+The command completed successfully
+[oracle@bakso ~]$ rlwrap sqlplus '/ as sysdba'
+
+SQL*Plus: Release 19.0.0.0.0 - Production on Tue Mar 2 20:23:37 2021
+Version 19.10.0.0.0
+
+Copyright (c) 1982, 2020, Oracle.  All rights reserved.
+
+
+Connected to:
+Oracle Database 19c Enterprise Edition Release 19.0.0.0.0 - Production
+Version 19.10.0.0.0
+
+SQL> SELECT CON_ID,NAME,OPEN_MODE FROM V$CONTAINERS ORDER BY 1;
+
+    CON_ID NAME                                                                                                                             OPEN_MODE
+---------- -------------------------------------------------------------------------------------------------------------------------------- ----------
+         1 CDB$ROOT                                                                                                                         READ WRITE
+         2 PDB$SEED                                                                                                                         READ ONLY
+         3 PLENJER                                                                                                                          READ WRITE
+         4 PADAAN                                                                                                                           READ WRITE
+
+Elapsed: 00:00:00.00
+SQL> exit
+Disconnected from Oracle Database 19c Enterprise Edition Release 19.0.0.0.0 - Production
+Version 19.10.0.0.0
+[oracle@bakso ~]$
