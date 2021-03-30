@@ -1,0 +1,88 @@
+########################################
+### Mongodb connect failed by AzizPW ###
+### Technical Consulting Manager #######
+### PT Mitra Integrasi Informatika #####
+### Tue, 30 Mar 2021 ###################
+########################################
+
+[oracle@bakso ~]$ mongo "mongodb://bakso:27017"
+MongoDB shell version v4.4.4
+connecting to: mongodb://bakso:27017/?compressors=disabled&gssapiServiceName=mongodb
+Error: couldn't connect to server bakso:27017, connection attempt failed: SocketException: Error connecting to bakso:27017 (192.168.56.3:27017) :: caused by :: Connection refused :
+connect@src/mongo/shell/mongo.js:374:17
+@(connect):2:6
+exception: connect failed
+exiting with code 1
+[oracle@bakso ~]$
+
+[root@bakso ~]# vi /etc/mongod.conf
+[root@bakso ~]# grep bindIp /etc/mongod.conf
+  bindIp: 127.0.0.1 # Enter 0.0.0.0,:: to bind to all IPv4 and IPv6 addresses or, alternatively, use the net.bindIpAll setting.
+[root@bakso ~]# grep bindIp /etc/mongod.conf
+  bindIp: 127.0.0.1, bakso.food.net # Enter 0.0.0.0,:: to bind to all IPv4 and IPv6 addresses or, alternatively, use the net.bindIpAll setting.
+[root@bakso ~]# systemctl restart mongod
+[root@bakso ~]# systemctl status mongod
+● mongod.service - MongoDB Database Server
+   Loaded: loaded (/usr/lib/systemd/system/mongod.service; enabled; vendor preset: disabled)
+   Active: active (running) since Tue 2021-03-30 15:15:22 WIB; 11s ago
+     Docs: https://docs.mongodb.org/manual
+  Process: 3618 ExecStart=/usr/bin/mongod $OPTIONS (code=exited, status=0/SUCCESS)
+  Process: 3616 ExecStartPre=/usr/bin/chmod 0755 /var/run/mongodb (code=exited, status=0/SUCCESS)
+  Process: 3613 ExecStartPre=/usr/bin/chown mongod:mongod /var/run/mongodb (code=exited, status=0/SUCCESS)
+  Process: 3611 ExecStartPre=/usr/bin/mkdir -p /var/run/mongodb (code=exited, status=0/SUCCESS)
+ Main PID: 3623 (mongod)
+    Tasks: 33
+   CGroup: /system.slice/mongod.service
+           └─3623 /usr/bin/mongod -f /etc/mongod.conf
+
+Mar 30 15:15:20 bakso.food.net systemd[1]: Starting MongoDB Database Server...
+Mar 30 15:15:20 bakso.food.net mongod[3618]: about to fork child process, waiting until server is ready for connections.
+Mar 30 15:15:20 bakso.food.net mongod[3618]: forked process: 3623
+Mar 30 15:15:22 bakso.food.net systemd[1]: Started MongoDB Database Server.
+[root@bakso ~]# exit
+logout
+[oracle@bakso ~]$ mongo "mongodb://bakso.food.net:27017"
+MongoDB shell version v4.4.4
+connecting to: mongodb://bakso.food.net:27017/?compressors=disabled&gssapiServiceName=mongodb
+Implicit session: session { "id" : UUID("65841fcc-9585-44a1-8b20-4942f998f9e5") }
+MongoDB server version: 4.4.4
+---
+The server generated these startup warnings when booting:
+        2021-03-30T15:15:22.172+07:00: Access control is not enabled for the database. Read and write access to data and configuration is unrestricted
+---
+---
+        Enable MongoDB's free cloud-based monitoring service, which will then receive and display
+        metrics about your deployment (disk utilization, CPU, operation statistics, etc).
+
+        The monitoring data will be available on a MongoDB website with a unique URL accessible to you
+        and anyone you share the URL with. MongoDB may use this information to make product
+        improvements and to suggest MongoDB products and deployment options to you.
+
+        To enable free monitoring, run the following command: db.enableFreeMonitoring()
+        To permanently disable this reminder, run the following command: db.disableFreeMonitoring()
+---
+> db.getName()
+test
+> db.getMongo()
+connection to bakso.food.net:27017
+> db.version()
+4.4.4
+> db.stats()
+{
+        "db" : "test",
+        "collections" : 0,
+        "views" : 0,
+        "objects" : 0,
+        "avgObjSize" : 0,
+        "dataSize" : 0,
+        "storageSize" : 0,
+        "totalSize" : 0,
+        "indexes" : 0,
+        "indexSize" : 0,
+        "scaleFactor" : 1,
+        "fileSize" : 0,
+        "fsUsedSize" : 0,
+        "fsTotalSize" : 0,
+        "ok" : 1
+}
+> db.hostInfo()

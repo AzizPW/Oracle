@@ -1,0 +1,215 @@
+#################################################################
+### Mongodb 4.4.4 Community Installation on OEL 7.9 by AzizPW ###
+### Technical Consulting Manager ################################
+### PT Mitra Integrasi Informatika ##############################
+### Tue, 30 Mar 2021 ############################################
+#################################################################
+
+### Repository
+##############
+https://repo.mongodb.org/yum/redhat/7Server/mongodb-org/4.4/x86_64/RPMS/
+
+[root@bakso ~]# yum install -y libcurl openssl xz-libs
+Loaded plugins: langpacks, ulninfo
+Package libcurl-7.29.0-59.0.1.el7.x86_64 already installed and latest version
+Package 1:openssl-1.0.2k-19.0.1.el7.x86_64 already installed and latest version
+Package xz-libs-5.2.2-1.el7.x86_64 already installed and latest version
+Nothing to do
+[root@bakso ~]# ls -lh /z01/sources/*
+-rw-r--r--. 1 oracle oinstall  18M Mar 30 14:05 /z01/sources/mongodb-org-shell-4.4.4-1.el7.s390x.rpm
+-rw-r--r--. 1 oracle oinstall  19M Mar 30 14:07 /z01/sources/mongodb-org-shell-4.4.4-1.el7.x86_64.rpm
+-rwxrwxr-x. 1 oracle oinstall 265K Feb  4 19:12 /z01/sources/ntfs-3g-2017.3.23-11.el7.x86_64.rpm
+-rwxrwxr-x. 1 oracle oinstall  20K Feb  4 19:12 /z01/sources/oracle-database-preinstall-19c-1.0-2.el7.x86_64.rpm
+-rwxrwxr-x. 1 oracle oinstall 4.6G Feb  4 19:11 /z01/sources/OracleLinux-R7-U9-Server-x86_64-dvd.iso
+-rwxrwxr-x. 1 oracle oinstall  64K Feb  4 19:12 /z01/sources/oraclelinux-release-7.9-1.0.9.el7.x86_64.rpm
+-rwxrwxr-x. 1 oracle oinstall 604K Feb  4 19:12 /z01/sources/p7zip-16.02-10.el7.x86_64.rpm
+-rwxrwxr-x. 1 oracle oinstall  97K Feb  4 19:12 /z01/sources/rlwrap-0.42-1.el7.x86_64.rpm
+[root@bakso ~]# yum install -y /z01/sources/mongodb-org-shell-4.4.4-1.el7.x86_64.rpm
+Loaded plugins: langpacks, ulninfo
+Examining /z01/sources/mongodb-org-shell-4.4.4-1.el7.x86_64.rpm: mongodb-org-shell-4.4.4-1.el7.x86_64
+Marking /z01/sources/mongodb-org-shell-4.4.4-1.el7.x86_64.rpm to be installed
+Resolving Dependencies
+--> Running transaction check
+---> Package mongodb-org-shell.x86_64 0:4.4.4-1.el7 will be installed
+--> Finished Dependency Resolution
+
+Dependencies Resolved
+
+=========================================================================================================================================================================================================================================
+ Package                                                Arch                                        Version                                             Repository                                                                  Size
+=========================================================================================================================================================================================================================================
+Installing:
+ mongodb-org-shell                                      x86_64                                      4.4.4-1.el7                                         /mongodb-org-shell-4.4.4-1.el7.x86_64                                       51 M
+
+Transaction Summary
+=========================================================================================================================================================================================================================================
+Install  1 Package
+
+Total size: 51 M
+Installed size: 51 M
+Downloading packages:
+Running transaction check
+Running transaction test
+Transaction test succeeded
+Running transaction
+  Installing : mongodb-org-shell-4.4.4-1.el7.x86_64                                                                                                                                                                                  1/1
+  Verifying  : mongodb-org-shell-4.4.4-1.el7.x86_64                                                                                                                                                                                  1/1
+
+Installed:
+  mongodb-org-shell.x86_64 0:4.4.4-1.el7
+
+Complete!
+[root@bakso ~]# cd /z01/sources/
+[root@bakso sources]# ls -lh
+total 4.7G
+-rw-r--r--. 1 oracle oinstall 4.4M Mar 30 14:18 mongodb-cli-1.9.1.x86_64.rpm
+-rw-r--r--. 1 oracle oinstall  51M Mar 30 14:18 mongodb-database-tools-100.3.1.x86_64.rpm
+-rw-r--r--. 1 oracle oinstall 6.0K Mar 30 14:18 mongodb-org-4.4.4-1.el7.x86_64.rpm
+-rw-r--r--. 1 oracle oinstall  16K Mar 30 14:18 mongodb-org-database-tools-extra-4.4.4-1.el7.x86_64.rpm
+-rw-r--r--. 1 oracle oinstall  22M Mar 30 14:18 mongodb-org-mongos-4.4.4-1.el7.x86_64.rpm
+-rw-r--r--. 1 oracle oinstall  28M Mar 30 14:18 mongodb-org-server-4.4.4-1.el7.x86_64.rpm
+-rw-r--r--. 1 oracle oinstall  18M Mar 30 14:05 mongodb-org-shell-4.4.4-1.el7.s390x.rpm
+-rw-r--r--. 1 oracle oinstall  19M Mar 30 14:07 mongodb-org-shell-4.4.4-1.el7.x86_64.rpm
+-rw-r--r--. 1 oracle oinstall 5.8K Mar 30 14:18 mongodb-org-tools-4.4.4-1.el7.x86_64.rpm
+-rwxrwxr-x. 1 oracle oinstall 265K Feb  4 19:12 ntfs-3g-2017.3.23-11.el7.x86_64.rpm
+-rwxrwxr-x. 1 oracle oinstall  20K Feb  4 19:12 oracle-database-preinstall-19c-1.0-2.el7.x86_64.rpm
+-rwxrwxr-x. 1 oracle oinstall 4.6G Feb  4 19:11 OracleLinux-R7-U9-Server-x86_64-dvd.iso
+-rwxrwxr-x. 1 oracle oinstall  64K Feb  4 19:12 oraclelinux-release-7.9-1.0.9.el7.x86_64.rpm
+-rwxrwxr-x. 1 oracle oinstall 604K Feb  4 19:12 p7zip-16.02-10.el7.x86_64.rpm
+-rwxrwxr-x. 1 oracle oinstall  97K Feb  4 19:12 rlwrap-0.42-1.el7.x86_64.rpm
+[root@bakso sources]# yum install -y mongodb-cli-1.9.1.x86_64.rpm mongodb-database-tools-100.3.1.x86_64.rpm mongodb-org-4.4.4-1.el7.x86_64.rpm mongodb-org-database-tools-extra-4.4.4-1.el7.x86_64.rpm mongodb-org-mongos-4.4.4-1.el7.x86_64.rpm mongodb-org-server-4.4.4-1.el7.x86_64.rpm mongodb-org-shell-4.4.4-1.el7.s390x.rpm mongodb-org-shell-4.4.4-1.el7.x86_64.rpm mongodb-org-tools-4.4.4-1.el7.x86_64.rpm
+Loaded plugins: langpacks, ulninfo
+Examining mongodb-cli-1.9.1.x86_64.rpm: mongocli-1.9.1-1.x86_64
+Marking mongodb-cli-1.9.1.x86_64.rpm to be installed
+Examining mongodb-database-tools-100.3.1.x86_64.rpm: mongodb-database-tools-100.3.1-1.x86_64
+Marking mongodb-database-tools-100.3.1.x86_64.rpm to be installed
+Examining mongodb-org-4.4.4-1.el7.x86_64.rpm: mongodb-org-4.4.4-1.el7.x86_64
+Marking mongodb-org-4.4.4-1.el7.x86_64.rpm to be installed
+Examining mongodb-org-database-tools-extra-4.4.4-1.el7.x86_64.rpm: mongodb-org-database-tools-extra-4.4.4-1.el7.x86_64
+Marking mongodb-org-database-tools-extra-4.4.4-1.el7.x86_64.rpm to be installed
+Examining mongodb-org-mongos-4.4.4-1.el7.x86_64.rpm: mongodb-org-mongos-4.4.4-1.el7.x86_64
+Marking mongodb-org-mongos-4.4.4-1.el7.x86_64.rpm to be installed
+Examining mongodb-org-server-4.4.4-1.el7.x86_64.rpm: mongodb-org-server-4.4.4-1.el7.x86_64
+Marking mongodb-org-server-4.4.4-1.el7.x86_64.rpm to be installed
+Examining mongodb-org-shell-4.4.4-1.el7.s390x.rpm: mongodb-org-shell-4.4.4-1.el7.s390x
+Cannot add package mongodb-org-shell-4.4.4-1.el7.s390x.rpm to transaction. Not a compatible architecture: s390x
+Examining mongodb-org-shell-4.4.4-1.el7.x86_64.rpm: mongodb-org-shell-4.4.4-1.el7.x86_64
+mongodb-org-shell-4.4.4-1.el7.x86_64.rpm: does not update installed package.
+Examining mongodb-org-tools-4.4.4-1.el7.x86_64.rpm: mongodb-org-tools-4.4.4-1.el7.x86_64
+Marking mongodb-org-tools-4.4.4-1.el7.x86_64.rpm to be installed
+Resolving Dependencies
+--> Running transaction check
+---> Package mongocli.x86_64 0:1.9.1-1 will be installed
+---> Package mongodb-database-tools.x86_64 0:100.3.1-1 will be installed
+---> Package mongodb-org.x86_64 0:4.4.4-1.el7 will be installed
+---> Package mongodb-org-database-tools-extra.x86_64 0:4.4.4-1.el7 will be installed
+---> Package mongodb-org-mongos.x86_64 0:4.4.4-1.el7 will be installed
+---> Package mongodb-org-server.x86_64 0:4.4.4-1.el7 will be installed
+---> Package mongodb-org-tools.x86_64 0:4.4.4-1.el7 will be installed
+--> Finished Dependency Resolution
+
+Dependencies Resolved
+
+=========================================================================================================================================================================================================================================
+ Package                                                        Arch                                 Version                                    Repository                                                                          Size
+=========================================================================================================================================================================================================================================
+Installing:
+ mongocli                                                       x86_64                               1.9.1-1                                    /mongodb-cli-1.9.1.x86_64                                                           13 M
+ mongodb-database-tools                                         x86_64                               100.3.1-1                                  /mongodb-database-tools-100.3.1.x86_64                                             220 M
+ mongodb-org                                                    x86_64                               4.4.4-1.el7                                /mongodb-org-4.4.4-1.el7.x86_64                                                    0.0
+ mongodb-org-database-tools-extra                               x86_64                               4.4.4-1.el7                                /mongodb-org-database-tools-extra-4.4.4-1.el7.x86_64                                32 k
+ mongodb-org-mongos                                             x86_64                               4.4.4-1.el7                                /mongodb-org-mongos-4.4.4-1.el7.x86_64                                              62 M
+ mongodb-org-server                                             x86_64                               4.4.4-1.el7                                /mongodb-org-server-4.4.4-1.el7.x86_64                                              79 M
+ mongodb-org-tools                                              x86_64                               4.4.4-1.el7                                /mongodb-org-tools-4.4.4-1.el7.x86_64                                              0.0
+
+Transaction Summary
+=========================================================================================================================================================================================================================================
+Install  7 Packages
+
+Total size: 374 M
+Installed size: 374 M
+Downloading packages:
+Running transaction check
+Running transaction test
+Transaction test succeeded
+Running transaction
+  Installing : mongodb-org-mongos-4.4.4-1.el7.x86_64                                                                                                                                                                                 1/7
+  Installing : mongodb-database-tools-100.3.1-1.x86_64                                                                                                                                                                               2/7
+  Installing : mongodb-org-database-tools-extra-4.4.4-1.el7.x86_64                                                                                                                                                                   3/7
+  Installing : mongodb-org-tools-4.4.4-1.el7.x86_64                                                                                                                                                                                  4/7
+  Installing : mongodb-org-server-4.4.4-1.el7.x86_64                                                                                                                                                                                 5/7
+Created symlink from /etc/systemd/system/multi-user.target.wants/mongod.service to /usr/lib/systemd/system/mongod.service.
+  Installing : mongodb-org-4.4.4-1.el7.x86_64                                                                                                                                                                                        6/7
+  Verifying  : mongodb-org-server-4.4.4-1.el7.x86_64                                                                                                                                                                                 1/7
+  Verifying  : mongodb-org-database-tools-extra-4.4.4-1.el7.x86_64                                                                                                                                                                   2/7
+  Verifying  : mongodb-database-tools-100.3.1-1.x86_64                                                                                                                                                                               3/7
+  Verifying  : mongocli-1.9.1-1.x86_64                                                                                                                                                                                               4/7
+  Verifying  : mongodb-org-4.4.4-1.el7.x86_64                                                                                                                                                                                        5/7
+  Verifying  : mongodb-org-mongos-4.4.4-1.el7.x86_64                                                                                                                                                                                 6/7
+  Verifying  : mongodb-org-tools-4.4.4-1.el7.x86_64                                                                                                                                                                                  7/7
+
+Installed:
+  mongocli.x86_64 0:1.9.1-1                   mongodb-database-tools.x86_64 0:100.3.1-1     mongodb-org.x86_64 0:4.4.4-1.el7     mongodb-org-database-tools-extra.x86_64 0:4.4.4-1.el7     mongodb-org-mongos.x86_64 0:4.4.4-1.el7
+  mongodb-org-server.x86_64 0:4.4.4-1.el7     mongodb-org-tools.x86_64 0:4.4.4-1.el7
+
+Complete!
+[root@bakso sources]# cd
+[root@bakso ~]# cat /etc/oracle-release
+Oracle Linux Server release 7.9
+[root@bakso ~]# uname -a
+Linux bakso.food.net 5.4.17-2011.6.2.el7uek.x86_64 #2 SMP Thu Sep 3 14:09:14 PDT 2020 x86_64 x86_64 x86_64 GNU/Linux
+[root@bakso ~]# dmidecode -t system
+# dmidecode 3.2
+Getting SMBIOS data from sysfs.
+SMBIOS 2.5 present.
+
+Handle 0x0001, DMI type 1, 27 bytes
+System Information
+        Manufacturer: innotek GmbH
+        Product Name: VirtualBox
+        Version: 1.2
+        Serial Number: 0
+        UUID: 0c3b8ecc-99f8-7c4b-9582-5e1b69cce22c
+        Wake-up Type: Power Switch
+        SKU Number: Not Specified
+        Family: Virtual Machine
+
+[root@bakso ~]# rpm -qa|grep mong
+mongodb-org-server-4.4.4-1.el7.x86_64
+mongodb-database-tools-100.3.1-1.x86_64
+mongodb-org-database-tools-extra-4.4.4-1.el7.x86_64
+mongocli-1.9.1-1.x86_64
+mongodb-org-shell-4.4.4-1.el7.x86_64
+mongodb-org-tools-4.4.4-1.el7.x86_64
+mongodb-org-mongos-4.4.4-1.el7.x86_64
+mongodb-org-4.4.4-1.el7.x86_64
+[root@bakso ~]# systemctl status mongod
+● mongod.service - MongoDB Database Server
+   Loaded: loaded (/usr/lib/systemd/system/mongod.service; enabled; vendor preset: disabled)
+   Active: inactive (dead)
+     Docs: https://docs.mongodb.org/manual
+[root@bakso ~]# systemctl start mongod
+[root@bakso ~]# systemctl status mongod
+● mongod.service - MongoDB Database Server
+   Loaded: loaded (/usr/lib/systemd/system/mongod.service; enabled; vendor preset: disabled)
+   Active: active (running) since Tue 2021-03-30 14:21:53 WIB; 1s ago
+     Docs: https://docs.mongodb.org/manual
+  Process: 3819 ExecStart=/usr/bin/mongod $OPTIONS (code=exited, status=0/SUCCESS)
+  Process: 3816 ExecStartPre=/usr/bin/chmod 0755 /var/run/mongodb (code=exited, status=0/SUCCESS)
+  Process: 3813 ExecStartPre=/usr/bin/chown mongod:mongod /var/run/mongodb (code=exited, status=0/SUCCESS)
+  Process: 3809 ExecStartPre=/usr/bin/mkdir -p /var/run/mongodb (code=exited, status=0/SUCCESS)
+ Main PID: 3822 (mongod)
+    Tasks: 33
+   CGroup: /system.slice/mongod.service
+           └─3822 /usr/bin/mongod -f /etc/mongod.conf
+
+Mar 30 14:21:52 bakso.food.net systemd[1]: Starting MongoDB Database Server...
+Mar 30 14:21:52 bakso.food.net mongod[3819]: about to fork child process, waiting until server is ready for connections.
+Mar 30 14:21:52 bakso.food.net mongod[3819]: forked process: 3822
+Mar 30 14:21:53 bakso.food.net systemd[1]: Started MongoDB Database Server.
+[root@bakso ~]# ps -ef|grep mongod
+mongod    3822     1  0 14:21 ?        00:00:01 /usr/bin/mongod -f /etc/mongod.conf
+root      5164  2680  0 14:25 pts/0    00:00:00 grep --color=auto mongod
+[root@bakso ~]# id mongod
+uid=988(mongod) gid=982(mongod) groups=982(mongod)
+[root@bakso ~]#

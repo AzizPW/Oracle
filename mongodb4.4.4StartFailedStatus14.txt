@@ -1,0 +1,71 @@
+################################################
+### Mongodb start failed status 14 by AzizPW ###
+### Technical Consulting Manager ###############
+### PT Mitra Integrasi Informatika #############
+### Tue, 30 Mar 2021 ###########################
+################################################
+
+Reference:
+https://www.mindwatering.com/SupportRef.nsf/webpg/312960F28E81F73E85258638001BBDDF
+
+[root@bakso ~]# systemctl status mongod
+● mongod.service - MongoDB Database Server
+   Loaded: loaded (/usr/lib/systemd/system/mongod.service; enabled; vendor preset: disabled)
+   Active: failed (Result: exit-code) since Tue 2021-03-30 15:06:41 WIB; 3min 4s ago
+     Docs: https://docs.mongodb.org/manual
+  Process: 2860 ExecStart=/usr/bin/mongod $OPTIONS (code=exited, status=14)
+  Process: 2856 ExecStartPre=/usr/bin/chmod 0755 /var/run/mongodb (code=exited, status=0/SUCCESS)
+  Process: 2851 ExecStartPre=/usr/bin/chown mongod:mongod /var/run/mongodb (code=exited, status=0/SUCCESS)
+  Process: 2849 ExecStartPre=/usr/bin/mkdir -p /var/run/mongodb (code=exited, status=0/SUCCESS)
+
+Mar 30 15:06:40 bakso.food.net systemd[1]: Starting MongoDB Database Server...
+Mar 30 15:06:41 bakso.food.net mongod[2860]: about to fork child process, waiting until server is ready for connections.
+Mar 30 15:06:41 bakso.food.net mongod[2860]: forked process: 2865
+Mar 30 15:06:41 bakso.food.net systemd[1]: mongod.service: control process exited, code=exited status=14
+Mar 30 15:06:41 bakso.food.net systemd[1]: Failed to start MongoDB Database Server.
+Mar 30 15:06:41 bakso.food.net systemd[1]: Unit mongod.service entered failed state.
+Mar 30 15:06:41 bakso.food.net systemd[1]: mongod.service failed.
+[root@bakso ~]# systemctl start mongod
+Job for mongod.service failed because the control process exited with error code. See "systemctl status mongod.service" and "journalctl -xe" for details.
+[root@bakso ~]#
+
+[root@bakso ~]# tail -50f /var/log/mongodb/mongod.log
+{"t":{"$date":"2021-03-30T15:09:53.143+07:00"},"s":"I",  "c":"CONTROL",  "id":20698,   "ctx":"main","msg":"***** SERVER RESTARTED *****"}
+{"t":{"$date":"2021-03-30T15:09:53.148+07:00"},"s":"I",  "c":"CONTROL",  "id":23285,   "ctx":"main","msg":"Automatically disabling TLS 1.0, to force-enable TLS 1.0 specify --sslDisabledProtocols 'none'"}
+{"t":{"$date":"2021-03-30T15:09:53.162+07:00"},"s":"W",  "c":"ASIO",     "id":22601,   "ctx":"main","msg":"No TransportLayer configured during NetworkInterface startup"}
+{"t":{"$date":"2021-03-30T15:09:53.162+07:00"},"s":"I",  "c":"NETWORK",  "id":4648601, "ctx":"main","msg":"Implicit TCP FastOpen unavailable. If TCP FastOpen is required, set tcpFastOpenServer, tcpFastOpenClient, and tcpFastOpenQueueSize."}
+{"t":{"$date":"2021-03-30T15:09:53.163+07:00"},"s":"I",  "c":"STORAGE",  "id":4615611, "ctx":"initandlisten","msg":"MongoDB starting","attr":{"pid":3183,"port":27017,"dbPath":"/var/lib/mongo","architecture":"64-bit","host":"bakso.food.net"}}
+{"t":{"$date":"2021-03-30T15:09:53.163+07:00"},"s":"I",  "c":"CONTROL",  "id":23403,   "ctx":"initandlisten","msg":"Build Info","attr":{"buildInfo":{"version":"4.4.4","gitVersion":"8db30a63db1a9d84bdcad0c83369623f708e0397","openSSLVersion":"OpenSSL 1.0.1e-fips 11 Feb 2013","modules":[],"allocator":"tcmalloc","environment":{"distmod":"rhel70","distarch":"x86_64","target_arch":"x86_64"}}}}
+{"t":{"$date":"2021-03-30T15:09:53.163+07:00"},"s":"I",  "c":"CONTROL",  "id":51765,   "ctx":"initandlisten","msg":"Operating System","attr":{"os":{"name":"Oracle Linux Server release 7.9","version":"Kernel 5.4.17-2011.6.2.el7uek.x86_64"}}}
+{"t":{"$date":"2021-03-30T15:09:53.163+07:00"},"s":"I",  "c":"CONTROL",  "id":21951,   "ctx":"initandlisten","msg":"Options set by command line","attr":{"options":{"config":"/etc/mongod.conf","net":{"bindIp":"127.0.0.1","port":27017},"processManagement":{"fork":true,"pidFilePath":"/var/run/mongodb/mongod.pid","timeZoneInfo":"/usr/share/zoneinfo"},"storage":{"dbPath":"/var/lib/mongo","journal":{"enabled":true}},"systemLog":{"destination":"file","logAppend":true,"path":"/var/log/mongodb/mongod.log"}}}}
+{"t":{"$date":"2021-03-30T15:09:53.164+07:00"},"s":"E",  "c":"NETWORK",  "id":23024,   "ctx":"initandlisten","msg":"Failed to unlink socket file","attr":{"path":"/tmp/mongodb-27017.sock","error":"Operation not permitted"}}
+{"t":{"$date":"2021-03-30T15:09:53.164+07:00"},"s":"F",  "c":"-",        "id":23091,   "ctx":"initandlisten","msg":"Fatal assertion","attr":{"msgid":40486,"file":"src/mongo/transport/transport_layer_asio.cpp","line":919}}
+{"t":{"$date":"2021-03-30T15:09:53.164+07:00"},"s":"F",  "c":"-",        "id":23092,   "ctx":"initandlisten","msg":"\n\n***aborting after fassert() failure\n\n"}
+
+[root@bakso ~]# ls -lh /tmp/mongodb-27017.sock
+srwx------. 1 root root 0 Mar 30 14:51 /tmp/mongodb-27017.sock
+[root@bakso ~]# chown mongod:mongod /tmp/mongodb-27017.sock
+[root@bakso ~]# ls -lh /tmp/mongodb-27017.sock
+srwx------. 1 mongod mongod 0 Mar 30 14:51 /tmp/mongodb-27017.sock
+[root@bakso ~]# id mongod
+uid=988(mongod) gid=982(mongod) groups=982(mongod)
+[root@bakso ~]# systemctl start mongod
+[root@bakso ~]# systemctl status mongod
+● mongod.service - MongoDB Database Server
+   Loaded: loaded (/usr/lib/systemd/system/mongod.service; enabled; vendor preset: disabled)
+   Active: active (running) since Tue 2021-03-30 15:11:24 WIB; 7s ago
+     Docs: https://docs.mongodb.org/manual
+  Process: 3320 ExecStart=/usr/bin/mongod $OPTIONS (code=exited, status=0/SUCCESS)
+  Process: 3317 ExecStartPre=/usr/bin/chmod 0755 /var/run/mongodb (code=exited, status=0/SUCCESS)
+  Process: 3313 ExecStartPre=/usr/bin/chown mongod:mongod /var/run/mongodb (code=exited, status=0/SUCCESS)
+  Process: 3309 ExecStartPre=/usr/bin/mkdir -p /var/run/mongodb (code=exited, status=0/SUCCESS)
+ Main PID: 3323 (mongod)
+    Tasks: 33
+   CGroup: /system.slice/mongod.service
+           └─3323 /usr/bin/mongod -f /etc/mongod.conf
+
+Mar 30 15:11:21 bakso.food.net systemd[1]: Starting MongoDB Database Server...
+Mar 30 15:11:21 bakso.food.net mongod[3320]: about to fork child process, waiting until server is ready for connections.
+Mar 30 15:11:21 bakso.food.net mongod[3320]: forked process: 3323
+Mar 30 15:11:24 bakso.food.net systemd[1]: Started MongoDB Database Server.
+[root@bakso ~]#
