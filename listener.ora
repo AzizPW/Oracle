@@ -21,3 +21,7 @@ LISTENER =
     )
   )
 ADR_BASE_LISTENER = /home/oracle/oradb
+SID_LIST_LISTENER =
+  (SID_LIST =
+    (SID_DESC = (GLOBAL_DBNAME = NINET_DR_DGMGRL)(ORACLE_HOME = /u01/app/oracle/product/19c/db_1)(SID_NAME = NINETEEN))
+  )

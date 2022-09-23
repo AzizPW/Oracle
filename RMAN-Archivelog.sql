@@ -25,6 +25,7 @@ delete archivelog from time 'SYSDATE-10' until time 'SYSDATE-2';
 delete archivelog from sequence 1000;
 delete archivelog until sequence 1500;
 delete archivelog from sequence 1000 until sequence 1500;
+DELETE ARCHIVELOG ALL COMPLETED BEFORE 'TRUNC(SYSDATE-0)';
 
 delete archivelog all completed before 'sysdate-4';
 

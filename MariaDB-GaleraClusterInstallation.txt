@@ -1,0 +1,872 @@
+##########################################################################
+### MariaDB 10.6.4 Galera Cluster Installation on OEL7.9 OCI by AzizPW ###
+### Technical Consultant Manager##########################################
+### PT Mitra Integrasi Informatika #######################################
+### Thu, 23 September 2021 ###############################################
+##########################################################################
+
+Reference:
+https://www.digitalocean.com/community/tutorials/how-to-configure-a-galera-cluster-with-mariadb-on-centos-7-servers
+https://galeracluster.com/2016/11/introducing-the-safe-to-bootstrap-feature-in-galera-cluster/
+
+### Modify /etc/hosts
+#####################
+[opc@mariadb01 ~]$ sudo vi /etc/hosts
+[opc@mariadb01 ~]$ cat /etc/hosts
+127.0.0.1   localhost localhost.localdomain localhost4 localhost4.localdomain4
+::1         localhost localhost.localdomain localhost6 localhost6.localdomain6
+10.77.0.210     mariadb01.sub02051503110.vcnesd2.oraclevcn.com  mariadb01
+10.77.0.31      mariadb02.sub02051503110.vcnesd2.oraclevcn.com  mariadb02
+10.77.0.98      mariadb03.sub02051503110.vcnesd2.oraclevcn.com  mariadb03
+[opc@mariadb01 ~]$
+
+[opc@mariadb02 ~]$ sudo vi /etc/hosts
+[opc@mariadb02 ~]$ cat /etc/hosts
+127.0.0.1   localhost localhost.localdomain localhost4 localhost4.localdomain4
+::1         localhost localhost.localdomain localhost6 localhost6.localdomain6
+10.77.0.210     mariadb01.sub02051503110.vcnesd2.oraclevcn.com  mariadb01
+10.77.0.31      mariadb02.sub02051503110.vcnesd2.oraclevcn.com  mariadb02
+10.77.0.98      mariadb03.sub02051503110.vcnesd2.oraclevcn.com  mariadb03
+[opc@mariadb02 ~]$
+
+[opc@mariadb03 ~]$ sudo vi /etc/hosts
+[opc@mariadb03 ~]$ cat /etc/hosts
+127.0.0.1   localhost localhost.localdomain localhost4 localhost4.localdomain4
+::1         localhost localhost.localdomain localhost6 localhost6.localdomain6
+10.77.0.210     mariadb01.sub02051503110.vcnesd2.oraclevcn.com  mariadb01
+10.77.0.31      mariadb02.sub02051503110.vcnesd2.oraclevcn.com  mariadb02
+10.77.0.98      mariadb03.sub02051503110.vcnesd2.oraclevcn.com  mariadb03
+[opc@mariadb03 ~]$
+
+### Enable Latest MariaDB Repository
+####################################
+[opc@mariadb01 ~]$ sudo vi /etc/yum.repos.d/mariadb.repo
+[opc@mariadb01 ~]$ cat /etc/yum.repos.d/mariadb.repo
+[mariadb]
+name = MariaDB
+baseurl = http://yum.mariadb.org/10.6/rhel7-amd64
+gpgkey = https://yum.mariadb.org/RPM-GPG-KEY-MariaDB
+gpgcheck=1
+[opc@mariadb01 ~]$
+
+[opc@mariadb02 ~]$ sudo vi /etc/yum.repos.d/mariadb.repo
+[opc@mariadb02 ~]$ cat /etc/yum.repos.d/mariadb.repo
+[mariadb]
+name = MariaDB
+baseurl = http://yum.mariadb.org/10.6/rhel7-amd64
+gpgkey = https://yum.mariadb.org/RPM-GPG-KEY-MariaDB
+gpgcheck=1
+[opc@mariadb02 ~]$
+
+[opc@mariadb03 ~]$ sudo vi /etc/yum.repos.d/mariadb.repo
+[opc@mariadb03 ~]$ cat /etc/yum.repos.d/mariadb.repo
+[mariadb]
+name = MariaDB
+baseurl = http://yum.mariadb.org/10.6/rhel7-amd64
+gpgkey = https://yum.mariadb.org/RPM-GPG-KEY-MariaDB
+gpgcheck=1
+[opc@mariadb03 ~]$
+
+### MariaDB 10.6 Installation
+#############################
+[opc@mariadb01 ~]$ sudo yum install -y MariaDB-server MariaDB-client
+Loaded plugins: langpacks, ulninfo
+Resolving Dependencies
+--> Running transaction check
+---> Package MariaDB-client.x86_64 0:10.6.4-1.el7.centos will be installed
+--> Processing Dependency: libpmem.so.1(LIBPMEM_1.0)(64bit) for package: MariaDB-client-10.6.4-1.el7.centos.x86_64
+--> Processing Dependency: perl(DBI) for package: MariaDB-client-10.6.4-1.el7.centos.x86_64
+--> Processing Dependency: perl(Data::Dumper) for package: MariaDB-client-10.6.4-1.el7.centos.x86_64
+--> Processing Dependency: MariaDB-common for package: MariaDB-client-10.6.4-1.el7.centos.x86_64
+--> Processing Dependency: libpmem.so.1()(64bit) for package: MariaDB-client-10.6.4-1.el7.centos.x86_64
+--> Processing Dependency: libpcre2-8.so.0()(64bit) for package: MariaDB-client-10.6.4-1.el7.centos.x86_64
+---> Package MariaDB-server.x86_64 0:10.6.4-1.el7.centos will be installed
+--> Processing Dependency: galera-4 for package: MariaDB-server-10.6.4-1.el7.centos.x86_64
+--> Running transaction check
+---> Package MariaDB-common.x86_64 0:10.6.4-1.el7.centos will be installed
+--> Processing Dependency: MariaDB-compat for package: MariaDB-common-10.6.4-1.el7.centos.x86_64
+---> Package galera-4.x86_64 0:26.4.9-1.el7.centos will be installed
+--> Processing Dependency: socat for package: galera-4-26.4.9-1.el7.centos.x86_64
+--> Processing Dependency: libboost_program_options-mt.so.1.53.0()(64bit) for package: galera-4-26.4.9-1.el7.centos.x86_64
+---> Package libpmem.x86_64 0:1.5.1-2.1.0.1.el7 will be installed
+---> Package pcre2.x86_64 0:10.23-2.el7 will be installed
+---> Package perl-DBI.x86_64 0:1.627-4.el7 will be installed
+--> Processing Dependency: perl(RPC::PlClient) >= 0.2000 for package: perl-DBI-1.627-4.el7.x86_64
+--> Processing Dependency: perl(RPC::PlServer) >= 0.2001 for package: perl-DBI-1.627-4.el7.x86_64
+---> Package perl-Data-Dumper.x86_64 0:2.145-3.el7 will be installed
+--> Running transaction check
+---> Package MariaDB-compat.x86_64 0:10.6.4-1.el7.centos will be installed
+---> Package boost-program-options.x86_64 0:1.53.0-28.el7 will be installed
+---> Package perl-PlRPC.noarch 0:0.2020-14.el7 will be installed
+--> Processing Dependency: perl(Net::Daemon) >= 0.13 for package: perl-PlRPC-0.2020-14.el7.noarch
+--> Processing Dependency: perl(Compress::Zlib) for package: perl-PlRPC-0.2020-14.el7.noarch
+--> Processing Dependency: perl(Net::Daemon::Log) for package: perl-PlRPC-0.2020-14.el7.noarch
+--> Processing Dependency: perl(Net::Daemon::Test) for package: perl-PlRPC-0.2020-14.el7.noarch
+---> Package socat.x86_64 0:1.7.3.2-2.el7 will be installed
+--> Running transaction check
+---> Package perl-IO-Compress.noarch 0:2.061-2.el7 will be installed
+--> Processing Dependency: perl(Compress::Raw::Bzip2) >= 2.061 for package: perl-IO-Compress-2.061-2.el7.noarch
+--> Processing Dependency: perl(Compress::Raw::Zlib) >= 2.061 for package: perl-IO-Compress-2.061-2.el7.noarch
+---> Package perl-Net-Daemon.noarch 0:0.48-5.el7 will be installed
+--> Running transaction check
+---> Package perl-Compress-Raw-Bzip2.x86_64 0:2.061-3.el7 will be installed
+---> Package perl-Compress-Raw-Zlib.x86_64 1:2.061-4.el7 will be installed
+--> Finished Dependency Resolution
+
+Dependencies Resolved
+
+=======================================================================================================================================================================================================================================
+ Package                                                         Arch                                           Version                                                       Repository                                          Size
+=======================================================================================================================================================================================================================================
+Installing:
+ MariaDB-client                                                  x86_64                                         10.6.4-1.el7.centos                                           mariadb                                             14 M
+ MariaDB-server                                                  x86_64                                         10.6.4-1.el7.centos                                           mariadb                                             25 M
+Installing for dependencies:
+ MariaDB-common                                                  x86_64                                         10.6.4-1.el7.centos                                           mariadb                                             81 k
+ MariaDB-compat                                                  x86_64                                         10.6.4-1.el7.centos                                           mariadb                                            2.2 M
+ boost-program-options                                           x86_64                                         1.53.0-28.el7                                                 ol7_latest                                         156 k
+ galera-4                                                        x86_64                                         26.4.9-1.el7.centos                                           mariadb                                            9.6 M
+ libpmem                                                         x86_64                                         1.5.1-2.1.0.1.el7                                             ol7_latest                                          58 k
+ pcre2                                                           x86_64                                         10.23-2.el7                                                   ol7_latest                                         201 k
+ perl-Compress-Raw-Bzip2                                         x86_64                                         2.061-3.el7                                                   ol7_latest                                          32 k
+ perl-Compress-Raw-Zlib                                          x86_64                                         1:2.061-4.el7                                                 ol7_latest                                          57 k
+ perl-DBI                                                        x86_64                                         1.627-4.el7                                                   ol7_latest                                         801 k
+ perl-Data-Dumper                                                x86_64                                         2.145-3.el7                                                   ol7_latest                                          47 k
+ perl-IO-Compress                                                noarch                                         2.061-2.el7                                                   ol7_latest                                         259 k
+ perl-Net-Daemon                                                 noarch                                         0.48-5.el7                                                    ol7_latest                                          50 k
+ perl-PlRPC                                                      noarch                                         0.2020-14.el7                                                 ol7_latest                                          35 k
+ socat                                                           x86_64                                         1.7.3.2-2.el7                                                 ol7_latest                                         289 k
+
+Transaction Summary
+=======================================================================================================================================================================================================================================
+Install  2 Packages (+14 Dependent packages)
+
+Total download size: 53 M
+Installed size: 254 M
+Downloading packages:
+warning: /var/cache/yum/x86_64/7Server/mariadb/packages/MariaDB-common-10.6.4-1.el7.centos.x86_64.rpm: Header V4 DSA/SHA1 Signature, key ID 1bb943db: NOKEY                                          ] 120 kB/s | 126 kB  00:07:28 ETA
+Public key for MariaDB-common-10.6.4-1.el7.centos.x86_64.rpm is not installed
+(1/16): MariaDB-common-10.6.4-1.el7.centos.x86_64.rpm                                                                                                                                                           |  81 kB  00:00:01
+(2/16): MariaDB-compat-10.6.4-1.el7.centos.x86_64.rpm                                                                                                                                                           | 2.2 MB  00:00:02
+(3/16): boost-program-options-1.53.0-28.el7.x86_64.rpm                                                                                                                                                          | 156 kB  00:00:00
+(4/16): MariaDB-client-10.6.4-1.el7.centos.x86_64.rpm                                                                                                                                                           |  14 MB  00:00:05
+(5/16): libpmem-1.5.1-2.1.0.1.el7.x86_64.rpm                                                                                                                                                                    |  58 kB  00:00:00
+(6/16): perl-Compress-Raw-Bzip2-2.061-3.el7.x86_64.rpm                                                                                                                                                          |  32 kB  00:00:00
+(7/16): perl-Compress-Raw-Zlib-2.061-4.el7.x86_64.rpm                                                                                                                                                           |  57 kB  00:00:00
+(8/16): perl-DBI-1.627-4.el7.x86_64.rpm                                                                                                                                                                         | 801 kB  00:00:00
+(9/16): perl-Data-Dumper-2.145-3.el7.x86_64.rpm                                                                                                                                                                 |  47 kB  00:00:00
+(10/16): perl-IO-Compress-2.061-2.el7.noarch.rpm                                                                                                                                                                | 259 kB  00:00:00
+(11/16): pcre2-10.23-2.el7.x86_64.rpm                                                                                                                                                                           | 201 kB  00:00:00
+(12/16): perl-PlRPC-0.2020-14.el7.noarch.rpm                                                                                                                                                                    |  35 kB  00:00:00
+(13/16): socat-1.7.3.2-2.el7.x86_64.rpm                                                                                                                                                                         | 289 kB  00:00:00
+(14/16): perl-Net-Daemon-0.48-5.el7.noarch.rpm                                                                                                                                                                  |  50 kB  00:00:00
+(15/16): galera-4-26.4.9-1.el7.centos.x86_64.rpm                                                                                                                                                                | 9.6 MB  00:00:00
+(16/16): MariaDB-server-10.6.4-1.el7.centos.x86_64.rpm                                                                                                                                                          |  25 MB  00:00:03
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Total                                                                                                                                                                                                  7.0 MB/s |  53 MB  00:00:07
+Retrieving key from https://yum.mariadb.org/RPM-GPG-KEY-MariaDB
+Importing GPG key 0x1BB943DB:
+ Userid     : "MariaDB Package Signing Key <package-signing-key@mariadb.org>"
+ Fingerprint: 1993 69e5 404b d5fc 7d2f e43b cbcb 082a 1bb9 43db
+ From       : https://yum.mariadb.org/RPM-GPG-KEY-MariaDB
+Running transaction check
+Running transaction test
+Transaction test succeeded
+Running transaction
+  Installing : MariaDB-compat-10.6.4-1.el7.centos.x86_64                                                                                                                                                                          1/16
+  Installing : MariaDB-common-10.6.4-1.el7.centos.x86_64                                                                                                                                                                          2/16
+  Installing : libpmem-1.5.1-2.1.0.1.el7.x86_64                                                                                                                                                                                   3/16
+  Installing : perl-Data-Dumper-2.145-3.el7.x86_64                                                                                                                                                                                4/16
+  Installing : pcre2-10.23-2.el7.x86_64                                                                                                                                                                                           5/16
+  Installing : socat-1.7.3.2-2.el7.x86_64                                                                                                                                                                                         6/16
+  Installing : 1:perl-Compress-Raw-Zlib-2.061-4.el7.x86_64                                                                                                                                                                        7/16
+  Installing : boost-program-options-1.53.0-28.el7.x86_64                                                                                                                                                                         8/16
+  Installing : galera-4-26.4.9-1.el7.centos.x86_64                                                                                                                                                                                9/16
+  Installing : perl-Net-Daemon-0.48-5.el7.noarch                                                                                                                                                                                 10/16
+  Installing : perl-Compress-Raw-Bzip2-2.061-3.el7.x86_64                                                                                                                                                                        11/16
+  Installing : perl-IO-Compress-2.061-2.el7.noarch                                                                                                                                                                               12/16
+  Installing : perl-PlRPC-0.2020-14.el7.noarch                                                                                                                                                                                   13/16
+  Installing : perl-DBI-1.627-4.el7.x86_64                                                                                                                                                                                       14/16
+  Installing : MariaDB-client-10.6.4-1.el7.centos.x86_64                                                                                                                                                                         15/16
+  Installing : MariaDB-server-10.6.4-1.el7.centos.x86_64                                                                                                                                                                         16/16
+
+
+Two all-privilege accounts were created.
+One is root@localhost, it has no password, but you need to
+be system 'root' user to connect. Use, for example, sudo mysql
+The second is mysql@localhost, it has no password either, but
+you need to be the system 'mysql' user to connect.
+After connecting you can set the password, if you would need to be
+able to connect as any of these users with a password and without sudo
+
+See the MariaDB Knowledgebase at https://mariadb.com/kb or the
+MySQL manual for more instructions.
+
+Please report any problems at https://mariadb.org/jira
+
+The latest information about MariaDB is available at https://mariadb.org/.
+You can find additional information about the MySQL part at:
+https://dev.mysql.com
+Consider joining MariaDB's strong and vibrant community:
+https://mariadb.org/get-involved/
+
+  Verifying  : MariaDB-client-10.6.4-1.el7.centos.x86_64                                                                                                                                                                          1/16
+  Verifying  : pcre2-10.23-2.el7.x86_64                                                                                                                                                                                           2/16
+  Verifying  : perl-Compress-Raw-Bzip2-2.061-3.el7.x86_64                                                                                                                                                                         3/16
+  Verifying  : perl-Net-Daemon-0.48-5.el7.noarch                                                                                                                                                                                  4/16
+  Verifying  : MariaDB-common-10.6.4-1.el7.centos.x86_64                                                                                                                                                                          5/16
+  Verifying  : perl-Data-Dumper-2.145-3.el7.x86_64                                                                                                                                                                                6/16
+  Verifying  : boost-program-options-1.53.0-28.el7.x86_64                                                                                                                                                                         7/16
+  Verifying  : MariaDB-compat-10.6.4-1.el7.centos.x86_64                                                                                                                                                                          8/16
+  Verifying  : perl-IO-Compress-2.061-2.el7.noarch                                                                                                                                                                                9/16
+  Verifying  : galera-4-26.4.9-1.el7.centos.x86_64                                                                                                                                                                               10/16
+  Verifying  : 1:perl-Compress-Raw-Zlib-2.061-4.el7.x86_64                                                                                                                                                                       11/16
+  Verifying  : MariaDB-server-10.6.4-1.el7.centos.x86_64                                                                                                                                                                         12/16
+  Verifying  : libpmem-1.5.1-2.1.0.1.el7.x86_64                                                                                                                                                                                  13/16
+  Verifying  : perl-DBI-1.627-4.el7.x86_64                                                                                                                                                                                       14/16
+  Verifying  : socat-1.7.3.2-2.el7.x86_64                                                                                                                                                                                        15/16
+  Verifying  : perl-PlRPC-0.2020-14.el7.noarch                                                                                                                                                                                   16/16
+
+Installed:
+  MariaDB-client.x86_64 0:10.6.4-1.el7.centos                                                                        MariaDB-server.x86_64 0:10.6.4-1.el7.centos
+
+Dependency Installed:
+  MariaDB-common.x86_64 0:10.6.4-1.el7.centos     MariaDB-compat.x86_64 0:10.6.4-1.el7.centos      boost-program-options.x86_64 0:1.53.0-28.el7     galera-4.x86_64 0:26.4.9-1.el7.centos     libpmem.x86_64 0:1.5.1-2.1.0.1.el7
+  pcre2.x86_64 0:10.23-2.el7                      perl-Compress-Raw-Bzip2.x86_64 0:2.061-3.el7     perl-Compress-Raw-Zlib.x86_64 1:2.061-4.el7      perl-DBI.x86_64 0:1.627-4.el7             perl-Data-Dumper.x86_64 0:2.145-3.el7
+  perl-IO-Compress.noarch 0:2.061-2.el7           perl-Net-Daemon.noarch 0:0.48-5.el7              perl-PlRPC.noarch 0:0.2020-14.el7                socat.x86_64 0:1.7.3.2-2.el7
+
+Complete!
+[opc@mariadb01 ~]$
+
+[opc@mariadb02 ~]$ sudo yum install -y MariaDB-server MariaDB-client
+
+[opc@mariadb03 ~]$ sudo yum install -y MariaDB-server MariaDB-client
+
+### Start MariaDB
+#################
+[opc@mariadb01 ~]$ sudo systemctl start mariadb; sudo systemctl enable mariadb; sudo systemctl status mariadb;
+Created symlink from /etc/systemd/system/multi-user.target.wants/mariadb.service to /usr/lib/systemd/system/mariadb.service.
+● mariadb.service - MariaDB 10.6.4 database server
+   Loaded: loaded (/usr/lib/systemd/system/mariadb.service; enabled; vendor preset: disabled)
+  Drop-In: /etc/systemd/system/mariadb.service.d
+           └─migrated-from-my.cnf-settings.conf
+   Active: active (running) since Thu 2021-09-23 09:18:11 GMT; 217ms ago
+     Docs: man:mariadbd(8)
+           https://mariadb.com/kb/en/library/systemd/
+ Main PID: 30856 (mariadbd)
+   Status: "Taking your SQL requests now..."
+   CGroup: /system.slice/mariadb.service
+           └─30856 /usr/sbin/mariadbd
+
+Sep 23 09:18:11 mariadb01 mariadbd[30856]: 2021-09-23  9:18:11 0 [Note] InnoDB: File './ibtmp1' size is now 12 MB.
+Sep 23 09:18:11 mariadb01 mariadbd[30856]: 2021-09-23  9:18:11 0 [Note] InnoDB: 10.6.4 started; log sequence number 41349; transaction id 14
+Sep 23 09:18:11 mariadb01 mariadbd[30856]: 2021-09-23  9:18:11 0 [Note] Plugin 'FEEDBACK' is disabled.
+Sep 23 09:18:11 mariadb01 mariadbd[30856]: 2021-09-23  9:18:11 0 [Note] InnoDB: Loading buffer pool(s) from /var/lib/mysql/ib_buffer_pool
+Sep 23 09:18:11 mariadb01 mariadbd[30856]: 2021-09-23  9:18:11 0 [Note] Server socket created on IP: '0.0.0.0'.
+Sep 23 09:18:11 mariadb01 mariadbd[30856]: 2021-09-23  9:18:11 0 [Note] Server socket created on IP: '::'.
+Sep 23 09:18:11 mariadb01 mariadbd[30856]: 2021-09-23  9:18:11 0 [Note] /usr/sbin/mariadbd: ready for connections.
+Sep 23 09:18:11 mariadb01 mariadbd[30856]: Version: '10.6.4-MariaDB'  socket: '/var/lib/mysql/mysql.sock'  port: 3306  MariaDB Server
+Sep 23 09:18:11 mariadb01 mariadbd[30856]: 2021-09-23  9:18:11 0 [Note] InnoDB: Buffer pool(s) load completed at 210923  9:18:11
+Sep 23 09:18:11 mariadb01 systemd[1]: Started MariaDB 10.6.4 database server.
+[opc@mariadb01 ~]$
+
+[opc@mariadb02 ~]$ sudo systemctl start mariadb; sudo systemctl enable mariadb; sudo systemctl status mariadb;
+
+[opc@mariadb03 ~]$ sudo systemctl start mariadb; sudo systemctl enable mariadb; sudo systemctl status mariadb;
+
+### Set Initial Password
+########################
+[opc@mariadb01 ~]$ sudo mysql -uroot
+Welcome to the MariaDB monitor.  Commands end with ; or \g.
+Your MariaDB connection id is 3
+Server version: 10.6.4-MariaDB MariaDB Server
+
+Copyright (c) 2000, 2018, Oracle, MariaDB Corporation Ab and others.
+
+Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
+
+MariaDB [(none)]> set password = password("We1come$");
+Query OK, 0 rows affected (0.001 sec)
+
+MariaDB [(none)]> quit
+Bye
+[opc@mariadb01 ~]$
+
+[opc@mariadb02 ~]$ sudo mysql -uroot
+Welcome to the MariaDB monitor.  Commands end with ; or \g.
+Your MariaDB connection id is 3
+Server version: 10.6.4-MariaDB MariaDB Server
+
+Copyright (c) 2000, 2018, Oracle, MariaDB Corporation Ab and others.
+
+Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
+
+MariaDB [(none)]> set password = password("We1come$");
+Query OK, 0 rows affected (0.001 sec)
+
+MariaDB [(none)]> quit
+Bye
+[opc@mariadb02 ~]$
+
+[opc@mariadb03 ~]$ sudo mysql -uroot
+Welcome to the MariaDB monitor.  Commands end with ; or \g.
+Your MariaDB connection id is 3
+Server version: 10.6.4-MariaDB MariaDB Server
+
+Copyright (c) 2000, 2018, Oracle, MariaDB Corporation Ab and others.
+
+Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
+
+MariaDB [(none)]> set password = password("We1come$");
+Query OK, 0 rows affected (0.001 sec)
+
+MariaDB [(none)]> quit
+Bye
+[opc@mariadb03 ~]$
+
+### Install rsync & python
+##########################
+[opc@mariadb01 ~]$ sudo yum install -y rsync policycoreutils-python
+Loaded plugins: langpacks, ulninfo
+Package rsync-3.1.2-10.el7.x86_64 already installed and latest version
+Package policycoreutils-python-2.5-34.0.1.el7.x86_64 already installed and latest version
+Nothing to do
+[opc@mariadb01 ~]$
+
+[opc@mariadb02 ~]$ sudo yum install -y rsync policycoreutils-python
+
+[opc@mariadb03 ~]$ sudo yum install -y rsync policycoreutils-python
+
+### Configure Galera
+####################
+[opc@mariadb01 ~]$ sudo vi /etc/my.cnf.d/galera.cnf; cat /etc/my.cnf.d/galera.cnf;
+[mysqld]
+binlog_format=ROW
+default-storage-engine=innodb
+innodb_autoinc_lock_mode=2
+bind-address=0.0.0.0
+
+# Galera Provider Configuration
+wsrep_on=ON
+wsrep_provider=/usr/lib64/galera-4/libgalera_smm.so
+
+# Galera Cluster Configuration
+wsrep_cluster_name="oci_cluster"
+wsrep_cluster_address="gcomm://10.77.0.210,10.77.0.31,10.77.0.98"
+
+# Galera Synchronization Configuration
+wsrep_sst_method=rsync
+
+# Galera Node Configuration
+wsrep_node_address="10.77.0.210"
+wsrep_node_name="mariadb01"
+[opc@mariadb01 ~]$
+
+[opc@mariadb02 ~]$ sudo vi /etc/my.cnf.d/galera.cnf; cat /etc/my.cnf.d/galera.cnf;
+[mysqld]
+binlog_format=ROW
+default-storage-engine=innodb
+innodb_autoinc_lock_mode=2
+bind-address=0.0.0.0
+
+# Galera Provider Configuration
+wsrep_on=ON
+wsrep_provider=/usr/lib64/galera-4/libgalera_smm.so
+
+# Galera Cluster Configuration
+wsrep_cluster_name="oci_cluster"
+wsrep_cluster_address="gcomm://10.77.0.210,10.77.0.31,10.77.0.98"
+
+# Galera Synchronization Configuration
+wsrep_sst_method=rsync
+
+# Galera Node Configuration
+wsrep_node_address="10.77.0.31"
+wsrep_node_name="mariadb02"
+[opc@mariadb02 ~]$
+
+[opc@mariadb03 ~]$ sudo vi /etc/my.cnf.d/galera.cnf; cat /etc/my.cnf.d/galera.cnf;
+[mysqld]
+binlog_format=ROW
+default-storage-engine=innodb
+innodb_autoinc_lock_mode=2
+bind-address=0.0.0.0
+
+# Galera Provider Configuration
+wsrep_on=ON
+wsrep_provider=/usr/lib64/galera-4/libgalera_smm.so
+
+# Galera Cluster Configuration
+wsrep_cluster_name="oci_cluster"
+wsrep_cluster_address="gcomm://10.77.0.210,10.77.0.31,10.77.0.98"
+
+# Galera Synchronization Configuration
+wsrep_sst_method=rsync
+
+# Galera Node Configuration
+wsrep_node_address="10.77.0.98"
+wsrep_node_name="mariadb03"
+[opc@mariadb03 ~]$
+
+### Open Firewall
+#################
+[opc@mariadb01 ~]$ sudo firewall-cmd --permanent --zone=public --add-port=3306/tcp
+success
+[opc@mariadb01 ~]$ sudo firewall-cmd --permanent --zone=public --add-port=4567/tcp
+success
+[opc@mariadb01 ~]$ sudo firewall-cmd --permanent --zone=public --add-port=4568/tcp
+success
+[opc@mariadb01 ~]$ sudo firewall-cmd --permanent --zone=public --add-port=4444/tcp
+success
+[opc@mariadb01 ~]$ sudo firewall-cmd --permanent --zone=public --add-port=4567/udp
+success
+[opc@mariadb01 ~]$ sudo firewall-cmd --permanent --zone=public --add-source=10.77.0.210/32
+success
+[opc@mariadb01 ~]$ sudo firewall-cmd --permanent --zone=public --add-source=10.77.0.31/32
+success
+[opc@mariadb01 ~]$ sudo firewall-cmd --permanent --zone=public --add-source=10.77.0.98/32
+success
+[opc@mariadb01 ~]$ sudo firewall-cmd --reload
+success
+[opc@mariadb01 ~]$
+
+[opc@mariadb02 ~]$ sudo firewall-cmd --permanent --zone=public --add-port=3306/tcp
+success
+[opc@mariadb02 ~]$ sudo firewall-cmd --permanent --zone=public --add-port=4567/tcp
+success
+[opc@mariadb02 ~]$ sudo firewall-cmd --permanent --zone=public --add-port=4568/tcp
+success
+[opc@mariadb02 ~]$ sudo firewall-cmd --permanent --zone=public --add-port=4444/tcp
+success
+[opc@mariadb02 ~]$ sudo firewall-cmd --permanent --zone=public --add-port=4567/udp
+success
+[opc@mariadb02 ~]$ sudo firewall-cmd --permanent --zone=public --add-source=10.77.0.210/32
+success
+[opc@mariadb02 ~]$ sudo firewall-cmd --permanent --zone=public --add-source=10.77.0.31/32
+success
+[opc@mariadb02 ~]$ sudo firewall-cmd --permanent --zone=public --add-source=10.77.0.98/32
+success
+[opc@mariadb02 ~]$ sudo firewall-cmd --reload
+success
+[opc@mariadb02 ~]$
+
+[opc@mariadb03 ~]$ sudo firewall-cmd --permanent --zone=public --add-port=3306/tcp
+success
+[opc@mariadb03 ~]$ sudo firewall-cmd --permanent --zone=public --add-port=4567/tcp
+success
+[opc@mariadb03 ~]$ sudo firewall-cmd --permanent --zone=public --add-port=4568/tcp
+success
+[opc@mariadb03 ~]$ sudo firewall-cmd --permanent --zone=public --add-port=4444/tcp
+success
+[opc@mariadb03 ~]$ sudo firewall-cmd --permanent --zone=public --add-port=4567/udp
+success
+[opc@mariadb03 ~]$ sudo firewall-cmd --permanent --zone=public --add-source=10.77.0.210/32
+success
+[opc@mariadb03 ~]$ sudo firewall-cmd --permanent --zone=public --add-source=10.77.0.31/32
+success
+[opc@mariadb03 ~]$ sudo firewall-cmd --permanent --zone=public --add-source=10.77.0.98/32
+success
+[opc@mariadb03 ~]$ sudo firewall-cmd --reload
+success
+[opc@mariadb03 ~]$
+
+### Configure SELINUX
+#####################
+[opc@mariadb01 ~]$ sudo semanage port -a -t mysqld_port_t -p tcp 4567
+ValueError: Port tcp/4567 already defined
+[opc@mariadb01 ~]$ sudo semanage port -a -t mysqld_port_t -p udp 4567
+[opc@mariadb01 ~]$ sudo semanage port -a -t mysqld_port_t -p tcp 4568
+[opc@mariadb01 ~]$ sudo semanage port -a -t mysqld_port_t -p tcp 4444
+ValueError: Port tcp/4444 already defined
+[opc@mariadb01 ~]$ sudo semanage permissive -a mysqld_t
+[opc@mariadb01 ~]$ sudo systemctl stop mariadb
+[opc@mariadb01 ~]$
+
+[opc@mariadb02 ~]$ sudo semanage port -a -t mysqld_port_t -p tcp 4567
+ValueError: Port tcp/4567 already defined
+[opc@mariadb02 ~]$ sudo semanage port -a -t mysqld_port_t -p udp 4567
+[opc@mariadb02 ~]$ sudo semanage port -a -t mysqld_port_t -p tcp 4568
+[opc@mariadb02 ~]$ sudo semanage port -a -t mysqld_port_t -p tcp 4444
+ValueError: Port tcp/4444 already defined
+[opc@mariadb02 ~]$ sudo semanage permissive -a mysqld_t
+[opc@mariadb02 ~]$ sudo systemctl stop mariadb
+[opc@mariadb02 ~]$
+
+[opc@mariadb03 ~]$ sudo semanage port -a -t mysqld_port_t -p tcp 4567
+ValueError: Port tcp/4567 already defined
+[opc@mariadb03 ~]$ sudo semanage port -a -t mysqld_port_t -p udp 4567
+[opc@mariadb03 ~]$ sudo semanage port -a -t mysqld_port_t -p tcp 4568
+[opc@mariadb03 ~]$ sudo semanage port -a -t mysqld_port_t -p tcp 4444
+ValueError: Port tcp/4444 already defined
+[opc@mariadb03 ~]$ sudo semanage permissive -a mysqld_t
+[opc@mariadb03 ~]$ sudo systemctl stop mariadb
+[opc@mariadb03 ~]$
+
+### Bootstrap the Cluster
+#########################
+[opc@mariadb01 ~]$ sudo galera_new_cluster
+[opc@mariadb01 ~]$ mysql -u root -p
+Enter password:
+Welcome to the MariaDB monitor.  Commands end with ; or \g.
+Your MariaDB connection id is 7
+Server version: 10.6.4-MariaDB MariaDB Server
+
+Copyright (c) 2000, 2018, Oracle, MariaDB Corporation Ab and others.
+
+Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
+
+MariaDB [(none)]> show databases;
++--------------------+
+| Database           |
++--------------------+
+| information_schema |
+| mysql              |
+| performance_schema |
+| sys                |
+| test               |
++--------------------+
+5 rows in set (0.001 sec)
+
+MariaDB [(none)]> create database selinux;
+Query OK, 1 row affected (0.004 sec)
+
+MariaDB [(none)]> CREATE TABLE selinux.selinux_policy (id INT NOT NULL AUTO_INCREMENT, PRIMARY KEY(id));
+Query OK, 0 rows affected (0.009 sec)
+
+MariaDB [(none)]> INSERT INTO selinux.selinux_policy VALUES ();
+Query OK, 1 row affected (0.002 sec)
+
+MariaDB [(none)]> select count(1) from selinux.selinux_policy;
++----------+
+| count(1) |
++----------+
+|        1 |
++----------+
+1 row in set (0.000 sec)
+
+MariaDB [(none)]> exit
+Bye
+[opc@mariadb01 ~]$ systemctl status mariadb
+● mariadb.service - MariaDB 10.6.4 database server
+   Loaded: loaded (/usr/lib/systemd/system/mariadb.service; enabled; vendor preset: disabled)
+  Drop-In: /etc/systemd/system/mariadb.service.d
+           └─migrated-from-my.cnf-settings.conf
+   Active: active (running) since Thu 2021-09-23 12:05:01 GMT; 3min 27s ago
+     Docs: man:mariadbd(8)
+           https://mariadb.com/kb/en/library/systemd/
+  Process: 11596 ExecStartPost=/bin/sh -c systemctl unset-environment _WSREP_START_POSITION (code=exited, status=0/SUCCESS)
+  Process: 11518 ExecStartPre=/bin/sh -c [ ! -e /usr/bin/galera_recovery ] && VAR= ||   VAR=`cd /usr/bin/..; /usr/bin/galera_recovery`; [ $? -eq 0 ]   && systemctl set-environment _WSREP_START_POSITION=$VAR || exit 1 (code=exited, status=0/SUCCESS)
+  Process: 11515 ExecStartPre=/bin/sh -c systemctl unset-environment _WSREP_START_POSITION (code=exited, status=0/SUCCESS)
+ Main PID: 11578 (mariadbd)
+   Status: "Taking your SQL requests now..."
+   Memory: 90.2M
+   CGroup: /system.slice/mariadb.service
+           └─11578 /usr/sbin/mariadbd --wsrep-new-cluster --wsrep_start_position=00000000-0000-0000-0000-000000000000:-1
+
+Sep 23 12:05:01 mariadb01 mariadbd[11578]: 2021-09-23 12:05:01 1 [Note] WSREP: wsrep_notify_cmd is not defined, skipping notification.
+Sep 23 12:05:01 mariadb01 mariadbd[11578]: 2021-09-23 12:05:01 0 [Note] /usr/sbin/mariadbd: ready for connections.
+Sep 23 12:05:01 mariadb01 mariadbd[11578]: Version: '10.6.4-MariaDB'  socket: '/var/lib/mysql/mysql.sock'  port: 3306  MariaDB Server
+Sep 23 12:05:01 mariadb01 mariadbd[11578]: 2021-09-23 12:05:01 1 [Note] WSREP: Lowest cert index boundary for CC from group: 1
+Sep 23 12:05:01 mariadb01 mariadbd[11578]: 2021-09-23 12:05:01 1 [Note] WSREP: Min available from gcache for CC from group: 1
+Sep 23 12:05:01 mariadb01 mariadbd[11578]: 2021-09-23 12:05:01 1 [Note] WSREP: Server mariadb01 synced with group
+Sep 23 12:05:01 mariadb01 mariadbd[11578]: 2021-09-23 12:05:01 1 [Note] WSREP: Server status change joined -> synced
+Sep 23 12:05:01 mariadb01 mariadbd[11578]: 2021-09-23 12:05:01 1 [Note] WSREP: Synchronized with group, ready for connections
+Sep 23 12:05:01 mariadb01 mariadbd[11578]: 2021-09-23 12:05:01 1 [Note] WSREP: wsrep_notify_cmd is not defined, skipping notification.
+Sep 23 12:05:01 mariadb01 systemd[1]: Started MariaDB 10.6.4 database server.
+[opc@mariadb01 ~]$
+
+### Start mariadb on node 2 & 3
+###############################
+[opc@mariadb02 ~]$ sudo systemctl start mariadb
+[opc@mariadb02 ~]$ sudo systemctl status mariadb
+● mariadb.service - MariaDB 10.6.4 database server
+   Loaded: loaded (/usr/lib/systemd/system/mariadb.service; enabled; vendor preset: disabled)
+  Drop-In: /etc/systemd/system/mariadb.service.d
+           └─migrated-from-my.cnf-settings.conf
+   Active: active (running) since Thu 2021-09-23 12:25:00 GMT; 1min 7s ago
+     Docs: man:mariadbd(8)
+           https://mariadb.com/kb/en/library/systemd/
+  Process: 16045 ExecStartPost=/bin/sh -c systemctl unset-environment _WSREP_START_POSITION (code=exited, status=0/SUCCESS)
+  Process: 15811 ExecStartPre=/bin/sh -c [ ! -e /usr/bin/galera_recovery ] && VAR= ||   VAR=`cd /usr/bin/..; /usr/bin/galera_recovery`; [ $? -eq 0 ]   && systemctl set-environment _WSREP_START_POSITION=$VAR || exit 1 (code=exited, status=0/SUCCESS)
+  Process: 15808 ExecStartPre=/bin/sh -c systemctl unset-environment _WSREP_START_POSITION (code=exited, status=0/SUCCESS)
+ Main PID: 15873 (mariadbd)
+   Status: "Taking your SQL requests now..."
+   Memory: 198.9M
+   CGroup: /system.slice/mariadb.service
+           └─15873 /usr/sbin/mariadbd --wsrep_start_position=00000000-0000-0000-0000-000000000000:-1
+
+Sep 23 12:25:56 mariadb02 mariadbd[15873]: 2021-09-23 12:25:56 0 [Note] WSREP: Member 0.0 (mariadb02) synced with group.
+Sep 23 12:25:56 mariadb02 mariadbd[15873]: 2021-09-23 12:25:56 0 [Note] WSREP: Shifting JOINED -> SYNCED (TO: 6)
+Sep 23 12:25:56 mariadb02 mariadbd[15873]: 2021-09-23 12:25:56 1 [Note] WSREP: Server mariadb02 synced with group
+Sep 23 12:25:56 mariadb02 mariadbd[15873]: 2021-09-23 12:25:56 1 [Note] WSREP: Server status change joined -> synced
+Sep 23 12:25:56 mariadb02 mariadbd[15873]: 2021-09-23 12:25:56 1 [Note] WSREP: Synchronized with group, ready for connections
+Sep 23 12:25:56 mariadb02 mariadbd[15873]: 2021-09-23 12:25:56 1 [Note] WSREP: wsrep_notify_cmd is not defined, skipping notification.
+Sep 23 12:25:56 mariadb02 mariadbd[15873]: 2021-09-23 12:25:56 0 [Note] WSREP: (42d29d72-9b4c, 'tcp://0.0.0.0:4567') turning message relay requesting off
+Sep 23 12:25:57 mariadb02 mariadbd[15873]: 2021-09-23 12:25:57 0 [Note] WSREP: async IST sender served
+Sep 23 12:25:57 mariadb02 mariadbd[15873]: 2021-09-23 12:25:57 0 [Note] WSREP: 1.0 (mariadb03): State transfer from 0.0 (mariadb02) complete.
+Sep 23 12:25:57 mariadb02 mariadbd[15873]: 2021-09-23 12:25:57 0 [Note] WSREP: Member 1.0 (mariadb03) synced with group.
+[opc@mariadb02 ~]$
+
+[opc@mariadb03 ~]$ sudo systemctl start mariadb
+[opc@mariadb03 ~]$ sudo systemctl status mariadb
+● mariadb.service - MariaDB 10.6.4 database server
+   Loaded: loaded (/usr/lib/systemd/system/mariadb.service; enabled; vendor preset: disabled)
+  Drop-In: /etc/systemd/system/mariadb.service.d
+           └─migrated-from-my.cnf-settings.conf
+   Active: active (running) since Thu 2021-09-23 12:25:57 GMT; 20s ago
+     Docs: man:mariadbd(8)
+           https://mariadb.com/kb/en/library/systemd/
+  Process: 15497 ExecStartPost=/bin/sh -c systemctl unset-environment _WSREP_START_POSITION (code=exited, status=0/SUCCESS)
+  Process: 15264 ExecStartPre=/bin/sh -c [ ! -e /usr/bin/galera_recovery ] && VAR= ||   VAR=`cd /usr/bin/..; /usr/bin/galera_recovery`; [ $? -eq 0 ]   && systemctl set-environment _WSREP_START_POSITION=$VAR || exit 1 (code=exited, status=0/SUCCESS)
+  Process: 15261 ExecStartPre=/bin/sh -c systemctl unset-environment _WSREP_START_POSITION (code=exited, status=0/SUCCESS)
+ Main PID: 15324 (mariadbd)
+   Status: "Taking your SQL requests now..."
+   Memory: 194.6M
+   CGroup: /system.slice/mariadb.service
+           └─15324 /usr/sbin/mariadbd --wsrep_start_position=00000000-0000-0000-0000-000000000000:-1
+
+Sep 23 12:25:57 mariadb03 mariadbd[15324]: 2021-09-23 12:25:57 2 [Note] WSREP: Min available from gcache for CC from sst: 2
+Sep 23 12:25:57 mariadb03 mariadbd[15324]: 2021-09-23 12:25:57 0 [Note] WSREP: 1.0 (mariadb03): State transfer from 0.0 (mariadb02) complete.
+Sep 23 12:25:57 mariadb03 mariadbd[15324]: 2021-09-23 12:25:57 0 [Note] WSREP: Shifting JOINER -> JOINED (TO: 6)
+Sep 23 12:25:57 mariadb03 mariadbd[15324]: 2021-09-23 12:25:57 0 [Note] WSREP: Member 1.0 (mariadb03) synced with group.
+Sep 23 12:25:57 mariadb03 mariadbd[15324]: 2021-09-23 12:25:57 0 [Note] WSREP: Shifting JOINED -> SYNCED (TO: 6)
+Sep 23 12:25:57 mariadb03 mariadbd[15324]: 2021-09-23 12:25:57 2 [Note] WSREP: Server mariadb03 synced with group
+Sep 23 12:25:57 mariadb03 mariadbd[15324]: 2021-09-23 12:25:57 2 [Note] WSREP: Server status change joined -> synced
+Sep 23 12:25:57 mariadb03 mariadbd[15324]: 2021-09-23 12:25:57 2 [Note] WSREP: Synchronized with group, ready for connections
+Sep 23 12:25:57 mariadb03 mariadbd[15324]: 2021-09-23 12:25:57 2 [Note] WSREP: wsrep_notify_cmd is not defined, skipping notification.
+Sep 23 12:25:57 mariadb03 systemd[1]: Started MariaDB 10.6.4 database server.
+[opc@mariadb03 ~]$
+
+### Nggak Jelas
+###############
+[opc@mariadb01 ~]$ mysql -u root -p -e 'INSERT INTO selinux.selinux_policy VALUES ();'
+Enter password:
+[opc@mariadb01 ~]$ sudo grep mysql /var/log/audit/audit.log | sudo audit2allow -M Galera
+Nothing to do
+[opc@mariadb01 ~]$ sudo semanage permissive -d mysqld_t
+libsemanage.semanage_direct_remove_key: Removing last permissive_mysqld_t module (no other permissive_mysqld_t module exists at another priority).
+[opc@mariadb01 ~]$
+
+[opc@mariadb02 ~]$ sudo semanage permissive -d mysqld_t
+libsemanage.semanage_direct_remove_key: Removing last permissive_mysqld_t module (no other permissive_mysqld_t module exists at another priority).
+[opc@mariadb02 ~]$
+
+[opc@mariadb03 ~]$ sudo semanage permissive -d mysqld_t
+libsemanage.semanage_direct_remove_key: Removing last permissive_mysqld_t module (no other permissive_mysqld_t module exists at another priority).
+[opc@mariadb03 ~]$
+
+### Stop MariaDB
+[opc@mariadb03 ~]$ sudo systemctl stop mariadb
+[opc@mariadb03 ~]$
+
+[opc@mariadb02 ~]$ sudo systemctl stop mariadb
+[opc@mariadb02 ~]$
+
+[opc@mariadb01 ~]$ sudo systemctl stop mariadb
+[opc@mariadb01 ~]$
+
+### Start MariaDB
+#################
+[opc@mariadb01 ~]$ sudo galera_new_cluster
+Job for mariadb.service failed because the control process exited with error code. See "systemctl status mariadb.service" and "journalctl -xe" for details.
+[opc@mariadb01 ~]$ systemctl status mariadb.service
+● mariadb.service - MariaDB 10.6.4 database server
+   Loaded: loaded (/usr/lib/systemd/system/mariadb.service; enabled; vendor preset: disabled)
+  Drop-In: /etc/systemd/system/mariadb.service.d
+           └─migrated-from-my.cnf-settings.conf
+   Active: failed (Result: exit-code) since Thu 2021-09-23 12:42:38 GMT; 19s ago
+     Docs: man:mariadbd(8)
+           https://mariadb.com/kb/en/library/systemd/
+  Process: 11596 ExecStartPost=/bin/sh -c systemctl unset-environment _WSREP_START_POSITION (code=exited, status=0/SUCCESS)
+  Process: 22235 ExecStart=/usr/sbin/mariadbd $MYSQLD_OPTS $_WSREP_NEW_CLUSTER $_WSREP_START_POSITION (code=exited, status=1/FAILURE)
+  Process: 22175 ExecStartPre=/bin/sh -c [ ! -e /usr/bin/galera_recovery ] && VAR= ||   VAR=`cd /usr/bin/..; /usr/bin/galera_recovery`; [ $? -eq 0 ]   && systemctl set-environment _WSREP_START_POSITION=$VAR || exit 1 (code=exited, status=0/SUCCESS)
+  Process: 22172 ExecStartPre=/bin/sh -c systemctl unset-environment _WSREP_START_POSITION (code=exited, status=0/SUCCESS)
+ Main PID: 22235 (code=exited, status=1/FAILURE)
+   Status: "MariaDB server is down"
+
+Sep 23 12:42:38 mariadb01 mariadbd[22235]: 2021-09-23 12:42:38 0 [Note] WSREP: Start replication
+Sep 23 12:42:38 mariadb01 mariadbd[22235]: 2021-09-23 12:42:38 0 [Note] WSREP: Connecting with bootstrap option: 1
+Sep 23 12:42:38 mariadb01 mariadbd[22235]: 2021-09-23 12:42:38 0 [Note] WSREP: Setting GCS initial position to 7ae8147c-1c66-11ec-8168-6f9f4428dd38:8
+Sep 23 12:42:38 mariadb01 mariadbd[22235]: 2021-09-23 12:42:38 0 [ERROR] WSREP: It may not be safe to bootstrap the cluster from this node. It was not the last one to leave the cluster and may not contain all the...bootstrap to 1 .
+Sep 23 12:42:38 mariadb01 mariadbd[22235]: 2021-09-23 12:42:38 0 [ERROR] WSREP: wsrep::connect(gcomm://10.77.0.210,10.77.0.31,10.77.0.98) failed: 7
+Sep 23 12:42:38 mariadb01 mariadbd[22235]: 2021-09-23 12:42:38 0 [ERROR] Aborting
+Sep 23 12:42:38 mariadb01 systemd[1]: mariadb.service: main process exited, code=exited, status=1/FAILURE
+Sep 23 12:42:38 mariadb01 systemd[1]: Failed to start MariaDB 10.6.4 database server.
+Sep 23 12:42:38 mariadb01 systemd[1]: Unit mariadb.service entered failed state.
+Sep 23 12:42:38 mariadb01 systemd[1]: mariadb.service failed.
+Hint: Some lines were ellipsized, use -l to show in full.
+[opc@mariadb01 ~]$ journalctl -xe
+.
+.
+.
+Sep 23 12:42:38 mariadb01 mariadbd[22235]: 2021-09-23 12:42:38 0 [ERROR] WSREP: It may not be safe to bootstrap the cluster from this node. It was not the last one to leave the cluster and may not contain all the...bootstrap to 1 .
+Sep 23 12:42:38 mariadb01 mariadbd[22235]: 2021-09-23 12:42:38 0 [ERROR] WSREP: wsrep::connect(gcomm://10.77.0.210,10.77.0.31,10.77.0.98) failed: 7
+Sep 23 12:42:38 mariadb01 mariadbd[22235]: 2021-09-23 12:42:38 0 [ERROR] Aborting
+Sep 23 12:42:38 mariadb01 systemd[1]: mariadb.service: main process exited, code=exited, status=1/FAILURE
+Sep 23 12:42:38 mariadb01 systemd[1]: Failed to start MariaDB 10.6.4 database server.
+.
+.
+.
+[opc@mariadb01 ~]$ sudo cat /var/lib/mysql/grastate.dat
+# GALERA saved state
+version: 2.1
+uuid:    7ae8147c-1c66-11ec-8168-6f9f4428dd38
+seqno:   -1
+safe_to_bootstrap: 0
+[opc@mariadb01 ~]$ sudo vi /var/lib/mysql/grastate.dat
+[opc@mariadb01 ~]$ sudo cat /var/lib/mysql/grastate.dat
+# GALERA saved state
+version: 2.1
+uuid:    7ae8147c-1c66-11ec-8168-6f9f4428dd38
+seqno:   -1
+safe_to_bootstrap: 1
+[opc@mariadb01 ~]$ sudo galera_new_cluster
+[opc@mariadb01 ~]$ sudo systemctl status mariadb
+● mariadb.service - MariaDB 10.6.4 database server
+   Loaded: loaded (/usr/lib/systemd/system/mariadb.service; enabled; vendor preset: disabled)
+  Drop-In: /etc/systemd/system/mariadb.service.d
+           └─migrated-from-my.cnf-settings.conf
+   Active: active (running) since Thu 2021-09-23 12:48:27 GMT; 15s ago
+     Docs: man:mariadbd(8)
+           https://mariadb.com/kb/en/library/systemd/
+  Process: 23939 ExecStartPost=/bin/sh -c systemctl unset-environment _WSREP_START_POSITION (code=exited, status=0/SUCCESS)
+  Process: 23860 ExecStartPre=/bin/sh -c [ ! -e /usr/bin/galera_recovery ] && VAR= ||   VAR=`cd /usr/bin/..; /usr/bin/galera_recovery`; [ $? -eq 0 ]   && systemctl set-environment _WSREP_START_POSITION=$VAR || exit 1 (code=exited, status=0/SUCCESS)
+  Process: 23857 ExecStartPre=/bin/sh -c systemctl unset-environment _WSREP_START_POSITION (code=exited, status=0/SUCCESS)
+ Main PID: 23920 (mariadbd)
+   Status: "Taking your SQL requests now..."
+   Memory: 88.8M
+   CGroup: /system.slice/mariadb.service
+           └─23920 /usr/sbin/mariadbd --wsrep-new-cluster --wsrep_start_position=7ae8147c-1c66-11ec-8168-6f9f4428dd38:8
+
+Sep 23 12:48:27 mariadb01 mariadbd[23920]: 2021-09-23 12:48:27 0 [Note] /usr/sbin/mariadbd: ready for connections.
+Sep 23 12:48:27 mariadb01 mariadbd[23920]: Version: '10.6.4-MariaDB'  socket: '/var/lib/mysql/mysql.sock'  port: 3306  MariaDB Server
+Sep 23 12:48:27 mariadb01 mariadbd[23920]: 2021-09-23 12:48:27 1 [Note] WSREP: Lowest cert index boundary for CC from group: 9
+Sep 23 12:48:27 mariadb01 mariadbd[23920]: 2021-09-23 12:48:27 1 [Note] WSREP: Min available from gcache for CC from group: 1
+Sep 23 12:48:27 mariadb01 mariadbd[23920]: 2021-09-23 12:48:27 1 [Note] WSREP: Server mariadb01 synced with group
+Sep 23 12:48:27 mariadb01 mariadbd[23920]: 2021-09-23 12:48:27 1 [Note] WSREP: Server status change joined -> synced
+Sep 23 12:48:27 mariadb01 mariadbd[23920]: 2021-09-23 12:48:27 1 [Note] WSREP: Synchronized with group, ready for connections
+Sep 23 12:48:27 mariadb01 mariadbd[23920]: 2021-09-23 12:48:27 1 [Note] WSREP: wsrep_notify_cmd is not defined, skipping notification.
+Sep 23 12:48:27 mariadb01 mariadbd[23920]: 2021-09-23 12:48:27 0 [Note] InnoDB: Buffer pool(s) load completed at 210923 12:48:27
+Sep 23 12:48:27 mariadb01 systemd[1]: Started MariaDB 10.6.4 database server.
+[opc@mariadb01 ~]$ mysql -u root -p -e "SHOW STATUS LIKE 'wsrep_cluster_size'"
+Enter password:
++--------------------+-------+
+| Variable_name      | Value |
++--------------------+-------+
+| wsrep_cluster_size | 1     |
++--------------------+-------+
+[opc@mariadb01 ~]$
+
+[opc@mariadb02 ~]$ sudo systemctl start mariadb; sudo systemctl status mariadb;
+● mariadb.service - MariaDB 10.6.4 database server
+   Loaded: loaded (/usr/lib/systemd/system/mariadb.service; enabled; vendor preset: disabled)
+  Drop-In: /etc/systemd/system/mariadb.service.d
+           └─migrated-from-my.cnf-settings.conf
+   Active: active (running) since Thu 2021-09-23 12:53:42 GMT; 41ms ago
+     Docs: man:mariadbd(8)
+           https://mariadb.com/kb/en/library/systemd/
+  Process: 24591 ExecStartPost=/bin/sh -c systemctl unset-environment _WSREP_START_POSITION (code=exited, status=0/SUCCESS)
+  Process: 24378 ExecStartPre=/bin/sh -c [ ! -e /usr/bin/galera_recovery ] && VAR= ||   VAR=`cd /usr/bin/..; /usr/bin/galera_recovery`; [ $? -eq 0 ]   && systemctl set-environment _WSREP_START_POSITION=$VAR || exit 1 (code=exited, status=0/SUCCESS)
+  Process: 24375 ExecStartPre=/bin/sh -c systemctl unset-environment _WSREP_START_POSITION (code=exited, status=0/SUCCESS)
+ Main PID: 24440 (mariadbd)
+   Status: "Taking your SQL requests now..."
+   Memory: 89.1M
+   CGroup: /system.slice/mariadb.service
+           └─24440 /usr/sbin/mariadbd --wsrep_start_position=7ae8147c-1c66-11ec-8168-6f9f4428dd38:12
+
+Sep 23 12:53:42 mariadb02 mariadbd[24440]: 2021-09-23 12:53:42 2 [Note] WSREP: Min available from gcache for CC from sst: 2
+Sep 23 12:53:42 mariadb02 mariadbd[24440]: 2021-09-23 12:53:42 0 [Note] WSREP: 0.0 (mariadb02): State transfer from 1.0 (mariadb01) complete.
+Sep 23 12:53:42 mariadb02 mariadbd[24440]: 2021-09-23 12:53:42 0 [Note] WSREP: Shifting JOINER -> JOINED (TO: 14)
+Sep 23 12:53:42 mariadb02 mariadbd[24440]: 2021-09-23 12:53:42 0 [Note] WSREP: Member 0.0 (mariadb02) synced with group.
+Sep 23 12:53:42 mariadb02 mariadbd[24440]: 2021-09-23 12:53:42 0 [Note] WSREP: Shifting JOINED -> SYNCED (TO: 14)
+Sep 23 12:53:42 mariadb02 mariadbd[24440]: 2021-09-23 12:53:42 2 [Note] WSREP: Server mariadb02 synced with group
+Sep 23 12:53:42 mariadb02 mariadbd[24440]: 2021-09-23 12:53:42 2 [Note] WSREP: Server status change joined -> synced
+Sep 23 12:53:42 mariadb02 mariadbd[24440]: 2021-09-23 12:53:42 2 [Note] WSREP: Synchronized with group, ready for connections
+Sep 23 12:53:42 mariadb02 mariadbd[24440]: 2021-09-23 12:53:42 2 [Note] WSREP: wsrep_notify_cmd is not defined, skipping notification.
+Sep 23 12:53:42 mariadb02 mariadbd[24440]: 2021-09-23 12:53:42 0 [Note] InnoDB: Buffer pool(s) load completed at 210923 12:53:42
+[opc@mariadb02 ~]$ mysql -u root -p -e "SHOW STATUS LIKE 'wsrep_cluster_size'"
+Enter password:
++--------------------+-------+
+| Variable_name      | Value |
++--------------------+-------+
+| wsrep_cluster_size | 2     |
++--------------------+-------+
+[opc@mariadb02 ~]$
+
+[opc@mariadb03 ~]$ sudo systemctl start mariadb; sudo systemctl status mariadb;
+● mariadb.service - MariaDB 10.6.4 database server
+   Loaded: loaded (/usr/lib/systemd/system/mariadb.service; enabled; vendor preset: disabled)
+  Drop-In: /etc/systemd/system/mariadb.service.d
+           └─migrated-from-my.cnf-settings.conf
+   Active: active (running) since Thu 2021-09-23 12:54:35 GMT; 38ms ago
+     Docs: man:mariadbd(8)
+           https://mariadb.com/kb/en/library/systemd/
+  Process: 24290 ExecStartPost=/bin/sh -c systemctl unset-environment _WSREP_START_POSITION (code=exited, status=0/SUCCESS)
+  Process: 24076 ExecStartPre=/bin/sh -c [ ! -e /usr/bin/galera_recovery ] && VAR= ||   VAR=`cd /usr/bin/..; /usr/bin/galera_recovery`; [ $? -eq 0 ]   && systemctl set-environment _WSREP_START_POSITION=$VAR || exit 1 (code=exited, status=0/SUCCESS)
+  Process: 24073 ExecStartPre=/bin/sh -c systemctl unset-environment _WSREP_START_POSITION (code=exited, status=0/SUCCESS)
+ Main PID: 24136 (mariadbd)
+   Status: "Taking your SQL requests now..."
+   Memory: 94.4M
+   CGroup: /system.slice/mariadb.service
+           └─24136 /usr/sbin/mariadbd --wsrep_start_position=7ae8147c-1c66-11ec-8168-6f9f4428dd38:11
+
+Sep 23 12:54:35 mariadb03 mariadbd[24136]: 2021-09-23 12:54:35 2 [Note] WSREP: Min available from gcache for CC from sst: 2
+Sep 23 12:54:35 mariadb03 mariadbd[24136]: 2021-09-23 12:54:35 0 [Note] WSREP: 1.0 (mariadb03): State transfer from 0.0 (mariadb02) complete.
+Sep 23 12:54:35 mariadb03 mariadbd[24136]: 2021-09-23 12:54:35 0 [Note] WSREP: Shifting JOINER -> JOINED (TO: 15)
+Sep 23 12:54:35 mariadb03 mariadbd[24136]: 2021-09-23 12:54:35 0 [Note] WSREP: Member 1.0 (mariadb03) synced with group.
+Sep 23 12:54:35 mariadb03 mariadbd[24136]: 2021-09-23 12:54:35 0 [Note] WSREP: Shifting JOINED -> SYNCED (TO: 15)
+Sep 23 12:54:35 mariadb03 mariadbd[24136]: 2021-09-23 12:54:35 2 [Note] WSREP: Server mariadb03 synced with group
+Sep 23 12:54:35 mariadb03 mariadbd[24136]: 2021-09-23 12:54:35 2 [Note] WSREP: Server status change joined -> synced
+Sep 23 12:54:35 mariadb03 mariadbd[24136]: 2021-09-23 12:54:35 2 [Note] WSREP: Synchronized with group, ready for connections
+Sep 23 12:54:35 mariadb03 mariadbd[24136]: 2021-09-23 12:54:35 2 [Note] WSREP: wsrep_notify_cmd is not defined, skipping notification.
+Sep 23 12:54:35 mariadb03 systemd[1]: Started MariaDB 10.6.4 database server.
+[opc@mariadb03 ~]$ mysql -u root -p -e "SHOW STATUS LIKE 'wsrep_cluster_size'"
+Enter password:
++--------------------+-------+
+| Variable_name      | Value |
++--------------------+-------+
+| wsrep_cluster_size | 3     |
++--------------------+-------+
+[opc@mariadb03 ~]$
+
+### Test Replication
+####################
+[opc@mariadb01 ~]$ mysql -u root -p -e 'CREATE DATABASE playground;
+> CREATE TABLE playground.equipment ( id INT NOT NULL AUTO_INCREMENT, type VARCHAR(50), quant INT, color VARCHAR(25), PRIMARY KEY(id));
+> INSERT INTO playground.equipment (type, quant, color) VALUES ("slide", 2, "blue");'
+Enter password:
+[opc@mariadb01 ~]$
+
+[opc@mariadb02 ~]$ mysql -u root -p -e 'SELECT * FROM playground.equipment;'
+Enter password:
++----+-------+-------+-------+
+| id | type  | quant | color |
++----+-------+-------+-------+
+|  3 | slide |     2 | blue  |
++----+-------+-------+-------+
+[opc@mariadb02 ~]$ mysql -u root -p -e 'INSERT INTO playground.equipment (type, quant, color) VALUES ("swing", 10, "yellow");'
+Enter password:
+[opc@mariadb02 ~]$
+
+[opc@mariadb03 ~]$ mysql -u root -p -e 'SELECT * FROM playground.equipment;'
+Enter password:
++----+-------+-------+--------+
+| id | type  | quant | color  |
++----+-------+-------+--------+
+|  3 | slide |     2 | blue   |
+|  4 | swing |    10 | yellow |
++----+-------+-------+--------+
+[opc@mariadb03 ~]$ mysql -u root -p -e 'INSERT INTO playground.equipment (type, quant, color) VALUES ("seesaw", 3, "green");'
+Enter password:
+[opc@mariadb03 ~]$
+
+[opc@mariadb01 ~]$ mysql -u root -p -e 'SELECT * FROM playground.equipment;'
+Enter password:
++----+--------+-------+--------+
+| id | type   | quant | color  |
++----+--------+-------+--------+
+|  3 | slide  |     2 | blue   |
+|  4 | swing  |    10 | yellow |
+|  5 | seesaw |     3 | green  |
++----+--------+-------+--------+
+[opc@mariadb01 ~]$

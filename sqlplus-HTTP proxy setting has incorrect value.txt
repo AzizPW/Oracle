@@ -1,0 +1,37 @@
+[oravis@ebsoracle ~]$ source /u01/oravis/VIS_12210/12.1.0/COVIDS_ebsoracle.env
+[oravis@ebsoracle ~]$ sqlplus /nolog
+Error 46 initializing SQL*Plus
+HTTP proxy setting has incorrect value
+SP2-1502: The HTTP proxy server specified by http_proxy is not accessible
+oravis@ebsoracle ~]$ env|grep prox
+http_proxy=http://10.1.5.110:80/
+ftp_proxy=http://10.1.5.110:80/
+all_proxy=socks://10.1.5.110:80/
+https_proxy=http://10.1.5.110:80/
+no_proxy=localhost,127.0.0.0/8,::1
+[oravis@ebsoracle ~]$ unset https_proxy; unset http_proxy; unset ftp_proxy; unset ftp_proxy; unset all_proxy; unset no_proxy; env|grep prox;
+[oravis@ebsoracle ~]$ sqlplus /nolog
+
+SQL*Plus: Release 12.1.0.2.0 Production on Sun Oct 24 15:20:46 2021
+
+Copyright (c) 1982, 2014, Oracle.  All rights reserved.
+
+SQL> conn apps/apps
+Connected.
+SQL> show user;
+USER is "APPS"
+SQL> exit
+Disconnected from Oracle Database 12c Enterprise Edition Release 12.1.0.2.0 - 64bit Production
+With the Partitioning, OLAP, Advanced Analytics and Real Application Testing options
+[oravis@ebsoracle ~]$ sqlplus / as sysdba
+
+SQL*Plus: Release 12.1.0.2.0 Production on Sun Oct 24 15:21:09 2021
+
+Copyright (c) 1982, 2014, Oracle.  All rights reserved.
+
+
+Connected to:
+Oracle Database 12c Enterprise Edition Release 12.1.0.2.0 - 64bit Production
+With the Partitioning, OLAP, Advanced Analytics and Real Application Testing options
+
+SQL> exit;

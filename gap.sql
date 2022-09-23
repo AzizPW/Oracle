@@ -1,5 +1,5 @@
 -- NAME: gap.sql
--- LAST UPDATED: 17 June 2020
+-- LAST UPDATED: 20 October 2021
 -- USAGE: @gap
 -- DISCLAIMER:
 --  This script is free and provided by azizpw (PT Metrodata Electronics, Tbk.) for all customers who use Oracle Data Guard.
@@ -15,4 +15,4 @@ SELECT /*Check gap on stby with difference*/ al.thrd "Thread", almax "Last Seq R
 FROM (select thread# thrd, MAX(sequence#) almax FROM v$archived_log WHERE resetlogs_change#=(SELECT resetlogs_change# FROM v$database) GROUP BY thread#) al,
 (SELECT thread# thrd, MAX(sequence#) lhmax FROM v$log_history WHERE resetlogs_change#=(SELECT resetlogs_change# FROM v$database) GROUP BY thread#) lh WHERE al.thrd = lh.thrd;
 --Check proses standby
-SELECT PROCESS,STATUS,SEQUENCE# FROM V$MANAGED_STANDBY ORDER BY 1,3,2;
+SELECT PROCESS,STATUS,SEQUENCE#,INST_ID FROM GV$MANAGED_STANDBY ORDER BY 1,3,2;

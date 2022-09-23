@@ -1,0 +1,155 @@
+[oracle@oel79 ~]$ rlwrap sqlplus system/oracle789@oel79:1521/pdb12
+
+SQL*Plus: Release 12.2.0.1.0 Production on Fri Aug 13 12:01:37 2021
+
+Copyright (c) 1982, 2016, Oracle.  All rights reserved.
+
+Last Successful login time: Fri Aug 13 2021 11:45:59 +00:00
+
+Connected to:
+Oracle Database 12c Enterprise Edition Release 12.2.0.1.0 - 64bit Production
+
+SQL> sho con_name
+
+CON_NAME
+------------------------------
+PDB12
+SQL> select name from v$datafile order by 1;
+
+NAME
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+/data/DB12/pdb12/sysaux01.dbf
+/data/DB12/pdb12/system01.dbf
+/data/DB12/pdb12/undotbs01.dbf
+/data/DB12/pdb12/users01.dbf
+
+SQL> create tablespace ts_messi datafile '/data/DB12/pdb12/messi01.dbf' size 8m autoextend on next 8m maxsize 1g, '/data/DB12/pdb12/messi02.dbf' size 8m autoextend on next 8m maxsize 1g;
+
+Tablespace created.
+
+SQL> create user messi identified by messi789 default tablespace ts_messi temporary tablespace temp;
+
+User created.
+
+SQL> grant resource,connect to messi;
+
+Grant succeeded.
+
+SQL> alter user messi quota unlimited on ts_messi;
+
+User altered.
+
+SQL> exit
+[oracle@oel79 ~]$ rlwrap sqlplus messi/messi789@oel79:1521/pdb12
+
+SQL*Plus: Release 12.2.0.1.0 Production on Fri Aug 13 12:06:00 2021
+
+Copyright (c) 1982, 2016, Oracle.  All rights reserved.
+
+
+Connected to:
+Oracle Database 12c Enterprise Edition Release 12.2.0.1.0 - 64bit Production
+
+SQL> show con_name
+
+CON_NAME
+------------------------------
+PDB12
+SQL> sho user;
+USER is "MESSI"
+SQL> CREATE TABLE OPUNG (X NUMBER, Y NUMBER, Z NUMBER);
+
+Table created.
+
+SQL> CREATE INDEX IX_OPUNG_X ON OPUNG(X);
+
+Index created.
+
+SQL> BEGIN
+  2  FOR I IN 1..99999 LOOP
+  3  INSERT INTO OPUNG VALUES(I,I,I);
+  4  END LOOP;
+  5  COMMIT;
+  6  END;
+  7  /
+
+PL/SQL procedure successfully completed.
+
+SQL> ANALYZE TABLE OPUNG COMPUTE STATISTICS FOR ALL INDEXES FOR ALL INDEXED COLUMNS;
+
+Table analyzed.
+
+SQL> CREATE TABLE TULANG (X VARCHAR2(5), Y VARCHAR2(2), Z VARCHAR2(5));
+
+Table created.
+
+SQL> CREATE INDEX IX_TULANG_X ON TULANG(X);
+
+Index created.
+
+SQL> alter table tulang modify (Y VARCHAR2(5));
+
+Table altered.
+
+SQL> desc tulang;
+ Name                                                                                                                                            Null?    Type
+ ----------------------------------------------------------------------------------------------------------------------------------------------- -------- ------------------------------------------------------------------------------------------------
+ X                                                                                                                                                        VARCHAR2(5)
+ Y                                                                                                                                                        VARCHAR2(5)
+ Z                                                                                                                                                        VARCHAR2(5)
+
+SQL> BEGIN
+  2  FOR I IN 1..99999 LOOP
+  3  INSERT INTO TULANG VALUES(I,I,I);
+  4  END LOOP;
+  5  COMMIT;
+  6  END;
+  7  /
+
+PL/SQL procedure successfully completed.
+
+SQL> ANALYZE TABLE TULANG COMPUTE STATISTICS FOR ALL INDEXES FOR ALL INDEXED COLUMNS;
+
+Table analyzed.
+
+SQL> SELECT COUNT(1) FROM OPUNG;
+
+  COUNT(1)
+----------
+     99999
+
+SQL> SELECT COUNT(1) FROM TULANG;
+
+  COUNT(1)
+----------
+     99999
+
+SQL> exit
+Disconnected from Oracle Database 12c Enterprise Edition Release 12.2.0.1.0 - 64bit Production
+[oracle@oel79 ~]$ source db12cR2_profile.env
+[oracle@oel79 ~]$ $ORACLE_HOME/jdk/bin/java -jar /u01/app/oracle/product/19c/db_1/rdbms/admin/preupgrade.jar dir /tmp -c pdb12
+==================
+PREUPGRADE SUMMARY
+==================
+  /tmp/preupgrade.log
+  /tmp/preupgrade_fixups.sql
+  /tmp/postupgrade_fixups.sql
+
+Execute fixup scripts across the entire CDB:
+
+Before upgrade:
+
+1. Execute preupgrade fixups with the below command
+$ORACLE_HOME/perl/bin/perl -I$ORACLE_HOME/perl/lib -I$ORACLE_HOME/rdbms/admin $ORACLE_HOME/rdbms/admin/catcon.pl -l /tmp/ -b preup_DB12 /tmp/preupgrade_fixups.sql
+
+2. Review logs under /tmp/
+
+After the upgrade:
+
+1. Execute postupgrade fixups with the below command
+$ORACLE_HOME/perl/bin/perl -I$ORACLE_HOME/perl/lib -I$ORACLE_HOME/rdbms/admin $ORACLE_HOME/rdbms/admin/catcon.pl -l /tmp/ -b postup_DB12 /tmp/postupgrade_fixups.sql
+
+2. Review logs under /tmp/
+
+Preupgrade complete: 2021-08-13T16:47:29
+[oracle@oel79 ~]$

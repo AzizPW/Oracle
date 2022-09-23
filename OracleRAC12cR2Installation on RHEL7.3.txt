@@ -291,6 +291,9 @@ export BASE_PATH=/usr/sbin:$PATH
 export PATH=$ORACLE_HOME/bin:$BASE_PATH
 export LD_LIBRARY_PATH=$ORACLE_HOME/lib:/lib:/usr/lib
 export CLASSPATH=$ORACLE_HOME/JRE:$ORACLE_HOME/jlib:$ORACLE_HOME/rdbms/jlib
+export NLS_DATE_FORMAT='DD-Mon-RR HH24:MI:SS'
+export HISTTIMEFORMAT="%Y-%m-%d %T ~ "
+umask 022
 
 nano db_profile
 ===============
@@ -306,6 +309,9 @@ export BASE_PATH=/usr/sbin:$PATH
 export PATH=$ORACLE_HOME/bin:$BASE_PATH
 export LD_LIBRARY_PATH=$ORACLE_HOME/lib:/lib:/usr/lib
 export CLASSPATH=$ORACLE_HOME/JRE:$ORACLE_HOME/jlib:$ORACLE_HOME/rdbms/jlib
+export NLS_DATE_FORMAT='DD-Mon-RR HH24:MI:SS'
+export HISTTIMEFORMAT="%Y-%m-%d %T ~ "
+umask 022
 
 nano grid_profile
 =================
@@ -321,6 +327,9 @@ export BASE_PATH=/usr/sbin:$PATH
 export PATH=$ORACLE_HOME/bin:$BASE_PATH
 export LD_LIBRARY_PATH=$ORACLE_HOME/lib:/lib:/usr/lib
 export CLASSPATH=$ORACLE_HOME/JRE:$ORACLE_HOME/jlib:$ORACLE_HOME/rdbms/jlib
+export NLS_DATE_FORMAT='DD-Mon-RR HH24:MI:SS'
+export HISTTIMEFORMAT="%Y-%m-%d %T ~ "
+umask 022
 
 nano db_profile
 ===============
@@ -336,6 +345,9 @@ export BASE_PATH=/usr/sbin:$PATH
 export PATH=$ORACLE_HOME/bin:$BASE_PATH
 export LD_LIBRARY_PATH=$ORACLE_HOME/lib:/lib:/usr/lib
 export CLASSPATH=$ORACLE_HOME/JRE:$ORACLE_HOME/jlib:$ORACLE_HOME/rdbms/jlib
+export NLS_DATE_FORMAT='DD-Mon-RR HH24:MI:SS'
+export HISTTIMEFORMAT="%Y-%m-%d %T ~ "
+umask 022
 
 ### 20180705
 ############
