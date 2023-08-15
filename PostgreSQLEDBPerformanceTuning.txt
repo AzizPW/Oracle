@@ -1,0 +1,65 @@
+https://www.enterprisedb.com/postgres-tutorials/introduction-postgresql-performance-tuning-and-optimization
+
+Designing the Machine 	3
+    Bare Metal 	3
+        CPU 	3
+        RAM 	3
+        Disk 	3
+        Network card 	3
+    Virtual Machines 	5
+Tuning the System 	5
+    tuned daemon 	6
+        Optimizing the filesystem 	9
+        Huge pages 	9
+PostgreSQL Tuning Starting Points 	11
+    Configuration & Authentication 	11
+        max_connections 	11
+        password_encryption 	12
+     Resource Usage 	12
+        shared_buffers 	12
+        work_mem 	12
+        maintenance_work_mem 	12
+        effective_io_concurrency 	12
+     Write-Ahead Log 	13
+        wal_compression 	13
+        wal_log_hints 	13
+        wal_buffers 	13
+        checkpoint_timeout 	13
+        checkpoint_completion_target 	13
+        max_wal_size 	14
+        archive_mode 	14
+        archive_command 	14
+     Query Tuning 	14
+        random_page_cost 	14
+        effective_cache_size 	14
+        cpu_tuple_cost 	14
+    Reporting and Logging 	15
+        logging_collector 	15
+        log_directory 	15
+        log_checkpoints 	15
+        log_line_prefix 	15
+        log_lock_waits 	15
+        log_statement 	15
+        log_temp_files 	15
+        timed_statistics (EPAS) 	16
+    Autovacuum 	16
+        log_autovacuum_min_duration 	16
+        autovacuum_max_workers 	16
+        autovacuum_vacuum_cost_limit 	16
+    Client Connection Defaults 	16
+        idle_in_transaction_session_timeout 	16
+        lc_messages 	17
+        shared_preload_libraries 	17
+Fine Tuning Based on Workload Analysis 	17
+    Finding Slow Queries 	17
+    Rewriting Queries 	 
+    Naked Columns 	18
+    Never Use NOT IN with a Subquery 	19
+Using EXPLAIN (ANALYZE, BUFFERS) 	20
+    Wrong Estimates 	20
+    External Sorts 	20
+    Hash Batches 	22
+    Heap Fetches 	23
+    Lossy Bitmap Scans 	24
+    Wrong Plan Shapes 	26
+Partitioning 	26
