@@ -6,6 +6,7 @@ Database 12.2.0.1 Proactive Patch Information (Doc ID 2285557.1)
 Database 18 Proactive Patch Information (Doc ID 2369376.1)
 Oracle Database 19c Proactive Patch Information (Doc ID 2521164.1)
 Oracle Database 21c Proactive Patch Information (Doc ID 2796590.1)
+Enterprise Manager Cloud Control Updates: List of Available RUs (Release Updates) and PSUs (Patch Set Updates) (Doc ID 1605609.1)
 
 Patch 33182768: GI RELEASE UPDATE 19.13.0.0.0
 COMBO OF OJVM RU COMPONENT 19.8.0.0.200714 + GI RU 19.8.0.0.200714 (Patch)

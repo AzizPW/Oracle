@@ -1,15 +1,10 @@
 ### Startup OEM13.3
 ###################
-dbstart $ORACLE_HOME
-cd $OMS_HOME/bin; ./emctl start oms
-cd $AGENT_HOME/bin; ./emctl start agent
-cd $OMS_HOME/bin; ./emctl status oms
+dbstart $ORACLE_HOME; cd $OMS_HOME/bin; ./emctl start oms; cd $AGENT_HOME/bin; ./emctl start agent; cd $OMS_HOME/bin; ./emctl status oms;
 
 ### Shutdown OEM13.3
 ####################
-cd $OMS_HOME/bin; ./emctl stop oms -all
-cd $AGENT_HOME/bin; ./emctl stop agent
-dbshut $ORACLE_HOME
+cd $OMS_HOME/bin; ./emctl stop oms -all; cd $AGENT_HOME/bin; ./emctl stop agent; dbshut $ORACLE_HOME;
 
 ### Real Action
 ###############

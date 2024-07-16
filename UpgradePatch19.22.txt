@@ -1,0 +1,782 @@
+#####################################
+### Upgrade Patch 19.22 by AzizPW ###
+### Technical Consultant ############
+### PT Mitra Integrasi Informatika ##
+#####################################
+### Thu, 15 Feb 2024 ################
+#####################################
+
+### Check Existing Patch Version
+################################
+[oracle@mysqlcirebon ~]$ $ORACLE_HOME/OPatch/opatch lspatches
+35050331;OCW RELEASE UPDATE 19.19.0.0.0 (35050331)
+35042068;Database Release Update : 19.19.0.0.230418 (35042068)
+
+OPatch succeeded.
+[oracle@mysqlcirebon ~]$ $ORACLE_HOME/OPatch/opatch version
+OPatch Version: 12.2.0.1.40
+
+OPatch succeeded.
+[oracle@mysqlcirebon ~]$
+
+### Prepare OPatch & 19.22 Patch
+################################
+[oracle@mysqlcirebon ~]$ ls -lh ~/Downloads/*zip
+-rw-r--r-- 1 oracle oinstall 2.9G Dec 28 12:41 /home/oracle/Downloads/LINUX.X64_193000_db_home.zip
+-rw-r--r-- 1 oracle oinstall 2.7G Dec 28 12:40 /home/oracle/Downloads/LINUX.X64_193000_grid_home.zip
+-rw-r--r-- 1 oracle oinstall 2.7G Dec 28 13:06 /home/oracle/Downloads/p35037840_190000_Linux-x86-64.zip
+-rw-r--r-- 1 oracle oinstall 3.0G Feb 15 03:54 /home/oracle/Downloads/p35940989_190000_Linux-x86-64-GIRU19.22.zip
+-rw-r--r-- 1 oracle oinstall 122M Feb 15 03:54 /home/oracle/Downloads/p6880880_190000_Linux-x86-64-OPatch12.2.0.1.41.zip
+[oracle@mysqlcirebon ~]$
+
+### Upgrade the OPatch
+######################
+[oracle@mysqlcirebon ~]$ cd $ORACLE_HOME; pwd;
+/oracle/product/dbhome19c_1
+[oracle@mysqlcirebon dbhome19c_1]$ rm -fr OPatch/
+[oracle@mysqlcirebon dbhome19c_1]$ 7za x ~/Downloads/p6880880_190000_Linux-x86-64-OPatch12.2.0.1.41.zip
+
+7-Zip (a) [64] 16.02 : Copyright (c) 1999-2016 Igor Pavlov : 2016-05-21
+p7zip Version 16.02 (locale=en_US.UTF-8,Utf16=on,HugeFiles=on,64 bits,2 CPUs AMD EPYC 7J13 64-Core Processor                 (A00F11),ASM,AES-NI)
+
+Scanning the drive for archives:
+1 file, 127629034 bytes (122 MiB)
+
+Extracting archive: /home/oracle/Downloads/p6880880_190000_Linux-x86-64-OPatch12.2.0.1.41.zip
+--
+Path = /home/oracle/Downloads/p6880880_190000_Linux-x86-64-OPatch12.2.0.1.41.zip
+Type = zip
+Physical Size = 127629034
+
+Everything is Ok
+
+Folders: 130
+Files: 495
+Size:       305582864
+Compressed: 127629034
+[oracle@mysqlcirebon dbhome19c_1]$ OPatch/opatch version
+OPatch Version: 12.2.0.1.41
+
+OPatch succeeded.
+[oracle@mysqlcirebon dbhome19c_1]$
+
+### Extract the Patch
+#####################
+[oracle@mysqlcirebon ~]$ cd ~/Downloads; ls -lh *zip
+-rw-r--r-- 1 oracle oinstall 2.9G Dec 28 12:41 LINUX.X64_193000_db_home.zip
+-rw-r--r-- 1 oracle oinstall 2.7G Dec 28 12:40 LINUX.X64_193000_grid_home.zip
+-rw-r--r-- 1 oracle oinstall 2.7G Dec 28 13:06 p35037840_190000_Linux-x86-64.zip
+-rw-r--r-- 1 oracle oinstall 3.0G Feb 15 03:54 p35940989_190000_Linux-x86-64-GIRU19.22.zip
+-rw-r--r-- 1 oracle oinstall 122M Feb 15 03:54 p6880880_190000_Linux-x86-64-OPatch12.2.0.1.41.zip
+[oracle@mysqlcirebon Downloads]$ 7za x p35940989_190000_Linux-x86-64-GIRU19.22.zip; cd 35940989; pwd;
+
+7-Zip (a) [64] 16.02 : Copyright (c) 1999-2016 Igor Pavlov : 2016-05-21
+p7zip Version 16.02 (locale=en_US.UTF-8,Utf16=on,HugeFiles=on,64 bits,2 CPUs AMD EPYC 7J13 64-Core Processor                 (A00F11),ASM,AES-NI)
+
+Scanning the drive for archives:
+1 file, 3153297056 bytes (3008 MiB)
+
+Extracting archive: p35940989_190000_Linux-x86-64-GIRU19.22.zip
+--
+Path = p35940989_190000_Linux-x86-64-GIRU19.22.zip
+Type = zip
+Physical Size = 3153297056
+
+Everything is Ok
+
+Folders: 1358
+Files: 19054
+Size:       5633262095
+Compressed: 3153297056
+/home/oracle/Downloads/35940989
+[oracle@mysqlcirebon 35940989]$
+
+### Apply Patch
+###############
+[oracle@mysqlcirebon ~]$ cd Downloads/35940989/35943157
+[oracle@mysqlcirebon 35943157]$ $ORACLE_HOME/OPatch/opatch apply -analyze -silent
+Oracle Interim Patch Installer version 12.2.0.1.41
+Copyright (c) 2024, Oracle Corporation.  All rights reserved.
+
+
+Oracle Home       : /oracle/product/dbhome19c_1
+Central Inventory : /oracle/oraInventory
+   from           : /oracle/product/dbhome19c_1/oraInst.loc
+OPatch version    : 12.2.0.1.41
+OUI version       : 12.2.0.7.0
+Log file location : /oracle/product/dbhome19c_1/cfgtoollogs/opatch/opatch2024-02-15_06-07-00AM_1.log
+
+Verifying environment and performing prerequisite checks...
+OPatch continues with these patches:   35943157
+
+Do you want to proceed? [y|n]
+Y (auto-answered by -silent)
+User Responded with: Y
+All checks passed.
+You are calling OPatch with -ocmrf option while this OPatch is generic, not being bundled with OCM. The -ocmrf option is being deprecated. Please remove it while calling OPatch.
+
+Please shutdown Oracle instances running out of this ORACLE_HOME on the local system.
+(Oracle Home = '/oracle/product/dbhome19c_1')
+
+
+Is the local system ready for patching? [y|n]
+Y (auto-answered by -silent)
+User Responded with: Y
+Backing up files...
+Applying interim patch '35943157' to OH '/oracle/product/dbhome19c_1'
+ApplySession: Optional component(s) [ oracle.network.gsm, 19.0.0.0.0 ] , [ oracle.crypto.rsf, 19.0.0.0.0 ] , [ oracle.pg4mq, 19.0.0.0.0 ] , [ oracle.precomp.companion, 19.0.0.0.0 ] , [ oracle.rdbms.ic, 19.0.0.0.0 ] , [ oracle.rdbms.tg4db2, 19.0.0.0.0 ] , [ oracle.tfa, 19.0.0.0.0 ] , [ oracle.rdbms.tg4tera, 19.0.0.0.0 ] , [ oracle.network.cman, 19.0.0.0.0 ] , [ oracle.options.olap, 19.0.0.0.0 ] , [ oracle.oid.client, 19.0.0.0.0 ] , [ oracle.xdk.companion, 19.0.0.0.0 ] , [ oracle.options.olap.api, 19.0.0.0.0 ] , [ oracle.rdbms.tg4ifmx, 19.0.0.0.0 ] , [ oracle.rdbms.tg4sybs, 19.0.0.0.0 ] , [ oracle.rdbms.tg4msql, 19.0.0.0.0 ] , [ oracle.ons.eons.bwcompat, 19.0.0.0.0 ] , [ oracle.ons.cclient, 19.0.0.0.0 ] , [ oracle.sdo.companion, 19.0.0.0.0 ] , [ oracle.net.cman, 19.0.0.0.0 ] , [ oracle.pg4appc, 19.0.0.0.0 ] , [ oracle.jdk, 1.8.0.191.0 ]  not present in the Oracle Home or a higher version is found.
+Users request no RAC file generation.  Do not create MP files.
+
+Skip patching component oracle.rdbms, 19.0.0.0.0 and its actions.
+The actions are reported here, but are not performed.
+
+
+Skip patching component oracle.rdbms.util, 19.0.0.0.0 and its actions.
+The actions are reported here, but are not performed.
+
+
+Skip patching component oracle.rdbms.rsf, 19.0.0.0.0 and its actions.
+The actions are reported here, but are not performed.
+
+
+Skip patching component oracle.assistants.acf, 19.0.0.0.0 and its actions.
+The actions are reported here, but are not performed.
+
+
+Skip patching component oracle.assistants.deconfig, 19.0.0.0.0 and its actions.
+The actions are reported here, but are not performed.
+
+
+Skip patching component oracle.assistants.server, 19.0.0.0.0 and its actions.
+The actions are reported here, but are not performed.
+
+
+Skip patching component oracle.blaslapack, 19.0.0.0.0 and its actions.
+The actions are reported here, but are not performed.
+
+
+Skip patching component oracle.buildtools.rsf, 19.0.0.0.0 and its actions.
+The actions are reported here, but are not performed.
+
+
+Skip patching component oracle.ctx, 19.0.0.0.0 and its actions.
+The actions are reported here, but are not performed.
+
+
+Skip patching component oracle.dbdev, 19.0.0.0.0 and its actions.
+The actions are reported here, but are not performed.
+
+
+Skip patching component oracle.dbjava.ic, 19.0.0.0.0 and its actions.
+The actions are reported here, but are not performed.
+
+
+Skip patching component oracle.dbjava.jdbc, 19.0.0.0.0 and its actions.
+The actions are reported here, but are not performed.
+
+
+Skip patching component oracle.dbjava.ucp, 19.0.0.0.0 and its actions.
+The actions are reported here, but are not performed.
+
+
+Skip patching component oracle.duma, 19.0.0.0.0 and its actions.
+The actions are reported here, but are not performed.
+
+
+Skip patching component oracle.javavm.client, 19.0.0.0.0 and its actions.
+The actions are reported here, but are not performed.
+
+
+Skip patching component oracle.ldap.owm, 19.0.0.0.0 and its actions.
+The actions are reported here, but are not performed.
+
+
+Skip patching component oracle.ldap.rsf, 19.0.0.0.0 and its actions.
+The actions are reported here, but are not performed.
+
+
+Skip patching component oracle.ldap.security.osdt, 19.0.0.0.0 and its actions.
+The actions are reported here, but are not performed.
+
+
+Skip patching component oracle.marvel, 19.0.0.0.0 and its actions.
+The actions are reported here, but are not performed.
+
+
+Skip patching component oracle.network.rsf, 19.0.0.0.0 and its actions.
+The actions are reported here, but are not performed.
+
+
+Skip patching component oracle.odbc.ic, 19.0.0.0.0 and its actions.
+The actions are reported here, but are not performed.
+
+
+Skip patching component oracle.ons, 19.0.0.0.0 and its actions.
+The actions are reported here, but are not performed.
+
+
+Skip patching component oracle.ons.ic, 19.0.0.0.0 and its actions.
+The actions are reported here, but are not performed.
+
+
+Skip patching component oracle.oracore.rsf, 19.0.0.0.0 and its actions.
+The actions are reported here, but are not performed.
+
+
+Skip patching component oracle.perlint, 5.28.1.0.0 and its actions.
+The actions are reported here, but are not performed.
+
+
+Skip patching component oracle.precomp.common.core, 19.0.0.0.0 and its actions.
+The actions are reported here, but are not performed.
+
+
+Skip patching component oracle.precomp.rsf, 19.0.0.0.0 and its actions.
+The actions are reported here, but are not performed.
+
+
+Skip patching component oracle.rdbms.crs, 19.0.0.0.0 and its actions.
+The actions are reported here, but are not performed.
+
+
+Skip patching component oracle.rdbms.dbscripts, 19.0.0.0.0 and its actions.
+The actions are reported here, but are not performed.
+
+
+Skip patching component oracle.rdbms.deconfig, 19.0.0.0.0 and its actions.
+The actions are reported here, but are not performed.
+
+
+Skip patching component oracle.rdbms.oci, 19.0.0.0.0 and its actions.
+The actions are reported here, but are not performed.
+
+
+Skip patching component oracle.rdbms.rsf.ic, 19.0.0.0.0 and its actions.
+The actions are reported here, but are not performed.
+
+
+Skip patching component oracle.rdbms.scheduler, 19.0.0.0.0 and its actions.
+The actions are reported here, but are not performed.
+
+
+Skip patching component oracle.rhp.db, 19.0.0.0.0 and its actions.
+The actions are reported here, but are not performed.
+
+
+Skip patching component oracle.sdo, 19.0.0.0.0 and its actions.
+The actions are reported here, but are not performed.
+
+
+Skip patching component oracle.sdo.locator.jrf, 19.0.0.0.0 and its actions.
+The actions are reported here, but are not performed.
+
+
+Skip patching component oracle.sqlplus, 19.0.0.0.0 and its actions.
+The actions are reported here, but are not performed.
+
+
+Skip patching component oracle.sqlplus.ic, 19.0.0.0.0 and its actions.
+The actions are reported here, but are not performed.
+
+
+Skip patching component oracle.wwg.plsql, 19.0.0.0.0 and its actions.
+The actions are reported here, but are not performed.
+
+
+Skip patching component oracle.xdk.rsf, 19.0.0.0.0 and its actions.
+The actions are reported here, but are not performed.
+
+
+Skip patching component oracle.install.deinstalltool, 19.0.0.0.0 and its actions.
+The actions are reported here, but are not performed.
+
+
+Skip patching component oracle.sdo.locator, 19.0.0.0.0 and its actions.
+The actions are reported here, but are not performed.
+
+
+Skip patching component oracle.rdbms.install.plugins, 19.0.0.0.0 and its actions.
+The actions are reported here, but are not performed.
+
+
+Skip patching component oracle.dbtoolslistener, 19.0.0.0.0 and its actions.
+The actions are reported here, but are not performed.
+
+
+Skip patching component oracle.xdk, 19.0.0.0.0 and its actions.
+The actions are reported here, but are not performed.
+
+
+Skip patching component oracle.rdbms.drdaas, 19.0.0.0.0 and its actions.
+The actions are reported here, but are not performed.
+
+
+Skip patching component oracle.xdk.xquery, 19.0.0.0.0 and its actions.
+The actions are reported here, but are not performed.
+
+
+Skip patching component oracle.rdbms.rman, 19.0.0.0.0 and its actions.
+The actions are reported here, but are not performed.
+
+
+Skip patching component oracle.network.client, 19.0.0.0.0 and its actions.
+The actions are reported here, but are not performed.
+
+
+Skip patching component oracle.rdbms.hs_common, 19.0.0.0.0 and its actions.
+The actions are reported here, but are not performed.
+
+
+Skip patching component oracle.nlsrtl.rsf.lbuilder, 19.0.0.0.0 and its actions.
+The actions are reported here, but are not performed.
+
+
+Skip patching component oracle.oraolap.dbscripts, 19.0.0.0.0 and its actions.
+The actions are reported here, but are not performed.
+
+
+Skip patching component oracle.mgw.common, 19.0.0.0.0 and its actions.
+The actions are reported here, but are not performed.
+
+
+Skip patching component oracle.rdbms.dv, 19.0.0.0.0 and its actions.
+The actions are reported here, but are not performed.
+
+
+Skip patching component oracle.ldap.ssl, 19.0.0.0.0 and its actions.
+The actions are reported here, but are not performed.
+
+
+Skip patching component oracle.xdk.parser.java, 19.0.0.0.0 and its actions.
+The actions are reported here, but are not performed.
+
+
+Skip patching component oracle.ctx.rsf, 19.0.0.0.0 and its actions.
+The actions are reported here, but are not performed.
+
+
+Skip patching component oracle.rdbms.lbac, 19.0.0.0.0 and its actions.
+The actions are reported here, but are not performed.
+
+
+Skip patching component oracle.rdbms.hsodbc, 19.0.0.0.0 and its actions.
+The actions are reported here, but are not performed.
+
+
+Skip patching component oracle.ctx.atg, 19.0.0.0.0 and its actions.
+The actions are reported here, but are not performed.
+
+
+Skip patching component oracle.oraolap, 19.0.0.0.0 and its actions.
+The actions are reported here, but are not performed.
+
+
+Skip patching component oracle.oraolap.api, 19.0.0.0.0 and its actions.
+The actions are reported here, but are not performed.
+
+
+Skip patching component oracle.odbc, 19.0.0.0.0 and its actions.
+The actions are reported here, but are not performed.
+
+
+Skip patching component oracle.ldap.client, 19.0.0.0.0 and its actions.
+The actions are reported here, but are not performed.
+
+
+Skip patching component oracle.nlsrtl.rsf, 19.0.0.0.0 and its actions.
+The actions are reported here, but are not performed.
+
+
+Skip patching component oracle.rdbms.install.common, 19.0.0.0.0 and its actions.
+The actions are reported here, but are not performed.
+
+
+Skip patching component oracle.ovm, 19.0.0.0.0 and its actions.
+The actions are reported here, but are not performed.
+
+
+Skip patching component oracle.network.listener, 19.0.0.0.0 and its actions.
+The actions are reported here, but are not performed.
+
+
+Skip patching component oracle.ldap.rsf.ic, 19.0.0.0.0 and its actions.
+The actions are reported here, but are not performed.
+
+
+Skip patching component oracle.javavm.server, 19.0.0.0.0 and its actions.
+The actions are reported here, but are not performed.
+
+
+Skip patching component oracle.precomp.lang, 19.0.0.0.0 and its actions.
+The actions are reported here, but are not performed.
+
+
+Skip patching component oracle.precomp.common, 19.0.0.0.0 and its actions.
+The actions are reported here, but are not performed.
+
+
+Skip patching component oracle.jdk, 1.8.0.201.0 and its actions.
+The actions are reported here, but are not performed.
+
+ApplySession skipping inventory update.
+Patch 35943157 successfully applied.
+Log file location: /oracle/product/dbhome19c_1/cfgtoollogs/opatch/opatch2024-02-15_06-07-00AM_1.log
+
+OPatch succeeded.
+[oracle@mysqlcirebon 35943157]$ $ORACLE_HOME/OPatch/opatch apply -silent
+Oracle Interim Patch Installer version 12.2.0.1.41
+Copyright (c) 2024, Oracle Corporation.  All rights reserved.
+
+
+Oracle Home       : /oracle/product/dbhome19c_1
+Central Inventory : /oracle/oraInventory
+   from           : /oracle/product/dbhome19c_1/oraInst.loc
+OPatch version    : 12.2.0.1.41
+OUI version       : 12.2.0.7.0
+Log file location : /oracle/product/dbhome19c_1/cfgtoollogs/opatch/opatch2024-02-15_06-08-47AM_1.log
+
+Verifying environment and performing prerequisite checks...
+OPatch continues with these patches:   35943157
+
+Do you want to proceed? [y|n]
+Y (auto-answered by -silent)
+User Responded with: Y
+All checks passed.
+
+Please shutdown Oracle instances running out of this ORACLE_HOME on the local system.
+(Oracle Home = '/oracle/product/dbhome19c_1')
+
+
+Is the local system ready for patching? [y|n]
+Y (auto-answered by -silent)
+User Responded with: Y
+Backing up files...
+Applying interim patch '35943157' to OH '/oracle/product/dbhome19c_1'
+ApplySession: Optional component(s) [ oracle.network.gsm, 19.0.0.0.0 ] , [ oracle.crypto.rsf, 19.0.0.0.0 ] , [ oracle.pg4mq, 19.0.0.0.0 ] , [ oracle.precomp.companion, 19.0.0.0.0 ] , [ oracle.rdbms.ic, 19.0.0.0.0 ] , [ oracle.rdbms.tg4db2, 19.0.0.0.0 ] , [ oracle.tfa, 19.0.0.0.0 ] , [ oracle.rdbms.tg4tera, 19.0.0.0.0 ] , [ oracle.network.cman, 19.0.0.0.0 ] , [ oracle.options.olap, 19.0.0.0.0 ] , [ oracle.oid.client, 19.0.0.0.0 ] , [ oracle.xdk.companion, 19.0.0.0.0 ] , [ oracle.options.olap.api, 19.0.0.0.0 ] , [ oracle.rdbms.tg4ifmx, 19.0.0.0.0 ] , [ oracle.rdbms.tg4sybs, 19.0.0.0.0 ] , [ oracle.rdbms.tg4msql, 19.0.0.0.0 ] , [ oracle.ons.eons.bwcompat, 19.0.0.0.0 ] , [ oracle.ons.cclient, 19.0.0.0.0 ] , [ oracle.sdo.companion, 19.0.0.0.0 ] , [ oracle.net.cman, 19.0.0.0.0 ] , [ oracle.pg4appc, 19.0.0.0.0 ] , [ oracle.jdk, 1.8.0.191.0 ]  not present in the Oracle Home or a higher version is found.
+
+Patching component oracle.rdbms, 19.0.0.0.0...
+
+Patching component oracle.rdbms.util, 19.0.0.0.0...
+
+Patching component oracle.rdbms.rsf, 19.0.0.0.0...
+
+Patching component oracle.assistants.acf, 19.0.0.0.0...
+
+Patching component oracle.assistants.deconfig, 19.0.0.0.0...
+
+Patching component oracle.assistants.server, 19.0.0.0.0...
+
+Patching component oracle.blaslapack, 19.0.0.0.0...
+
+Patching component oracle.buildtools.rsf, 19.0.0.0.0...
+
+Patching component oracle.ctx, 19.0.0.0.0...
+
+Patching component oracle.dbdev, 19.0.0.0.0...
+
+Patching component oracle.dbjava.ic, 19.0.0.0.0...
+
+Patching component oracle.dbjava.jdbc, 19.0.0.0.0...
+
+Patching component oracle.dbjava.ucp, 19.0.0.0.0...
+
+Patching component oracle.duma, 19.0.0.0.0...
+
+Patching component oracle.javavm.client, 19.0.0.0.0...
+
+Patching component oracle.ldap.owm, 19.0.0.0.0...
+
+Patching component oracle.ldap.rsf, 19.0.0.0.0...
+
+Patching component oracle.ldap.security.osdt, 19.0.0.0.0...
+
+Patching component oracle.marvel, 19.0.0.0.0...
+
+Patching component oracle.network.rsf, 19.0.0.0.0...
+
+Patching component oracle.odbc.ic, 19.0.0.0.0...
+
+Patching component oracle.ons, 19.0.0.0.0...
+
+Patching component oracle.ons.ic, 19.0.0.0.0...
+
+Patching component oracle.oracore.rsf, 19.0.0.0.0...
+
+Patching component oracle.perlint, 5.28.1.0.0...
+
+Patching component oracle.precomp.common.core, 19.0.0.0.0...
+
+Patching component oracle.precomp.rsf, 19.0.0.0.0...
+
+Patching component oracle.rdbms.crs, 19.0.0.0.0...
+
+Patching component oracle.rdbms.dbscripts, 19.0.0.0.0...
+
+Patching component oracle.rdbms.deconfig, 19.0.0.0.0...
+
+Patching component oracle.rdbms.oci, 19.0.0.0.0...
+
+Patching component oracle.rdbms.rsf.ic, 19.0.0.0.0...
+
+Patching component oracle.rdbms.scheduler, 19.0.0.0.0...
+
+Patching component oracle.rhp.db, 19.0.0.0.0...
+
+Patching component oracle.sdo, 19.0.0.0.0...
+
+Patching component oracle.sdo.locator.jrf, 19.0.0.0.0...
+
+Patching component oracle.sqlplus, 19.0.0.0.0...
+
+Patching component oracle.sqlplus.ic, 19.0.0.0.0...
+
+Patching component oracle.wwg.plsql, 19.0.0.0.0...
+
+Patching component oracle.xdk.rsf, 19.0.0.0.0...
+
+Patching component oracle.install.deinstalltool, 19.0.0.0.0...
+
+Patching component oracle.sdo.locator, 19.0.0.0.0...
+
+Patching component oracle.rdbms.install.plugins, 19.0.0.0.0...
+
+Patching component oracle.dbtoolslistener, 19.0.0.0.0...
+
+Patching component oracle.xdk, 19.0.0.0.0...
+
+Patching component oracle.rdbms.drdaas, 19.0.0.0.0...
+
+Patching component oracle.xdk.xquery, 19.0.0.0.0...
+
+Patching component oracle.rdbms.rman, 19.0.0.0.0...
+
+Patching component oracle.network.client, 19.0.0.0.0...
+
+Patching component oracle.rdbms.hs_common, 19.0.0.0.0...
+
+Patching component oracle.nlsrtl.rsf.lbuilder, 19.0.0.0.0...
+
+Patching component oracle.oraolap.dbscripts, 19.0.0.0.0...
+
+Patching component oracle.mgw.common, 19.0.0.0.0...
+
+Patching component oracle.rdbms.dv, 19.0.0.0.0...
+
+Patching component oracle.ldap.ssl, 19.0.0.0.0...
+
+Patching component oracle.xdk.parser.java, 19.0.0.0.0...
+
+Patching component oracle.ctx.rsf, 19.0.0.0.0...
+
+Patching component oracle.rdbms.lbac, 19.0.0.0.0...
+
+Patching component oracle.rdbms.hsodbc, 19.0.0.0.0...
+
+Patching component oracle.ctx.atg, 19.0.0.0.0...
+
+Patching component oracle.oraolap, 19.0.0.0.0...
+
+Patching component oracle.oraolap.api, 19.0.0.0.0...
+
+Patching component oracle.odbc, 19.0.0.0.0...
+
+Patching component oracle.ldap.client, 19.0.0.0.0...
+
+Patching component oracle.nlsrtl.rsf, 19.0.0.0.0...
+
+Patching component oracle.rdbms.install.common, 19.0.0.0.0...
+
+Patching component oracle.ovm, 19.0.0.0.0...
+
+Patching component oracle.network.listener, 19.0.0.0.0...
+
+Patching component oracle.ldap.rsf.ic, 19.0.0.0.0...
+
+Patching component oracle.javavm.server, 19.0.0.0.0...
+
+Patching component oracle.precomp.lang, 19.0.0.0.0...
+
+Patching component oracle.precomp.common, 19.0.0.0.0...
+
+Patching component oracle.jdk, 1.8.0.201.0...
+Patch 35943157 successfully applied.
+Sub-set patch [35042068] has become inactive due to the application of a super-set patch [35943157].
+Please refer to Doc ID 2161861.1 for any possible further required actions.
+Log file location: /oracle/product/dbhome19c_1/cfgtoollogs/opatch/opatch2024-02-15_06-08-47AM_1.log
+
+OPatch succeeded.
+[oracle@mysqlcirebon 35943157]$ $ORACLE_HOME/OPatch/opatch lspatches
+35943157;Database Release Update : 19.22.0.0.240116 (35943157)
+35050331;OCW RELEASE UPDATE 19.19.0.0.0 (35050331)
+
+OPatch succeeded.
+[oracle@mysqlcirebon 35943157]$ cd ../35967489
+[oracle@mysqlcirebon 35967489]$ $ORACLE_HOME/OPatch/opatch apply -analyze -silent
+Oracle Interim Patch Installer version 12.2.0.1.41
+Copyright (c) 2024, Oracle Corporation.  All rights reserved.
+
+
+Oracle Home       : /oracle/product/dbhome19c_1
+Central Inventory : /oracle/oraInventory
+   from           : /oracle/product/dbhome19c_1/oraInst.loc
+OPatch version    : 12.2.0.1.41
+OUI version       : 12.2.0.7.0
+Log file location : /oracle/product/dbhome19c_1/cfgtoollogs/opatch/opatch2024-02-15_06-52-54AM_1.log
+
+Verifying environment and performing prerequisite checks...
+
+--------------------------------------------------------------------------------
+Start OOP by Prereq process.
+Launch OOP...
+
+Oracle Interim Patch Installer version 12.2.0.1.41
+Copyright (c) 2024, Oracle Corporation.  All rights reserved.
+
+
+Oracle Home       : /oracle/product/dbhome19c_1
+Central Inventory : /oracle/oraInventory
+   from           : /oracle/product/dbhome19c_1/oraInst.loc
+OPatch version    : 12.2.0.1.41
+OUI version       : 12.2.0.7.0
+Log file location : /oracle/product/dbhome19c_1/cfgtoollogs/opatch/opatch2024-02-15_06-55-27AM_1.log
+
+Verifying environment and performing prerequisite checks...
+OPatch continues with these patches:   35967489
+
+Do you want to proceed? [y|n]
+Y (auto-answered by -silent)
+User Responded with: Y
+All checks passed.
+You are calling OPatch with -ocmrf option while this OPatch is generic, not being bundled with OCM. The -ocmrf option is being deprecated. Please remove it while calling OPatch.
+
+Please shutdown Oracle instances running out of this ORACLE_HOME on the local system.
+(Oracle Home = '/oracle/product/dbhome19c_1')
+
+
+Is the local system ready for patching? [y|n]
+Y (auto-answered by -silent)
+User Responded with: Y
+Backing up files...
+Applying interim patch '35967489' to OH '/oracle/product/dbhome19c_1'
+ApplySession: Optional component(s) [ oracle.has.crs.cvu, 19.0.0.0.0 ] , [ oracle.has.crs, 19.0.0.0.0 ] , [ oracle.rhp.crs, 19.0.0.0.0 ] , [ oracle.xag, 19.0.0.0.0 ] , [ oracle.has.cvu, 19.0.0.0.0 ]  not present in the Oracle Home or a higher version is found.
+Users request no RAC file generation.  Do not create MP files.
+
+Skip patching component oracle.rdbms, 19.0.0.0.0 and its actions.
+The actions are reported here, but are not performed.
+
+
+Skip patching component oracle.rhp.db, 19.0.0.0.0 and its actions.
+The actions are reported here, but are not performed.
+
+
+Skip patching component oracle.has.common, 19.0.0.0.0 and its actions.
+The actions are reported here, but are not performed.
+
+
+Skip patching component oracle.has.rsf, 19.0.0.0.0 and its actions.
+The actions are reported here, but are not performed.
+
+
+Skip patching component oracle.has.db.cvu, 19.0.0.0.0 and its actions.
+The actions are reported here, but are not performed.
+
+
+Skip patching component oracle.has.common.cvu, 19.0.0.0.0 and its actions.
+The actions are reported here, but are not performed.
+
+
+Skip patching component oracle.rhp.common, 19.0.0.0.0 and its actions.
+The actions are reported here, but are not performed.
+
+
+Skip patching component oracle.has.db, 19.0.0.0.0 and its actions.
+The actions are reported here, but are not performed.
+
+ApplySession skipping inventory update.
+Patch 35967489 successfully applied.
+Log file location: /oracle/product/dbhome19c_1/cfgtoollogs/opatch/opatch2024-02-15_06-55-27AM_1.log
+
+OPatch succeeded.
+[oracle@mysqlcirebon 35967489]$ $ORACLE_HOME/OPatch/opatch apply -silent
+Oracle Interim Patch Installer version 12.2.0.1.41
+Copyright (c) 2024, Oracle Corporation.  All rights reserved.
+
+
+Oracle Home       : /oracle/product/dbhome19c_1
+Central Inventory : /oracle/oraInventory
+   from           : /oracle/product/dbhome19c_1/oraInst.loc
+OPatch version    : 12.2.0.1.41
+OUI version       : 12.2.0.7.0
+Log file location : /oracle/product/dbhome19c_1/cfgtoollogs/opatch/opatch2024-02-15_07-12-35AM_1.log
+
+Verifying environment and performing prerequisite checks...
+
+--------------------------------------------------------------------------------
+Start OOP by Prereq process.
+Launch OOP...
+
+Oracle Interim Patch Installer version 12.2.0.1.41
+Copyright (c) 2024, Oracle Corporation.  All rights reserved.
+
+
+Oracle Home       : /oracle/product/dbhome19c_1
+Central Inventory : /oracle/oraInventory
+   from           : /oracle/product/dbhome19c_1/oraInst.loc
+OPatch version    : 12.2.0.1.41
+OUI version       : 12.2.0.7.0
+Log file location : /oracle/product/dbhome19c_1/cfgtoollogs/opatch/opatch2024-02-15_07-15-07AM_1.log
+
+Verifying environment and performing prerequisite checks...
+OPatch continues with these patches:   35967489
+
+Do you want to proceed? [y|n]
+Y (auto-answered by -silent)
+User Responded with: Y
+All checks passed.
+
+Please shutdown Oracle instances running out of this ORACLE_HOME on the local system.
+(Oracle Home = '/oracle/product/dbhome19c_1')
+
+
+Is the local system ready for patching? [y|n]
+Y (auto-answered by -silent)
+User Responded with: Y
+Backing up files...
+Applying interim patch '35967489' to OH '/oracle/product/dbhome19c_1'
+ApplySession: Optional component(s) [ oracle.has.crs.cvu, 19.0.0.0.0 ] , [ oracle.has.crs, 19.0.0.0.0 ] , [ oracle.rhp.crs, 19.0.0.0.0 ] , [ oracle.xag, 19.0.0.0.0 ] , [ oracle.has.cvu, 19.0.0.0.0 ]  not present in the Oracle Home or a higher version is found.
+
+Patching component oracle.rdbms, 19.0.0.0.0...
+
+Patching component oracle.rhp.db, 19.0.0.0.0...
+
+Patching component oracle.has.common, 19.0.0.0.0...
+
+Patching component oracle.has.rsf, 19.0.0.0.0...
+
+Patching component oracle.has.db.cvu, 19.0.0.0.0...
+
+Patching component oracle.has.common.cvu, 19.0.0.0.0...
+
+Patching component oracle.rhp.common, 19.0.0.0.0...
+
+Patching component oracle.has.db, 19.0.0.0.0...
+Patch 35967489 successfully applied.
+Sub-set patch [35050331] has become inactive due to the application of a super-set patch [35967489].
+Please refer to Doc ID 2161861.1 for any possible further required actions.
+Log file location: /oracle/product/dbhome19c_1/cfgtoollogs/opatch/opatch2024-02-15_07-15-07AM_1.log
+
+OPatch succeeded.
+[oracle@mysqlcirebon 35967489]$ $ORACLE_HOME/OPatch/opatch lspatches
+35967489;OCW RELEASE UPDATE 19.22.0.0.0 (35967489)
+35943157;Database Release Update : 19.22.0.0.240116 (35943157)
+
+OPatch succeeded.
+[oracle@mysqlcirebon 35967489]$ cd ../..
+[oracle@mysqlcirebon Downloads]$ rm -fr PatchSearch.xml 35940989/
+[oracle@mysqlcirebon Downloads]$
+
+### Post Patch
+##############
+[oracle@mysqlcirebon Downloads]$ dbstart $ORACLE_HOME
+[oracle@mysqlcirebon Downloads]$ cd $ORACLE_HOME/OPatch
+[oracle@mysqlcirebon OPatch]$ ./datapatch -verbose
